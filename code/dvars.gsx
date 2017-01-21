@@ -24,10 +24,10 @@ init()
 	addDvar( "cmd_fps", "int", 1, 0, 1 ); // Allow players to change cg_fovscale setting with script command ( 1-yes ; 0-no )
 	addDvar( "cmd_promod", "int", 1, 0, 1 ); // Allow players to change promod vision setting with script command ( 1-yes ; 0-no )
 	addDvar( "old_hardpoints", "int", 0, 0, 1 ); // Hardpoints based off killstreak ( 1-yes ; 0-no )
-	addDvar( "intro_text", "string", "Welcome to XYZ" ); // Big text that shows when you first spawn
+	addDvar( "intro_text", "string", "Welcome to CoD4:NE" ); // Big text that shows when you first spawn
 	addDvar( "website", "string", "www.mysite.com" ); // Will show under ^ big text
 	addDvar( "intro_time", "int", 6, 1, 20 ); // How long should intro big text stay?
-	addDvar( "credit_text", "string", "Thank you for playing" ); // Credit
+	addDvar( "credit_text", "string", "Thank you for playing CoD4:NE" ); // Credit
 	addDvar( "disable_gl", "int", 0, 0, 1 ); // Disable Grenade Launcher attachment ( 1-yes ; 0-no )
 	addDvar( "disable_rpg", "int", 0, 0, 1 ); // Disable RPG-7 perk ( 1-yes ; 0-no )
 	addDvar( "disable_c4", "int", 0, 0, 1 ); // Disable C4 perk ( 1-yes ; 0-no )
@@ -36,7 +36,7 @@ init()
 	addDvar( "disable_jugger", "int", 1, 0, 1 ); // Disable JUGGERNAUT perk ( 1-yes ; 0-no )
 	addDvar( "disable_laststand", "int", 1, 0, 1 ); // Disable LAST STAND perk ( 1-yes ; 0-no )
 	addDvar( "disable_marty", "int", 1, 0, 1 ); // Disable MARTYDROP perk ( 1-yes ; 0-no )
-	addDvar( "arty_shell_num", "int", 1, 100, 35 ); // Number of artillery shells
+	addDvar( "arty_shell_num", "int", 35, 100, 10 ); // Number of artillery shells
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
