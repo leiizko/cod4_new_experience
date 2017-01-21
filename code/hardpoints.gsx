@@ -92,7 +92,7 @@ onConnected()
 	
 	waittillframeend;
 
-	self.money = 10000;
+	self.money = 0;
 	self.HnotifyDone = [];
 	
 	self thread moneyHud();
