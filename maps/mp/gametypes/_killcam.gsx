@@ -53,14 +53,8 @@ killcam(
 					camtime = 2.5;
 					break;
 				case "agm":
-					// incase attacker disconnects we still have enemy team
-					if( self.team == "axis" )
-						team = "allies";
-					else
-						team = "axis";
-						
-					if( level.AGMLaunchTime[ team ] / 1000 < 4 )
-						camtime = level.AGMLaunchTime[ team ] / 1000;
+					if( level.AGMLaunchTime[ attackerNum ] / 1000 < 4 )
+						camtime = level.AGMLaunchTime[ attackerNum ] / 1000;
 					else
 						camtime = 1.5;
 						

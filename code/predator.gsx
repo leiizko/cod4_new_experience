@@ -190,7 +190,7 @@ launcher()
 		if( self attackButtonPressed() )
 		{
 			self thread launchMissile();
-			level.AGMLaunchTime[ self.team ] = getTime();
+			level.AGMLaunchTime[ self getEntityNumber() ] = getTime();
 			self waittill( "missileExpoded" );
 		}
 		wait .05;
@@ -269,7 +269,7 @@ launchMissile()
 			else
 				self setOrigin( self.oldPosition );
 			
-			level.AGMLaunchTime[ self.team ] = getTime() - level.AGMLaunchTime[ self.team ];
+			level.AGMLaunchTime[ self getEntityNumber() ] = getTime() - level.AGMLaunchTime[ self getEntityNumber() ];
 			
 			wait .05;
 			self thread explodeAGM( target );
@@ -289,7 +289,7 @@ launchMissile()
 			else
 				self setOrigin( self.oldPosition );
 			
-			level.AGMLaunchTime[ self.team ] = getTime() - level.AGMLaunchTime[ self.team ];			
+			level.AGMLaunchTime[ self getEntityNumber() ] = getTime() - level.AGMLaunchTime[ self getEntityNumber() ];			
 			
 			wait .05;
 			self thread explodeAGM( target );

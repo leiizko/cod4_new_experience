@@ -51,13 +51,8 @@ killcam(
 					camtime = 3.5;
 					break;
 				case "agm":
-					if( victim.team == "axis" )
-						team = "allies";
-					else
-						team = "axis";
-						
-					if( level.AGMLaunchTime[ team ] / 1000 < 8 )
-						camtime = level.AGMLaunchTime[ team ] / 1000;
+					if( level.AGMLaunchTime[ attackerNum ] / 1000 < 8 )
+						camtime = level.AGMLaunchTime[ attackerNum ] / 1000;
 					else
 						camtime = 1.5;
 					break;
