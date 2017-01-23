@@ -1383,66 +1383,69 @@ endGame( winner, endReasonText )
 	
 	roundEndWait( level.postRoundTime, true );
 	
-	// -Leiizko- // // -Final- //
-		if( getDvar( "g_gametype" ) != "dm" )
-			team = winner;
+	// -Final- //
+	if( getDvar( "g_gametype" ) == "dm" )
+	{
+		if( !isDefined( winner ) )
+			team = "dc";
 		else
 			team = winner.team;
+	}
+	else
+		team = winner;
 
-		if( isDefined( level.caminfo ) && isDefined( level.caminfo[ team ] ) )
+	if( team != "dc" && isArray( level.caminfo ) && isArray( level.caminfo[ team ] ) )
+	{
+		level.finalcamshowing = true;
+		for(i=0;i<level.players.size;i++)
 		{
-			level.finalcamshowing = true;
+			level.players[i] notify("reset_outcome");
+			level.players[i] thread code\killcam::killcam(  level.caminfo[ team ][ "attackerNum" ],
+															level.caminfo[ team ][ "killcamentity" ],
+															level.caminfo[ team ][ "sWeapon" ],
+															level.caminfo[ team ][ "predelay" ],
+															level.caminfo[ team ][ "psOffsetTime" ],
+															undefined,
+															level.caminfo[ team ][ "attacker" ],
+															level.caminfo[ team ][ "victim" ],
+															level.caminfo[ team ][ "time" ],
+															level.caminfo[ team ][ "sWeaponForKillcam" ] );
+		}
+			
+		wait 1;
+
+		level.finalcamtime = getTime();
+
+		while( level.finalcamshowing ) // or 1 for that matter
+		{
+			finalnum = 0;
+
 			for(i=0;i<level.players.size;i++)
 			{
-				level.players[i] notify("reset_outcome");
-				//level.players[i] closeMenu();
-				//level.players[i] closeInGameMenu();
-				level.players[i] thread code\killcam::killcam(  level.caminfo[ team ][ "attackerNum" ],
-																level.caminfo[ team ][ "killcamentity" ],
-																level.caminfo[ team ][ "sWeapon" ],
-																level.caminfo[ team ][ "predelay" ],
-																level.caminfo[ team ][ "psOffsetTime" ],
-																undefined,
-																level.caminfo[ team ][ "attacker" ],
-																level.caminfo[ team ][ "victim" ],
-																level.caminfo[ team ][ "time" ],
-																level.caminfo[ team ][ "sWeaponForKillcam" ] );
-			}
-			
-			wait 1;
-
-			level.finalcamtime = getTime();
-
-			while( level.finalcamshowing ) // or 1 for that matter
-			{
-				finalnum = 0;
-
-				for(i=0;i<level.players.size;i++)
+				player = players[i];
+					
+				if( !isDefined( player ) )
+					continue;
+					
+				if( isDefined( player.finalcam ) )
 				{
-					player = players[i];
-					
-					if( !isDefined( player ) )
-						continue;
-					
-					if( isDefined( player.finalcam ) )
-					{
-						finalnum++;
-						break; // no point in going forward as FKC is still playing
-					}
+					finalnum++;
+					break; // no point in going forward as FKC is still playing
 				}
-				
-				if( finalnum == 0 )
-					break;
-
-				// FAILSAFE
-				if( getTime() - level.finalcamtime > 8000 )
-					break;
-				
-				wait .25;
 			}
+				
+			if( finalnum == 0 )
+				break;
+
+			// FAILSAFE
+			if( getTime() - level.finalcamtime > 8000 )
+				break;
+			
+			wait .25;
 		}
-		wait .05;
-		//  //
+	}
+	wait .1;
+	//  //
 	
 	level.intermission = true;
 	
