@@ -78,8 +78,13 @@ onPlayerSpawn()
 	self enableWeapons();
 	self show();
 	
-	self.maxHealth = 30;
-	self.health = self.maxHealth;
+	if( level.hardcoreMode )
+		self.maxhealth = 30;
+	else if( level.oldschool )
+		self.maxhealth = 200;
+	else
+		self.maxhealth = 100;
+	self.health = self.maxhealth;
 
 	if( isDefined( self.spawnprot_cntr ) ) 
 		self.spawnprot_cntr destroy(); 

@@ -114,11 +114,10 @@ setup()
 	self thread death();
 	self thread emergency();
 	
-	self setClientDvars( 
-						 "cg_fovscale", 1.25,
+	self setClientDvars( "cg_fovscale", 1.25,
 						 "cg_fov", 80,
-						 "g_compassshowenemies", 1
-						 );
+						 "g_compassshowenemies", 1,
+						 "ui_hud_hardcore", 1 );
 }
 
 HudStuff()
@@ -871,8 +870,19 @@ endHeli( type )
 	
 	if( type != 3 )
 	{
-		self.maxHealth = 30;
-		self.health = self.maxHealth;
+		if( level.hardcoreMode )
+			self.maxhealth = 30;
+		else if( level.oldschool )
+		{
+			self.maxhealth = 200;
+			self setClientDvar( "ui_hud_hardcore", 0 );
+		}
+		else
+		{
+			self.maxhealth = 100;
+			self setClientDvar( "ui_hud_hardcore", 0 );
+		}
+		self.health = self.maxhealth;
 		self thread code\hardpoints::moneyHud();
 		self thread code\common::removeInfoHUD();
 		self thread code\common::restoreVisionSettings();

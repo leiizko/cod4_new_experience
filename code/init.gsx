@@ -28,7 +28,8 @@ startGameType()
 		
 		
 	// Dev only
-	//thread code\_dBots::init();
+	if( getDvarInt( "developer" ) > 0 )
+		thread code\_dBots::init();
 }
 
 fx_cache()
