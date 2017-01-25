@@ -4541,7 +4541,7 @@ Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, s
 			prof_end( "Callback_PlayerDamage world" );
 		}
 
-		if ( isdefined(eAttacker) && eAttacker != self )
+		if ( level.dvar[ "hitmarker" ] > 0 && isdefined(eAttacker) && eAttacker != self )
 		{
 			hasBodyArmor = false;
 			if ( self hasPerk( "specialty_armorvest" ) )
@@ -4554,7 +4554,14 @@ Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, s
 				*/
 			}
 			if ( iDamage > 0 )
-				eAttacker thread maps\mp\gametypes\_damagefeedback::updateDamageFeedback( hasBodyArmor );
+			{
+				if( level.dvar[ "hitmarker" ] == 1 )
+					eAttacker thread maps\mp\gametypes\_damagefeedback::updateDamageFeedback( hasBodyArmor );
+					
+				else if( level.dvar[ "hitmarker" ] == 2 )
+					if( bulletTracePassed( eAttacker getEye(), self getEye(), false, eAttacker ) )
+						eAttacker thread maps\mp\gametypes\_damagefeedback::updateDamageFeedback( hasBodyArmor );
+			}
 		}
 		
 		self.hasDoneCombat = true;
