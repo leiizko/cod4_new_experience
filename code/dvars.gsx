@@ -15,6 +15,7 @@
 init()
 {
 	addDvar( "xp_multi", "int", 1, 1, 100 ); // XP multiplier - 1 normal XP, up to x100
+	addDvar( "final_killcam", "int", 1, 0, 1 ); // Enable final killcam Steady sniper score ( 1-yes ; 0-no )
 	addDvar( "promod_sniper", "int", 1, 0, 1 ); // Steady sniper score ( 1-yes ; 0-no )
 	addDvar( "rcon_interface", "int", 0, 0, 1 ); // aka B3 custom command support ( 1-yes ; 0-no )
 	addDvar( "fast_paced", "int", 1, 0, 1 ); // Increase sprint time and overall walking/running speed ( 1-yes ; 0-no )

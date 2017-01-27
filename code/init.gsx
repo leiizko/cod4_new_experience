@@ -14,7 +14,12 @@ startGameType()
 		thread code\hardpoints::init(); 
 		
 	thread code\player::init();
-	thread code\killcam_settings::init();
+	
+	if( level.dvar[ "final_killcam" ] )
+		thread code\killcam_settings::init();
+		
+	if( level.killcam )	
+		thread code\killcam_settings::kcCache();
 	
 	if( level.dvar[ "spawn_protection" ] )
 		thread code\spawnprotection::init();

@@ -4,9 +4,13 @@ init()
 {
 	precacheShader("white");
 	
-	level.killcam = true;
+	if( getDvarInt( "scr_game_allowkillcam" ) == 1 )
+		level.killcam = true;
+	else
+		level.killcam = false;
 
-	setArchive(true);
+	if( level.killcam || level.dvar[ "final_killcam" ] )
+		setArchive( true );
 }
 
 killcam(
@@ -18,7 +22,8 @@ killcam(
 	respawn, // will the player be allowed to respawn after the killcam?
 	maxtime, // time remaining until map ends; the killcam will never last longer than this. undefined = no limit
 	perks, // the perks the attacker had at the time of the kill
-	attacker // entity object of attacker
+	attacker, // entity object of attacker
+	sMeansOfDeath
 )
 {	
 	self endon("disconnect");
@@ -166,7 +171,8 @@ killcam(
 	self.killcam = true;
 	///////////////////////////////////////////////////
 	
-	self thread hud( attacker );
+	data = code\killcam_settings::killcamData( sWeapon, sMeansOfDeath );
+	self thread hud( attacker, data );
 	
 	//////////////////////////////////////////////////
 	//////////////////////////////////////////////////
@@ -188,7 +194,7 @@ killcam(
 	self.psoffsettime = 0;
 }
 
-hud( attacker )
+hud( attacker, data )
 {
 	self endon("disconnect");
 	self endon("spawned");
@@ -276,6 +282,67 @@ hud( attacker )
 	self.kc_hud[ 5 ].fontscale = 1.4;
 	self.kc_hud[ 5 ] setText( "^0ME  ^7" + self.pers[ "youVSfoe" ][ "killed" ][ attID ] + " - " + self.pers[ "youVSfoe" ][ "killedBy" ][ attID ] + "  ^0FOE" );
 	self.kc_hud[ 5 ].sort = 3;
+	
+	self.kc_hud[ 6 ] = newClientHudElem( self );
+	self.kc_hud[ 6 ].alpha = 1;
+	self.kc_hud[ 6 ].y = 30;
+	self.kc_hud[ 6 ].x = -130;
+	self.kc_hud[ 6 ].alignX = "center";
+	self.kc_hud[ 6 ].horzAlign = "center";
+	self.kc_hud[ 6 ].archived = false;
+	self.kc_hud[ 6 ].fontscale = 1.4;
+	self.kc_hud[ 6 ] setText( data.name );
+	self.kc_hud[ 6 ].sort = 3;
+	
+	self.kc_hud[ 7 ] = newClientHudElem( self );
+	self.kc_hud[ 7 ].alpha = 1;
+	self.kc_hud[ 7 ].y = 37;
+	self.kc_hud[ 7 ].x = -130;
+	self.kc_hud[ 7 ].alignX = "center";
+	self.kc_hud[ 7 ].horzAlign = "center";
+	self.kc_hud[ 7 ].archived = false;
+	self.kc_hud[ 7 ].fontscale = 1.4;
+	self.kc_hud[ 7 ] setShader( data.icon, 90, 60 );
+	self.kc_hud[ 7 ].sort = 3;
+	
+	self.kc_hud[ 8 ] = newClientHudElem( self );
+	self.kc_hud[ 8 ].alpha = 1;
+	self.kc_hud[ 8 ].y = 30;
+	self.kc_hud[ 8 ].x = -7;
+	self.kc_hud[ 8 ].alignX = "center";
+	self.kc_hud[ 8 ].horzAlign = "center";
+	self.kc_hud[ 8 ].archived = false;
+	self.kc_hud[ 8 ].fontscale = 1.4;
+	self.kc_hud[ 8 ] setText( "Rank" );
+	self.kc_hud[ 8 ].sort = 3;
+	
+	self.kc_hud[ 9 ] = newClientHudElem( self );
+	self.kc_hud[ 9 ].alpha = 1;
+	self.kc_hud[ 9 ].y = 46;
+	self.kc_hud[ 9 ].x = -7;
+	self.kc_hud[ 9 ].alignX = "center";
+	self.kc_hud[ 9 ].horzAlign = "center";
+	self.kc_hud[ 9 ].archived = false;
+	self.kc_hud[ 9 ].fontscale = 1.4;
+	self.kc_hud[ 9 ] setShader( maps\mp\gametypes\_rank::getRankInfoIcon( attacker.pers[ "rank" ], attacker.pers[ "prestige" ] ), 50, 50 );
+	self.kc_hud[ 9 ].sort = 3;
+	
+	// 24 chars per line - or was it 34 lol
+	quote = [];
+	quote[ 0 ] = "War is peace. \nFreedom is slavery. \nIgnorance is strength.";
+	quote[ 1 ] = "The supreme art of war \nis to subdue the enemy \nwithout fighting.";
+	quote[ 2 ] = "In time of peace prepare \nfor war.";
+ 	
+	self.kc_hud[ 10 ] = newClientHudElem( self );
+	self.kc_hud[ 10 ].alpha = 1;
+	self.kc_hud[ 10 ].y = 35;
+	self.kc_hud[ 10 ].x = 125;
+	self.kc_hud[ 10 ].alignX = "center";
+	self.kc_hud[ 10 ].horzAlign = "center";
+	self.kc_hud[ 10 ].archived = false;
+	self.kc_hud[ 10 ].fontscale = 1.4;
+	self.kc_hud[ 10 ] setText( quote[ randomInt( quote.size ) ] );
+	self.kc_hud[ 10 ].sort = 3;
 }
 
 waitKillcamTime()
@@ -303,14 +370,9 @@ waitSkipKillcamButton()
 
 endKillcam()
 {
-	if(isDefined(self.kc_skiptext))
-		self.kc_skiptext.alpha = 0;
-	if(isDefined(self.kc_timer))
-		self.kc_timer.alpha = 0;
-	
 	waittillframeend;
 	
-	if( isDefined( self.kc_hud ) && isDefined( self.kc_hud[ 0 ] ) )
+	if( isArray( self.kc_hud ) )
 	{
 		for( i = 0; i < self.kc_hud.size; i++ )
 		{

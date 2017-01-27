@@ -1394,7 +1394,7 @@ endGame( winner, endReasonText )
 	else
 		team = winner;
 
-	if( team != "dc" && isArray( level.caminfo ) && isArray( level.caminfo[ team ] ) )
+	if( level.dvar[ "final_killcam" ] && team != "dc" && isDefined( level.caminfo[ team ][ "attackerNum" ] ) )
 	{
 		level.finalcamshowing = true;
 		for(i=0;i<level.players.size;i++)
@@ -3753,7 +3753,6 @@ Callback_StartGameType()
 	if( getdvar( "r_reflectionProbeGenerate" ) == "1" )
 		level waittill( "eternity" );
 
-	thread code\init::startGameType();
 	thread maps\mp\gametypes\_persistence::init();
 	thread maps\mp\gametypes\_menus::init();
 	thread maps\mp\gametypes\_hud::init();
@@ -3773,6 +3772,7 @@ Callback_StartGameType()
 	thread maps\mp\gametypes\_spawnlogic::init();
 	thread maps\mp\gametypes\_oldschool::init();
 	thread maps\mp\gametypes\_battlechatter_mp::init();
+	thread code\init::startGameType();
 
 	thread maps\mp\gametypes\_hardpoints::init();
 
@@ -5015,16 +5015,18 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	respawnTimerStartTime = gettime();
 	
 	
+	/#
 	if ( getDvarInt( "scr_forcekillcam" ) != 0 )
 	{
 		doKillcam = true;
 		if ( lpattacknum < 0 )
 			lpattacknum = self getEntityNumber();
 	}
+	#/
 	
 	
-	if ( doKillcam )
-		self maps\mp\gametypes\_killcam::killcam( lpattacknum, killcamentity, sWeapon, postDeathDelay + deathTimeOffset, psOffsetTime, true, timeUntilRoundEnd(), undefined, attacker );
+	if ( doKillcam && level.killcam )
+		self maps\mp\gametypes\_killcam::killcam( lpattacknum, killcamentity, sWeapon, postDeathDelay + deathTimeOffset, psOffsetTime, true, timeUntilRoundEnd(), undefined, attacker, sMeansOfDeath );
 
 	
 	prof_end( "PlayerKilled post constants" );
