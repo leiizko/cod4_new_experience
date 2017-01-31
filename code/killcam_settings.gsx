@@ -82,6 +82,7 @@ kcCache()
 	precacheShader( "weapon_skorpion" );
 	precacheShader( "weapon_winchester1200" );
 	precacheShader( "weapon_c4" );
+	precacheShader( "weapon_m14_scoped" );
 	precacheShader( "weapon_claymore" );
 	
 	
