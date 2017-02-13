@@ -51,10 +51,11 @@ killcam(
 					camtime = 3.5;
 					break;
 				case "agm":
-					if( level.AGMLaunchTime[ attackerNum ] / 1000 < 8 )
+					if( isDefined( level.AGMLaunchTime[ attackerNum ] ) && level.AGMLaunchTime[ attackerNum ] / 1000 < 8 )
 						camtime = level.AGMLaunchTime[ attackerNum ] / 1000;
 					else
 						camtime = 1.5;
+
 					break;
 				case "artillery":
 					camtime = 3.7;

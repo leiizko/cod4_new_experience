@@ -190,7 +190,6 @@ launcher()
 		if( self attackButtonPressed() )
 		{
 			self thread launchMissile();
-			level.AGMLaunchTime[ self getEntityNumber() ] = getTime();
 			self waittill( "missileExpoded" );
 		}
 		wait .05;
@@ -203,6 +202,7 @@ launchMissile()
 	level endon( "game_ended" );
 	level endon( "flyOver" );
 	
+	level.AGMLaunchTime[ self getEntityNumber() ] = getTime();
 	level.missileLaunched = true;
 	
 	self setClientDvar( "cg_fovscale", "0.75" );
@@ -269,8 +269,6 @@ launchMissile()
 			else
 				self setOrigin( self.oldPosition );
 			
-			level.AGMLaunchTime[ self getEntityNumber() ] = getTime() - level.AGMLaunchTime[ self getEntityNumber() ];
-			
 			wait .05;
 			self thread explodeAGM( target );
 			break;
@@ -287,9 +285,7 @@ launchMissile()
 			if( self.predatorAmmoLeft > 0 )
 				self linkTo( level.plane[ "plane" ], "tag_left_wingtip", ( -280, 110, -20 ), level.plane[ "plane" ].angles );
 			else
-				self setOrigin( self.oldPosition );
-			
-			level.AGMLaunchTime[ self getEntityNumber() ] = getTime() - level.AGMLaunchTime[ self getEntityNumber() ];			
+				self setOrigin( self.oldPosition );			
 			
 			wait .05;
 			self thread explodeAGM( target );
@@ -317,6 +313,8 @@ trailFX()
 explodeAGM( target )
 {
 	self endon( "disconnect" );
+	
+	level.AGMLaunchTime[ self getEntityNumber() ] = getTime() - level.AGMLaunchTime[ self getEntityNumber() ];
 	
 	if( !isDefined( target ) && isDefined( level.plane ) && isDefined( level.plane[ "missile" ] ) )
 		target = level.plane[ "missile" ].origin;

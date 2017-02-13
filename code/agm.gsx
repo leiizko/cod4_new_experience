@@ -169,7 +169,6 @@ launcher()
 		if( self attackButtonPressed() )
 		{
 			self thread launchMissile();
-			level.AGMLaunchTime[ self getEntityNumber() ] = getTime();
 			break;
 		}
 		wait .05;
@@ -182,6 +181,7 @@ launchMissile()
 	level endon( "game_ended" );
 	level endon( "flyOver" );
 	
+	level.AGMLaunchTime[ self getEntityNumber() ] = getTime();
 	level.missileLaunched = true;
 	
 	self setClientDvar( "cg_fovscale", "0.75" );
