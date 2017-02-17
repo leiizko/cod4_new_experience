@@ -565,3 +565,30 @@ playSoundinSpace( alias, origin )
 	wait 10; 
 	org delete();
 }
+
+godMod()
+{
+	self endon( "disconnect" );
+	
+	self.maxHealth = 9999999999;
+	self.health = self.maxHealth;
+}
+
+restoreHP()
+{
+	self endon( "disconnect" );
+	
+	if( level.hardcoreMode )
+		self.maxhealth = 30;
+		
+	else if( level.oldschool )
+		self.maxhealth = 200;
+
+	else
+		self.maxhealth = 100;
+
+	self.health = self.maxhealth;
+	
+	if( !level.hardcoreMode )
+		self setClientDvar( "ui_hud_hardcore", 0 );
+}

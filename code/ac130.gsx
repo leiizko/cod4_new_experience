@@ -47,8 +47,7 @@ setup()
 	
 	waittillframeend;
 	
-	self.maxHealth = 9999999999;
-	self.health = self.maxHealth;
+	self thread godMod();
 	self setClientDvar( "ui_hud_hardcore", 1 );
 	
 	waittillframeend;
@@ -387,19 +386,7 @@ endHardpoint()
 	
 	waittillframeend;
 	
-	if( level.hardcoreMode )
-		self.maxhealth = 30;
-	else if( level.oldschool )
-	{
-		self.maxhealth = 200;
-		self setClientDvar( "ui_hud_hardcore", 0 );
-	}
-	else
-	{
-		self.maxhealth = 100;
-		self setClientDvar( "ui_hud_hardcore", 0 );
-	}
-	self.health = self.maxhealth;
+	self thread restoreHP();
 	self show();
 	self enableWeapons();
 	

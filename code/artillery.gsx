@@ -1,7 +1,7 @@
 startBarrage( endPos, startPos )
 {
 	self endon( "disconnect" );
-	self endon( "endBarage" );
+	level endon( "endBarage" );
 	
 	self thread code\common::notifyTeamLn( "Friendly artillery called by^1 " + self.name );
 	
@@ -51,8 +51,7 @@ startBarrage( endPos, startPos )
 
 endBarage()
 {
-	self endon( "disconnect" );
-	self notify( "endBarage" );
+	level notify( "endBarage" );
 	
 	wait .1;
 	
@@ -79,28 +78,13 @@ playerDC( player )
 	
 	player waittill( "disconnect" );
 	
-	wait .25;
-	
-	if( isDefined( level.mortarShell ) )
-	{
-		for( i = 0; i < level.dvar[ "arty_shell_num" ]; i++ )
-		{
-			if( isDefined( level.mortarShell[ i ] ) )
-				level.mortarShell[ i ] delete();
-				
-			waittillframeend;
-		}
-	}
-	
-	wait .1;
-	
-	level.artilleryBarrage = undefined;
+	thread endBarage();
 }
 
 roundThink( ent )
 {
 	self endon( "disconnect" );
-	self endon( "endBarage" );
+	level endon( "endBarage" );
 	
 	while( isDefined( ent ) )
 	{

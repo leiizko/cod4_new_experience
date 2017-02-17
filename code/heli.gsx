@@ -343,8 +343,7 @@ miscStuff()
 	
 	waittillframeend;
 	
-	self.maxHealth = 999999;
-	self.health = self.maxHealth;	
+	self thread code\common::godMod();	
 	
 	self iPrintLnBold( "Use [{+forward}], [{+back}], [{+moveleft}], [{+moveright}] to pilot the helicopter" );
 	self iPrintLnBold( "[{+gostand}] to climb up, [{+breath_sprint}] to climb down" );
@@ -870,19 +869,7 @@ endHeli( type )
 	
 	if( type != 3 )
 	{
-		if( level.hardcoreMode )
-			self.maxhealth = 30;
-		else if( level.oldschool )
-		{
-			self.maxhealth = 200;
-			self setClientDvar( "ui_hud_hardcore", 0 );
-		}
-		else
-		{
-			self.maxhealth = 100;
-			self setClientDvar( "ui_hud_hardcore", 0 );
-		}
-		self.health = self.maxhealth;
+		self thread code\common::restoreHP();
 		self thread code\hardpoints::moneyHud();
 		self thread code\common::removeInfoHUD();
 		self thread code\common::restoreVisionSettings();
