@@ -88,10 +88,6 @@ onDeath( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, p
 
 onConnected()
 {
-	self endon( "disconnect" );
-	
-	waittillframeend;
-
 	self.money = 0;
 	self.HnotifyDone = [];
 	
@@ -100,8 +96,6 @@ onConnected()
 
 moneyHud()
 {
-	self endon( "disconnect" );
-	
 	self.moneyhud = newClientHudElem( self );
 	self.moneyhud.archived = false;
 	self.moneyhud.alignX = "right";
@@ -157,6 +151,7 @@ onSpawn()
 shopThink()
 {
 	self endon( "destroy_shop" );
+	self endon( "disconnect" );
 	
 	for( ;; )
 	{
@@ -465,12 +460,9 @@ exitShop()
 waittill_any_game( string1, string2, string3 )
 {
 	level endon( "game_ended" );
+	self endon( "disconnect" );
 	
-	if ( isdefined( string2 ) )
-		self endon( string2 );
-		
-	if ( isdefined( string3 ) )
-		self endon( string3 );
-	
-	self waittill( string1 );
+	self endon( string1 );
+	self endon( string2 );
+	self waittill( string3 );
 }

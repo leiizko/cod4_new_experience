@@ -89,6 +89,8 @@ onConnect()
 	
 	self.pers[ "rads" ] = 0;
 	
+	self setClientDvar( "ui_ShowMenuOnly", "" ); // if admin rotates the map while in killcam
+	
 	/////////////////////////////////////////////////
 	// Things we need to do on spawn but only once //
 	/////////////////////////////////////////////////
