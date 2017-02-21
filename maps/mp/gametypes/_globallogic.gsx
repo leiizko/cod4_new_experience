@@ -4841,7 +4841,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 						attacker.cur_kill_streak++;
 				}
 				
-				if ( isDefined( level.hardpointItems ) && isAlive( attacker ) && level.dvar["old_hardpoints"] && self.cur_kill_streak > 2 )
+				if ( isDefined( level.hardpointItems ) && isAlive( attacker ) && level.dvar["old_hardpoints"] )
 					attacker thread maps\mp\gametypes\_hardpoints::giveHardpointItemForStreak();
 	
 				attacker.cur_death_streak = 0;

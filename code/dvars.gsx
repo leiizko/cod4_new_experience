@@ -22,7 +22,7 @@ init()
 	addDvar( "hitmarker", "int", 2, 0, 2 ); // Show hitmarker ( 0-no ; 1-always yes ; 2-yes if not wallbang )
 	addDvar( "gun_position", "int", 1, 0, 1 ); // More realistic gun positions on screen ( 1-yes ; 0-no )
 	addDvar( "spawn_protection", "int", 1, 0, 1 ); // Enable spawn protection ( 1-yes ; 0-no )
-	addDvar( "prot_time", "int", 5, 1, 10 ); // Spawn protection time ( 1 - 10 secs )
+	addDvar( "prot_time", "int", 5, 1, 5 ); // Spawn protection time ( 1 - 10 secs )
 	addDvar( "cmd_fov", "int", 1, 0, 1 ); // Allow players to change r_fullbright setting with script command ( 1-yes ; 0-no )
 	addDvar( "cmd_fps", "int", 1, 0, 1 ); // Allow players to change cg_fovscale setting with script command ( 1-yes ; 0-no )
 	addDvar( "cmd_promod", "int", 1, 0, 1 ); // Allow players to change promod vision setting with script command ( 1-yes ; 0-no )
@@ -39,7 +39,35 @@ init()
 	addDvar( "disable_jugger", "int", 1, 0, 1 ); // Disable JUGGERNAUT perk ( 1-yes ; 0-no )
 	addDvar( "disable_laststand", "int", 1, 0, 1 ); // Disable LAST STAND perk ( 1-yes ; 0-no )
 	addDvar( "disable_marty", "int", 1, 0, 1 ); // Disable MARTYDROP perk ( 1-yes ; 0-no )
-	addDvar( "arty_shell_num", "int", 35, 100, 10 ); // Number of artillery shells
+	
+	// Hardpoints - old style, required kill streak
+	addDvar( "radar", "int", 3, 1, 100 );
+	addDvar( "airstrike", "int", 5, 1, 100 );
+	addDvar( "helicopter", "int", 18, 1, 100 );
+	addDvar( "artillery", "int", 7, 1, 100 ); 
+	addDvar( "asf", "int", 12, 1, 100 );
+	addDvar( "agm", "int", 10, 1, 100 );
+	addDvar( "predator", "int", 25, 1, 100 );
+	addDvar( "ac130", "int", 35, 1, 100 );
+	addDvar( "mannedheli", "int", 48, 1, 100 );
+	addDvar( "nuke", "int", 70, 1, 100 );
+	
+	// Hardpoints shop - required credits
+	/*
+						WIP
+	addDvar( "radar_shop", "int", 20, 1, 2000 );
+	addDvar( "airstrike_shop", "int", 70, 1, 2000 );
+	addDvar( "helicopter_shop", "int", 180, 1, 2000 );
+	addDvar( "artillery_shop", "int", 70, 1, 2000 ); 
+	addDvar( "asf_shop", "int", 100, 1, 2000 );
+	addDvar( "agm_shop", "int", 100, 1, 2000 );
+	addDvar( "predator_shop", "int", 280, 1, 2000 );
+	addDvar( "ac130_shop", "int", 380, 1, 2000 );
+	addDvar( "mannedheli_shop", "int", 500, 1, 2000 );
+	addDvar( "nuke_shop", "int", 600, 1, 2000 );
+	*/
+	
+	addDvar( "arty_shell_num", "int", 35, 10, 100 ); // Number of artillery shells
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

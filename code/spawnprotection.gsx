@@ -51,12 +51,11 @@ onPlayerSpawn()
 		self.spawnprot_text destroy();
 	
 	self.spawnprotected = undefined;
+	self notify( "spawnProtectionDisabled" );
 }
 
 hud()
 {
-	self endon( "disconnect" );
-
 	if( isDefined( self.spawnprot_cntr ) ) 
 		self.spawnprot_cntr destroy(); 
 	if( isDefined( self.spawnprot_text ) ) 

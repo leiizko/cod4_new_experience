@@ -21,20 +21,54 @@ init()
 	priority++;
 	level.hardpointItems["airstrike_mp"] = priority;
 	priority++;
+	level.hardpointItems["artillery_mp"] = priority;
+	priority++;
+	level.hardpointItems["asf_mp"] = priority;
+	priority++;
+	level.hardpointItems["agm_mp"] = priority;
+	priority++;
 	level.hardpointItems["helicopter_mp"] = priority;
 	priority++;
+	level.hardpointItems["predator_mp"] = priority;
+	priority++;
+	level.hardpointItems["ac130_mp"] = priority;
+	priority++;
+	level.hardpointItems["mannedheli_mp"] = priority;
+	priority++;
+	level.hardpointItems["nuke_mp"] = priority;
 
 	level.hardpointHints["radar_mp"] = &"MP_EARNED_RADAR";
 	level.hardpointHints["airstrike_mp"] = &"MP_EARNED_AIRSTRIKE";
 	level.hardpointHints["helicopter_mp"] = &"MP_EARNED_HELICOPTER";
+	level.hardpointHints["predator_mp"] = "Press [{+actionslot 4}] for PREDATOR DRONE";
+	level.hardpointHints["artillery_mp"] = "Press [{+actionslot 4}] for ARTILLERY BARRAGE";
+	level.hardpointHints["asf_mp"] = "Press [{+actionslot 4}] for AIR SUPERIORITY FIGHTER";
+	level.hardpointHints["agm_mp"] = "Press [{+actionslot 4}] for AIR-GROUND MISSILE";
+	level.hardpointHints["ac130_mp"] = "Press [{+actionslot 4}] for AC130 GUNSHIP";
+	level.hardpointHints["mannedheli_mp"] = "Press [{+actionslot 4}] for MANNED HELICOPTER";
+	level.hardpointHints["nuke_mp"] = "Press [{+actionslot 4}] for TACTICAL NUKE";
 
 	level.hardpointHints["radar_mp_not_available"] = &"MP_RADAR_NOT_AVAILABLE";
 	level.hardpointHints["airstrike_mp_not_available"] = &"MP_AIRSTRIKE_NOT_AVAILABLE";
 	level.hardpointHints["helicopter_mp_not_available"] = &"MP_HELICOPTER_NOT_AVAILABLE";
+	level.hardpointHints["predator_mp_not_available"] = "PREDATOR DRONE not available";
+	level.hardpointHints["artillery_mp_not_available"] = "ARTILLERY BARRAGE not available";
+	level.hardpointHints["asf_mp_not_available"] = "AIR SUPERIORITY FIGHTER not available";
+	level.hardpointHints["agm_mp_not_available"] = "AIR-GROUND MISSILE not available";
+	level.hardpointHints["ac130_mp_not_available"] = "AC130 GUNSHIP not available";
+	level.hardpointHints["mannedheli_mp_not_available"] = "MANNED HELICOPTER not available";
+	level.hardpointHints["nuke_mp_not_available"] = "TACTICAL NUKE not available";
 
 	level.hardpointInforms["radar_mp"] = "mp_killstreak_radar";
 	level.hardpointInforms["airstrike_mp"] = "mp_killstreak_jet";
 	level.hardpointInforms["helicopter_mp"] = "mp_killstreak_heli";
+	level.hardpointInforms["predator_mp"] = "mp_killstreak_jet";
+	level.hardpointInforms["artillery_mp"] = "mp_killstreak_jet";
+	level.hardpointInforms["asf_mp"] = "mp_killstreak_jet";
+	level.hardpointInforms["agm_mp"] = "mp_killstreak_jet";
+	level.hardpointInforms["ac130_mp"] = "mp_killstreak_jet";
+	level.hardpointInforms["mannedheli_mp"] = "mp_killstreak_heli";
+	level.hardpointInforms["nuke_mp"] = "mp_killstreak_jet";
 
 	maps\mp\gametypes\_rank::registerScoreInfo( "hardpoint", 10 );
 	
@@ -851,24 +885,41 @@ playSoundinSpace (alias, origin, master)
 
 giveHardpointItemForStreak()
 {
-	switch( self.cur_kill_streak )
-	{
-		case 3:
-			self giveHardpoint( "radar_mp", self.cur_kill_streak );
-			break;
+	s = self.cur_kill_streak;
+
+	if( s == level.dvar[ "radar" ] )
+		self giveHardpoint( "radar_mp", s );
 		
-		case 5:
-			self giveHardpoint( "airstrike_mp", self.cur_kill_streak );
-			break;
-			
-		case 9:
-			self giveHardpoint( "helicopter_mp", self.cur_kill_streak );
-			break;
+	else if( s == level.dvar[ "airstrike" ] )
+		self giveHardpoint( "airstrike_mp", s );
 		
-		default:
-			if( self.cur_kill_streak % 5 == 0 )
-				self streakNotify( self.cur_kill_streak );
-	}
+	else if( s == level.dvar[ "helicopter" ] )
+		self giveHardpoint( "helicopter_mp", s );
+		
+	else if( s == level.dvar[ "artillery" ] )
+		self giveHardpoint( "artillery_mp", s );
+		
+	else if( s == level.dvar[ "asf" ] )
+		self giveHardpoint( "asf_mp", s );
+		
+	else if( s == level.dvar[ "agm" ] )
+		self giveHardpoint( "agm_mp", s );
+		
+	else if( s == level.dvar[ "predator" ] )
+		self giveHardpoint( "predator_mp", s );
+		
+	else if( s == level.dvar[ "ac130" ] )
+		self giveHardpoint( "ac130_mp", s );
+		
+	else if( s == level.dvar[ "nuke" ] )
+		self giveHardpoint( "nuke_mp", s );
+		
+	else if( s == level.dvar[ "mannedheli" ] )
+		self giveHardpoint( "mannedheli_mp", s );
+		
+	else
+		if( ( s % 5 ) == 0 )
+			self streakNotify( s );
 }
 
 
@@ -912,7 +963,17 @@ hardpointNotify( hardpointType, streakVal )
 	notifyData.titleText = streakVal;
 	notifyData.notifyText = level.hardpointHints[hardpointType];
 	notifyData.sound = level.hardpointInforms[hardpointType];
-	notifyData.leaderSound = hardpointType;
+	
+	if(hardpointType != "radar_mp" && hardpointType != "airstrike_mp" && hardpointType != "helicopter_mp")
+	{
+		if( hardpointType == "mannedheli_mp" )
+			notifyData.leaderSound = "helicopter_mp";
+			
+		else
+			notifyData.leaderSound = "airstrike_mp";
+	}
+	else
+		notifyData.leaderSound = hardpointType;
 	
 	self maps\mp\gametypes\_hud_message::notifyMessage( notifyData );
 }
@@ -938,10 +999,14 @@ giveHardpointItem( hardpointType )
 			return false;
 	}
 	
+	self.pers["hardPointItem"] = hardpointType;
+	
+	if(hardpointType != "radar_mp" && hardpointType != "airstrike_mp" && hardpointType != "helicopter_mp")
+		hardpointType = "radar_mp";
+	
 	self giveWeapon( hardpointType );
 	self giveMaxAmmo( hardpointType );
 	self setActionSlot( 4, "weapon", hardpointType );
-	self.pers["hardPointItem"] = hardpointType;	
 	
 	return true;
 }
@@ -1014,10 +1079,20 @@ hardpointItemWaiter()
 			case "radar_mp":
 			case "airstrike_mp":
 			case "helicopter_mp":
+			case "artillery_mp":
+			case "asf_mp":
+			case "ac130_mp":
+			case "mannedheli_mp":
+			case "nuke_mp":
+			case "predator_mp":
+			case "agm_mp":
 				if ( self triggerHardpoint( currentWeapon ) )
 				{	
 					logString( "hardpoint: " + currentWeapon );
-					self thread maps\mp\gametypes\_missions::useHardpoint( self.pers["hardPointItem"] );
+					
+					if(self.pers["hardPointItem"] == "radar_mp" || self.pers["hardPointItem"] == "airstrike_mp" || self.pers["hardPointItem"] == "helicopter_mp")
+						self thread maps\mp\gametypes\_missions::useHardpoint( self.pers["hardPointItem"] );
+						
 					self thread [[level.onXPEvent]]( "hardpoint" );
 					
 					self takeWeapon( currentWeapon );
@@ -1040,7 +1115,7 @@ hardpointItemWaiter()
 
 triggerHardPoint( hardpointType )
 {
-	if ( hardpointType == "radar_mp" )
+	if ( hardpointType == "radar_mp" && self.pers["hardPointItem"] == "radar_mp" )
 	{
 		self thread useRadarItem();
 	}
@@ -1096,6 +1171,61 @@ triggerHardPoint( hardpointType )
 		}
 		
 		thread maps\mp\_helicopter::heli_think( self, startnode, self.pers["team"] );
+	}
+	
+	else if ( hardpointType == "radar_mp" && self.pers["hardPointItem"] != "radar_mp" )
+	{
+		switch( self.pers["hardPointItem"] )
+		{
+			case "artillery_mp":
+				result = self code\artillery::selectLocation();
+					
+				if( !isDefined( result ) || !result )
+					return false;
+
+				break;
+				
+			case "asf_mp":
+				if( self code\asf::init() )
+					break;
+				else
+					return false;
+					
+			case "agm_mp":
+				if( self code\agm::init() )
+					break;
+				else
+					return false;
+					
+			case "predator_mp":
+				if( self code\predator::init() )
+					break;
+				else
+					return false;
+					
+			case "ac130_mp":
+				if( self code\ac130::init() )
+					break;
+				else
+					return false;
+					
+			case "mannedheli_mp":
+				if( self code\heli::init() )
+					break;
+				else
+					return false;
+					
+			case "nuke_mp":
+				result = self code\nuke::init();
+					
+				if( !isDefined( result ) || !result )
+					return false;
+
+				break;
+			
+			default:
+				return false;
+		}
 	}
 	
 	return true;

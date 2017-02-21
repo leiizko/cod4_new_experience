@@ -31,6 +31,9 @@ onDeath( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, p
 			
 		waittillframeend;
 		
+		if( ( attacker.cur_kill_streak % 5 ) == 0 )
+			attacker maps\mp\gametypes\_hardpoints::streakNotify( attacker.cur_kill_streak );
+		
 		if( isDefined( attacker.moneyhud ) )
 			attacker.moneyhud setValue( int( attacker.money ) );
 		

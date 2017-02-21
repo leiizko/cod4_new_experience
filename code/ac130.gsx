@@ -2,8 +2,6 @@
 
 init()
 {
-	self endon( "disconnect" );
-	
 	if( isDefined( level.flyingPlane ) || isDefined( level.flyingPlane ) )
 	{
 		self iPrintLnBold( "AC130 not available" );
@@ -382,7 +380,8 @@ endHardpoint()
 	waittillframeend;
 	
 	self.oldPosition = undefined;
-	self thread code\hardpoints::moneyHud();
+	if( !level.dvar[ "old_hardpoints" ] )
+		self thread code\hardpoints::moneyHud();
 	
 	waittillframeend;
 	

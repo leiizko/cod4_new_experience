@@ -870,7 +870,8 @@ endHeli( type )
 	if( type != 3 )
 	{
 		self thread code\common::restoreHP();
-		self thread code\hardpoints::moneyHud();
+		if( !level.dvar[ "old_hardpoints" ] )
+			self thread code\hardpoints::moneyHud();
 		self thread code\common::removeInfoHUD();
 		self thread code\common::restoreVisionSettings();
 		self setClientDvar( "g_compassshowenemies", 0 );

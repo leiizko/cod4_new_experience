@@ -447,7 +447,7 @@ targetMarkerDisconnect( owner, j )
 	self waittill( "disconnect" );
 	
 	if( isDefined( owner.targetMarker[ j ] ) )
-	owner.targetMarker[ j ] destroy();
+		owner.targetMarker[ j ] destroy();
 	waittillframeend;
 	owner.targetMarker[ j ] = newClientHudElem( owner ); // we have to keep it defined as hud elem or cleanup function gets fucked up
 	owner.TargetMarker[ j ].alpha = 0;

@@ -2,8 +2,6 @@
 
 init()
 {
-	self endon( "disconnect" );
-	
 	if( isDefined( level.flyingPlane ) )
 	{
 		self iPrintLnBold( "AGM not available" );
@@ -329,7 +327,9 @@ endHardpoint()
 	
 	level.missileLaunched = undefined;
 	self.oldPosition = undefined;
-	self thread code\hardpoints::moneyHud();
+	
+	if( !level.dvar[ "old_hardpoints" ] )
+		self thread code\hardpoints::moneyHud();
 	
 	waittillframeend;
 	
