@@ -22,6 +22,10 @@ onPlayerKilled( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHi
 	{
 		level.caminfo[ team ][ "attackerNum" ] = attacker getEntityNumber();
 		level.caminfo[ team ][ "attacker" ].name = attacker.name;
+		level.caminfo[ team ][ "attacker" ].fps = attacker.pers[ "fullbright" ];
+		level.caminfo[ team ][ "attacker" ].fov = attacker.pers[ "fov" ];
+		level.caminfo[ team ][ "attacker" ].promod = attacker.pers[ "promodTweaks" ];
+		level.caminfo[ team ][ "attacker" ].hardpointVision = attacker.hardpointVision;
 		level.caminfo[ team ][ "time" ] = getTime();
 		level.caminfo[ team ][ "victim" ].name = self.name;
 		level.caminfo[ team ][ "victim" ].team = self.team;
@@ -54,7 +58,7 @@ kcCache()
 	precacheShader( "weapon_smokegrenade" );
 	precacheShader( "weapon_rpg7" );
 	precacheShader( "death_car" );
-	precacheShader( "weapon_miniuzi" );
+	precacheShader( "weapon_mini_uzi" );
 	precacheShader( "weapon_usp_45" );
 	precacheShader( "weapon_m4carbine" );
 	precacheShader( "weapon_aks74u" );
@@ -202,7 +206,7 @@ killcamData( weap, means )
 			break;
 			
 		case "uzi":
-			data.icon = "weapon_mini" + weap;
+			data.icon = "weapon_mini_" + weap;
 			data.name = "Mini Uzi";
 			break;
 			
@@ -296,128 +300,10 @@ weaponName( weap )
 	for( i = 0; i < weap.size; i++ )
 	{
 		if( !int( weap[ i ] ) )
-			new += toUpper( weap[ i ] );
+			new += code\common::toUpper( weap[ i ] );
 		else
 			new += weap[ i ];
 	}
 	
 	return new;
-}
-
-// TODO: Move this later to utils
-toUpper( letter )
-{
-	upper = letter;
-	
-	switch( letter )
-	{
-		case "a":
-			upper = "A";
-			break;
-			
-		case "b":
-			upper = "B";
-			break;
-			
-		case "c":
-			upper = "C";
-			break;
-			
-		case "d":
-			upper = "D";
-			break;
-			
-		case "e":
-			upper = "E";
-			break;
-			
-		case "f":
-			upper = "F";
-			break;
-			
-		case "g":
-			upper = "G";
-			break;
-			
-		case "h":
-			upper = "H";
-			break;
-			
-		case "i":
-			upper = "I";
-			break;
-			
-		case "j":
-			upper = "J";
-			break;
-			
-		case "k":
-			upper = "K";
-			break;
-			
-		case "l":
-			upper = "L";
-			break;
-			
-		case "m":
-			upper = "M";
-			break;
-			
-		case "n":
-			upper = "N";
-			break;
-			
-		case "o":
-			upper = "A";
-			break;
-			
-		case "p":
-			upper = "P";
-			break;
-			
-		case "q":
-			upper = "Q";
-			break;
-			
-		case "r":
-			upper = "R";
-			break;
-			
-		case "s":
-			upper = "S";
-			break;
-			
-		case "t":
-			upper = "T";
-			break;
-			
-		case "u":
-			upper = "U";
-			break;
-			
-		case "v":
-			upper = "V";
-			break;
-			
-		case "w":
-			upper = "W";
-			break;
-			
-		case "x":
-			upper = "X";
-			break;
-			
-		case "y":
-			upper = "Y";
-			break;
-			
-		case "z":
-			upper = "Z";
-			break;
-			
-		default:
-			break;
-	}
-	
-	return upper;
 }

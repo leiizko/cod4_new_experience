@@ -39,6 +39,10 @@ init()
 	addDvar( "disable_jugger", "int", 1, 0, 1 ); // Disable JUGGERNAUT perk ( 1-yes ; 0-no )
 	addDvar( "disable_laststand", "int", 1, 0, 1 ); // Disable LAST STAND perk ( 1-yes ; 0-no )
 	addDvar( "disable_marty", "int", 1, 0, 1 ); // Disable MARTYDROP perk ( 1-yes ; 0-no )
+	// Used when script command support is disabled for specific setting
+	addDvar( "default_fps", "int", 0, 0, 1 ); // Fullbright setting, players won't be able to change it ( 1-enable ; 0-disable )
+	addDvar( "default_fov", "int", 0, 0, 2 ); // Field of view setting, players won't be able to change it ( 2-FOV=100 ; 1-FOV=90 ; 0-FOV=80 )
+	addDvar( "default_promod", "int", 0, 0, 1 ); // promod setting, players won't be able to change it ( 1-enable ; 0-disable )
 	
 	// Hardpoints - old style, required kill streak
 	addDvar( "radar", "int", 3, 1, 100 );

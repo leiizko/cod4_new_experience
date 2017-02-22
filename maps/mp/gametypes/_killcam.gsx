@@ -79,6 +79,26 @@ killcam(
 		camtime = 4.5; // show long enough to see grenade thrown
 	else
 		camtime = 3;
+		
+	self.visiondata = spawnStruct();
+	self.visiondata.fps = self.pers[ "fullbright" ];
+	self.visiondata.fov = self.pers[ "fov" ];
+	self.visiondata.promod = self.pers[ "promodTweaks" ];
+	
+	if( isDefined( attacker ) )
+	{	
+		self.pers[ "fullbright" ] = attacker.pers[ "fullbright" ];
+		self.pers[ "fov" ] = attacker.pers[ "fov" ];
+		self.pers[ "promodTweaks" ] = attacker.pers[ "promodTweaks" ];
+	
+		self thread code\player::userSettings();
+	}
+	
+	if( isDefined( self.hardpointVisionA ) )
+	{
+		self thread code\common::initialVisionSettings();
+		self.hardpointVisionA = undefined;
+	}
 	
 	/////////////////
 	// STOCK STUFF //
@@ -380,6 +400,13 @@ endKillcam()
 				self.kc_hud[ i ] destroy();
 		}
 	}
+	
+	self.pers[ "fullbright" ] = self.visiondata.fps;
+	self.pers[ "fov" ] = self.visiondata.fov;
+	self.pers[ "promodTweaks" ] = self.visiondata.promod;
+	self.visiondata = undefined;
+	
+	self thread code\player::userSettings();
 	
 	self.killcam = undefined;
 	

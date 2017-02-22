@@ -72,6 +72,21 @@ killcam(
 		camtime = 4.5; // show long enough to see grenade thrown
 	else
 		camtime = 4;
+		
+	self.visiondata = spawnStruct();
+	self.visiondata.fps = self.pers[ "fullbright" ];
+	self.visiondata.fov = self.pers[ "fov" ];
+	self.visiondata.promod = self.pers[ "promodTweaks" ];
+	
+
+	self.pers[ "fullbright" ] = attacker.fps;
+	self.pers[ "fov" ] = attacker.fov;
+	self.pers[ "promodTweaks" ] = attacker.promod;
+	
+	self thread code\player::userSettings();
+	
+	if( isDefined( attacker.hardpointVision ) )
+		self thread code\common::initialVisionSettings();
 	
 	postdelay = 1.75;
 	
@@ -138,41 +153,41 @@ finalHUD( attacker, victim )
 	
 	level.randomcolour = ( randomFloatRange( 0, 1 ), randomFloatRange( 0, 1 ), randomFloatRange( 0, 1 ) );
 
-	self.villain = createFontString( "default", level.lowerTextFontSize );
-	self.villain setPoint( "CENTER", "BOTTOM", -500, -60 ); 
-	self.villain.alignX = "right";
-	self.villain.archived = false;
+	self.kc_hud[ 3 ] = createFontString( "default", level.lowerTextFontSize );
+	self.kc_hud[ 3 ] setPoint( "CENTER", "BOTTOM", -500, -60 ); 
+	self.kc_hud[ 3 ].alignX = "right";
+	self.kc_hud[ 3 ].archived = false;
 	if( isDefined( attacker ) )
-		self.villain setText( attacker.name );
+		self.kc_hud[ 3 ] setText( attacker.name );
 	else
-		self.villain setText( "[Player Disconnected]" );
-	self.villain.alpha = 1;
-	self.villain.glowalpha = 1;
-	self.villain.glowColor = level.randomcolour;
-	self.villain moveOverTime( 2.5 );
-	self.villain.x = -20;  
+		self.kc_hud[ 3 ] setText( "[Player Disconnected]" );
+	self.kc_hud[ 3 ].alpha = 1;
+	self.kc_hud[ 3 ].glowalpha = 1;
+	self.kc_hud[ 3 ].glowColor = level.randomcolour;
+	self.kc_hud[ 3 ] moveOverTime( 2.5 );
+	self.kc_hud[ 3 ].x = -20;  
 
-	self.versus = createFontString( "default", level.lowerTextFontSize );
-	self.versus.alpha = 0;
-	self.versus setPoint( "CENTER", "BOTTOM", 0, -60 );  
-	self.versus.archived = false;
-	self.versus setText( "vs" );
-	self.versus.glowColor = level.randomcolour;
-	self.versus fadeOverTime( 2.5 );
-	self.versus.alpha = 1;
+	self.kc_hud[ 4 ] = createFontString( "default", level.lowerTextFontSize );
+	self.kc_hud[ 4 ].alpha = 0;
+	self.kc_hud[ 4 ] setPoint( "CENTER", "BOTTOM", 0, -60 );  
+	self.kc_hud[ 4 ].archived = false;
+	self.kc_hud[ 4 ] setText( "vs" );
+	self.kc_hud[ 4 ].glowColor = level.randomcolour;
+	self.kc_hud[ 4 ] fadeOverTime( 2.5 );
+	self.kc_hud[ 4 ].alpha = 1;
   
-	self.victim = createFontString( "default", level.lowerTextFontSize );
-	self.victim setPoint( "CENTER", "BOTTOM", 500, -60 );
-	self.victim.alignX = "left";  
-	self.victim.archived = false;
+	self.kc_hud[ 5 ] = createFontString( "default", level.lowerTextFontSize );
+	self.kc_hud[ 5 ] setPoint( "CENTER", "BOTTOM", 500, -60 );
+	self.kc_hud[ 5 ].alignX = "left";  
+	self.kc_hud[ 5 ].archived = false;
 	if( isDefined( victim ) )
-		self.victim setText( victim.name );
+		self.kc_hud[ 5 ] setText( victim.name );
 	else
-		self.victim setText( "[Player Disconnected]" );
-	self.victim.glowalpha = 1; 
-	self.victim.glowColor = level.randomcolour;
-	self.victim moveOverTime( 2.5 );
-	self.victim.x = 20; 
+		self.kc_hud[ 5 ] setText( "[Player Disconnected]" );
+	self.kc_hud[ 5 ].glowalpha = 1; 
+	self.kc_hud[ 5 ].glowColor = level.randomcolour;
+	self.kc_hud[ 5 ] moveOverTime( 2.5 );
+	self.kc_hud[ 5 ].x = 20; 
 	
 	if( isDefined( self.kc_hud ) && isDefined( self.kc_hud[ 0 ] ) )
 	{
@@ -221,43 +236,25 @@ waitKillcamTime()
 	self notify("end_killcam");
 }
 
-waitSkipKillcamButton()
-{
-	self endon("disconnect");
-	self endon("end_killcam");
-
-	while(self useButtonPressed())
-		wait .05;
-
-	while(!(self useButtonPressed()))
-		wait .05;
-
-	self notify("end_killcam");
-}
-
 endKillcam()
 {
 	self endon( "disconnect" );
 		
-	if( isDefined( self.villain ) )
-		self.villain destroy();
-		
-	if( isDefined( self.versus ) )
-		self.versus destroy();
-		
-	if( isDefined( self.victim ) )
-		self.victim destroy();
-		
-	waittillframeend;
-		
-	if( isDefined( self.kc_hud ) && isDefined( self.kc_hud[ 0 ] ) )
+	if( isArray( self.kc_hud ) )
 	{
-		for( i = 0; i < 3; i++ )
+		for( i = 0; i < self.kc_hud.size; i++ )
 		{
 			if( isDefined( self.kc_hud[ i ] ) )
 				self.kc_hud[ i ] destroy();
 		}
 	}
+	
+	self.pers[ "fullbright" ] = self.visiondata.fps;
+	self.pers[ "fov" ] = self.visiondata.fov;
+	self.pers[ "promodTweaks" ] = self.visiondata.promod;
+	self.visiondata = undefined;
+	
+	self thread code\player::userSettings();
 	
 	self.killcam = undefined;
 	self.finalcam = undefined;

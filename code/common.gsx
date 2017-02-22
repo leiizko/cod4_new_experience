@@ -26,8 +26,9 @@ planeSetup()
 
 initialVisionSettings()
 {
-	self endon( "disconnect" );
 	level endon( "flyOver" );
+	
+	self.hardpointVision = true;
 	
 	self setClientDvars( "r_FilmTweakDarktint", "1 1 1",
 						 "r_FilmTweakLighttint", "1 1 1", 
@@ -39,7 +40,9 @@ initialVisionSettings()
 					 	 "r_FilmUseTweaks", "1",
 						 "r_FullBright", "0",
 						 "cg_fovscale", "1.25",
-						 "cg_fov", "80" );
+						 "cg_fov", "80",
+						 "waypointiconheight", 15,
+						 "waypointiconwidth", 15 );
 }
 
 restoreVisionSettings()
@@ -49,39 +52,11 @@ restoreVisionSettings()
 	self setClientDvar("waypointiconheight", 36);
 	self setClientDvar("waypointiconwidth", 36);
 	
-	switch( self.pers[ "fov" ] )
-	{
-		case 0:
-			self setClientDvar( "cg_fovscale", 1.0 );
-			self setClientDvar( "cg_fov", 80 );
-			break;
-		case 1:
-			self setClientDvar( "cg_fovscale", 1.125 );
-			self setClientDvar( "cg_fov", 80 );
-			break;
-		case 2:
-			self setClientDvar( "cg_fovscale", 1.25 );
-			self setClientDvar( "cg_fov", 80 );
-			break;
-		default:
-			break;
-	}
+	self thread code\player::userSettings();
 	
-	if( self.pers[ "fullbright" ] == 1 )
-		self setClientDvar( "r_fullbright", 1 );
+	wait .05; // Let the onPlayerKilled code catch up
 	
-	if( self.pers[ "promodTweaks" ] == 1 )
-		self SetClientDvars( "r_filmTweakInvert", "0",
-                     	     "r_filmTweakBrightness", "0",
-                     	     "r_filmusetweaks", "1",
-                     	     "r_filmTweakenable", "1",
-                      	     "r_filmtweakLighttint", "0.8 0.8 1",
-                       	     "r_filmTweakContrast", "1.2",
-                       	     "r_filmTweakDesaturation", "0",
-                       	     "r_filmTweakDarkTint", "1.8 1.8 2" );
-	else
-		self SetClientDvars( "r_filmusetweaks", "0",
-							 "r_filmTweakenable", "0" );
+	self.hardpointVision = undefined;
 }
 
 destroyPlane()
@@ -90,13 +65,13 @@ destroyPlane()
 	
 	if( isDefined( self ) && isArray( self.fireTimes ) )
 	{
-		while( isDefined( self.fireTimes[ "105mm" ] ) && getTime() - self.fireTimes[ "105mm" ] < 2050 )
+		while( isArray( self.fireTimes ) && getTime() - self.fireTimes[ "105mm" ] < 2050 )
 			wait .1;
 		
-		while( isDefined( self.fireTimes[ "40mm" ] ) && getTime() - self.fireTimes[ "40mm" ] < 1850 )
+		while( isArray( self.fireTimes ) && getTime() - self.fireTimes[ "40mm" ] < 1850 )
 			wait .1;
 		
-		while( isDefined( self.fireTimes[ "25mm" ] ) && getTime() - self.fireTimes[ "25mm" ] < 800 )
+		while( isArray( self.fireTimes ) && getTime() - self.fireTimes[ "25mm" ] < 800 )
 			wait .1;
 	}
 	
@@ -394,8 +369,6 @@ targetMarkers()
 	
 	wait .1;
 
-	self setClientDvar( "waypointiconheight", 15 );
-	self setClientDvar( "waypointiconwidth", 15 );
 	self.targetMarker = [];
 
 	j = 0;
@@ -591,4 +564,121 @@ restoreHP()
 	
 	if( !level.hardcoreMode )
 		self setClientDvar( "ui_hud_hardcore", 0 );
+}
+
+toUpper( letter )
+{
+	upper = letter;
+	
+	switch( letter )
+	{
+		case "a":
+			upper = "A";
+			break;
+			
+		case "b":
+			upper = "B";
+			break;
+			
+		case "c":
+			upper = "C";
+			break;
+			
+		case "d":
+			upper = "D";
+			break;
+			
+		case "e":
+			upper = "E";
+			break;
+			
+		case "f":
+			upper = "F";
+			break;
+			
+		case "g":
+			upper = "G";
+			break;
+			
+		case "h":
+			upper = "H";
+			break;
+			
+		case "i":
+			upper = "I";
+			break;
+			
+		case "j":
+			upper = "J";
+			break;
+			
+		case "k":
+			upper = "K";
+			break;
+			
+		case "l":
+			upper = "L";
+			break;
+			
+		case "m":
+			upper = "M";
+			break;
+			
+		case "n":
+			upper = "N";
+			break;
+			
+		case "o":
+			upper = "A";
+			break;
+			
+		case "p":
+			upper = "P";
+			break;
+			
+		case "q":
+			upper = "Q";
+			break;
+			
+		case "r":
+			upper = "R";
+			break;
+			
+		case "s":
+			upper = "S";
+			break;
+			
+		case "t":
+			upper = "T";
+			break;
+			
+		case "u":
+			upper = "U";
+			break;
+			
+		case "v":
+			upper = "V";
+			break;
+			
+		case "w":
+			upper = "W";
+			break;
+			
+		case "x":
+			upper = "X";
+			break;
+			
+		case "y":
+			upper = "Y";
+			break;
+			
+		case "z":
+			upper = "Z";
+			break;
+			
+		default:
+			break;
+	}
+	
+	return upper;
 }

@@ -72,9 +72,43 @@ onConnect()
 	
 	if( !isDefined( self.pers[ "fullbright" ] ) )
 	{
-		self.pers[ "fullbright" ] = self getStat( 3160 );
-		self.pers[ "fov" ] = self getStat( 3161 );
-		self.pers[ "promodTweaks" ] = self getStat( 3162 );
+		if( level.dvar["cmd_fps"] )
+			self.pers[ "fullbright" ] = self getStat( 3160 );
+		else
+			self.pers[ "fullbright" ] = level.dvar[ "default_fps" ];
+			
+		if( level.dvar["cmd_fov"] )
+			self.pers[ "fov" ] = self getStat( 3161 );
+		else
+			self.pers[ "fov" ] = level.dvar[ "default_fov" ];
+			
+		if( level.dvar["cmd_promod"] )
+			self.pers[ "promodTweaks" ] = self getStat( 3162 );
+		else
+			self.pers[ "promodTweaks" ] = level.dvar[ "default_promod" ];
+			
+		if( abs( self.pers[ "fov" ] > 2 ) )
+		{
+			self.pers[ "fov" ] = 0;
+			self setstat( 3161, 0 );
+			self setClientDvar( "cg_fovscale", 1.0 );
+			self setClientDvar( "cg_fov", 80 );
+			self iprintlnbold( "Error: illegal fov value, setting 3161 to 0" );
+		}
+		
+		if( self.pers[ "fullbright" ] != 1 && self.pers[ "fullbright" ] != 0 )
+		{
+			self setstat( 3160, 0 );
+			self.pers[ "fullbright" ] = 0;
+			self iprintlnbold( "Error: illegal fullbright value, setting 3160 to 0" );
+		}
+		
+		if( self.pers[ "promodTweaks" ] != 1 && self.pers[ "promodTweaks" ] != 0 )
+		{
+			self setstat( 3162, 0 );
+			self.pers[ "promodTweaks" ] = 0;
+			self iprintlnbold( "Error: illegal promod value, setting 3162 to 0" );
+		}
 	}
 	
 	if( !isDefined( self.pers[ "meleekills" ] ) )
@@ -119,17 +153,6 @@ onConnect()
 
 userSettings()
 {
-	self endon( "disconnect" );
-	
-	if( abs( self.pers[ "fov" ] > 2 ) )
-	{
-		self.pers[ "fov" ] = 0;
-		self setstat( 3161, 0 );
-		self setClientDvar( "cg_fovscale", 1.0 );
-		self setClientDvar( "cg_fov", 80 );
-		self iprintlnbold( "Error: illegal fov value, setting 3161 to 0" );
-	}
-	
 	switch( self.pers[ "fov" ] )
 	{
 		case 0:
@@ -153,22 +176,10 @@ userSettings()
 			break;
 	}
 	
-	if( self.pers[ "fullbright" ] != 1 && self.pers[ "fullbright" ] != 0 )
-	{
-		self setstat( 3160, 0 );
-		self.pers[ "fullbright" ] = 0;
-		self iprintlnbold( "Error: illegal fullbright value, setting 3160 to 0" );
-	}
-	
 	if( self.pers[ "fullbright" ] == 1 )
 		self setClientDvar( "r_fullbright", 1 );
-		
-	if( self.pers[ "promodTweaks" ] != 1 && self.pers[ "promodTweaks" ] != 0 )
-	{
-		self setstat( 3162, 0 );
-		self.pers[ "promodTweaks" ] = 0;
-		self iprintlnbold( "Error: illegal promod value, setting 3162 to 0" );
-	}
+	else
+		self setClientDvar( "r_fullbright", 0 );
 	
 	if( self.pers[ "promodTweaks" ] == 1 )
 		self SetClientDvars( "r_filmTweakInvert", "0",
@@ -179,6 +190,9 @@ userSettings()
                        	     "r_filmTweakContrast", "1.2",
                        	     "r_filmTweakDesaturation", "0",
                        	     "r_filmTweakDarkTint", "1.8 1.8 2" );
+	else
+		self SetClientDvars( "r_filmusetweaks", "0",
+							"r_filmTweakenable", "0" );
 }
 
 welcome()

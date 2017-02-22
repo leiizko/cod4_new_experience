@@ -5003,6 +5003,9 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	self.deathTime = getTime();
 	//perks = getPerks( attacker );
 	
+	if( isDefined( attacker.hardpointVision ) )
+		self.hardpointVisionA = true;
+	
 	// let the player watch themselves die
 	wait ( 0.25 );
 	postDeathDelay = 1.75;

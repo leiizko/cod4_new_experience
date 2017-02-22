@@ -7,8 +7,16 @@ spectating()
 {
 	self endon( "disconnect" );
 	
+	wait .25; // Let server assign all required variables for this player
+	
+	data = spawnStruct();
+	
 	for( ;; )
-	{		
+	{
+		data.fps = self.pers[ "fullbright" ];
+		data.fov = self.pers[ "fov" ];
+		data.promod = self.pers[ "promodTweaks" ];
+		
 		while( self.sessionstate == "spectator" )
 		{			
 			entity = self getSpectatorClient(); // Get the entity
@@ -26,8 +34,8 @@ spectating()
 			
 			if( !isDefined( self.specFPS ) )
 				showFPS();
-				
-			self thread visionSettings( entity );
+			
+			self thread visionSettingsForEnt( entity );
 			
 			while( isDefined( self getSpectatorClient() ) && entity == self getSpectatorClient() )
 			{
@@ -44,16 +52,35 @@ spectating()
 		if( isDefined( self.specFPS ) )
 			self.specFPS destroy();
 		
-		self thread visionSettings( self );
+		self thread visionSettings( data );
 		
-		self common_scripts\utility::waittill_any( "joined_team", "joined_spectators", "death" );
+		self common_scripts\utility::waittill_any( "joined_team", "joined_spectators" );
 	}
+}
+
+visionSettings( data )
+{
+	self.pers[ "fullbright" ] = data.fps;
+	self.pers[ "fov" ] = data.fov;
+	self.pers[ "promodTweaks" ] = data.promod;
+	
+	self thread code\player::userSettings();
+}
+
+visionSettingsForEnt( ent )
+{
+	if( !isDefined( ent.pers[ "fullbright" ] ) )
+		return;
+
+	self.pers[ "fullbright" ] = ent.pers[ "fullbright" ];
+	self.pers[ "fov" ] = ent.pers[ "fov" ];
+	self.pers[ "promodTweaks" ] = ent.pers[ "promodTweaks" ];
+	
+	self thread code\player::userSettings();
 }
 
 showFPS()
 {
-	self endon( "disconnect" );
-	
 	self.specFPS = newClientHudElem( self );
 	self.specFPS.archived = false;
 	self.specFPS.alignX = "center";
@@ -66,84 +93,4 @@ showFPS()
 	self.specFPS.label = &"Player FPS: ";
 	self.specFPS.color = ( 0.9, 0.2, 0.2 );
 	self.specFPS setValue( 0 );
-}
-
-visionSettings( entity )
-{
-	self endon( "disconnect" );
-	entity endon( "disconnect" );
-	
-	if( !isDefined( entity.pers[ "fov" ] ) )
-		return;
-	
-	switch( entity.pers[ "fov" ] )
-	{
-		case 0:
-			self setClientDvar( "cg_fovscale", 1.0 );
-			self setClientDvar( "cg_fov", 80 );
-			break;
-		case 1:
-			self setClientDvar( "cg_fovscale", 1.125 );
-			self setClientDvar( "cg_fov", 80 );
-			break;
-		case 2:
-			self setClientDvar( "cg_fovscale", 1.25 );
-			self setClientDvar( "cg_fov", 80 );
-			break;
-		default:
-			break;
-	}
-	
-	if( entity.pers[ "fullbright" ] == 1 )
-		self setClientDvar( "r_fullbright", 1 );
-	else
-		self setClientDvar( "r_fullbright", 0 );
-	
-	if( entity.pers[ "promodTweaks" ] == 1 )
-		self SetClientDvars( "r_filmTweakInvert", "0",
-                     	     "r_filmTweakBrightness", "0",
-                     	     "r_filmusetweaks", "1",
-                     	     "r_filmTweakenable", "1",
-                      	     "r_filmtweakLighttint", "0.8 0.8 1",
-                       	     "r_filmTweakContrast", "1.2",
-                       	     "r_filmTweakDesaturation", "0",
-                       	     "r_filmTweakDarkTint", "1.8 1.8 2" );
-	else
-		self SetClientDvars( "r_filmusetweaks", "0",
-                     	     "r_filmTweakenable", "0" );
-}
-
-keyOverlay( entity )
-{
-	self endon( "disconnect" );
-	entity endon( "disconnect" );
-	
-	self notify( "newEntity" ); // only 1 thread
-	self endon( "newEntity" );
-	
-	while( 1 )
-	{
-		if( entity forwardButtonPressed() )
-			self iprintlnbold( "W" );
-			
-		if( entity moveLeftButtonPressed() )
-			self iprintlnbold( "A" );
-		
-		if( entity backButtonPressed() )
-			self iprintlnbold( "S" );
-		
-		if( entity moveRightButtonPressed() )
-			self iprintlnbold( "D" );
-		
-		if( entity sprintButtonPressed() )
-			self iprintlnbold( "SHIFT" );
-			
-		if( entity jumpButtonPressed() )
-			self iprintlnbold( "SPACE" );
-		
-		if( entity isCrouching() )
-			self iprintlnbold( "C" );
-			
-		wait .05;
-	}
 }
