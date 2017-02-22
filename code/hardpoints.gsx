@@ -193,7 +193,7 @@ buy()
 		case 0:
 			if( self.money >= 20 )
 			{
-				self thread maps\mp\gametypes\_hardpoints::triggerHardPoint( "radar_mp" );
+				self thread maps\mp\gametypes\_hardpoints::useRadarItem();
 				self.money -= 20;
 			}
 			else if( self.money < 20 )
