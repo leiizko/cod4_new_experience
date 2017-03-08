@@ -175,6 +175,11 @@ killcamData( weap, means )
 			data.name = "Claymore";
 			break;
 			
+		case "none":
+			data.icon = "compassping_explosion";
+			data.name = "Explosion";
+			break;
+			
 		case "frag":
 			data.icon = "weapon_fraggrenade";
 			data.name = "Frag Grenade";
