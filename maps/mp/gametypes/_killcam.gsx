@@ -409,6 +409,7 @@ endKillcam()
 	self thread code\player::userSettings();
 	
 	self.killcam = undefined;
+	self.hardpointVision = undefined;
 	
 	self SetClientDvar( "ui_ShowMenuOnly", "" );
 	self.sWeaponForKillcam = undefined;

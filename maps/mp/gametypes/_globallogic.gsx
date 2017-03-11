@@ -1138,6 +1138,8 @@ endGame( winner, endReasonText )
 	level.inGracePeriod = false;
 	level notify ( "game_ended" );
 	
+	thread code\common::clearNotify();
+	
 	setGameEndTime( 0 ); // stop/hide the timers
 	
 	if ( level.rankedMatch )

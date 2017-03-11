@@ -3,10 +3,6 @@ init()
 	thread code\events::addConnectEvent( ::onConnected );
 	thread code\events::addSpawnEvent( ::onSpawn );
 	thread code\events::addDeathEvent( ::onDeath );
-	
-	level waittill( "game_ended" );
-	
-	thread code\common::clearNotify();
 }
 
 onDeath( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime, deathAnimDuration )
