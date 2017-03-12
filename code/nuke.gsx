@@ -140,12 +140,15 @@ setup( endPos )
 				continue;
 			
 			if( isPlayer( ents[ i ].entity ) )
-				ents[ i ].entity.sWeaponForKillcam = "nuke_main";
+				{
+					ents[ i ].entity.sWeaponForKillcam = "nuke_main";
+					ents[ i ].entity thread restoreHP();
+				}
 
 			ents[ i ] maps\mp\gametypes\_weapons::damageEnt(
 				level.tacticalNuke, 
 				self, 
-				1000000,
+				999999999,
 				"MOD_PROJECTILE_SPLASH", 
 				"artillery_mp", 
 				endPos, 
@@ -194,6 +197,7 @@ playerDC( player )
 	level.tacticalNuke = undefined;
 	if( isDefined( level.radiationZone ) )
 		level.radiationZone delete();
+	setExpFog( 1000, 100000, 51/255, 51/255, 51/255, 20 );
 }
 
 callStrike_planeSound_nuke( plane, bombsite )
@@ -247,6 +251,7 @@ radiationZone( location )
 	level.radiationZone = spawn( "trigger_radius", location, 0, 1536, 2048 );
 	
 	thread endRadationZone();
+	setExpFog( 0, 75, 51/255, 51/255, 51/255, 0 );
 	
 	while( 1 )
 	{
@@ -261,7 +266,7 @@ radiationZone( location )
 		if( getTime() - player.pers[ "radsLastTime" ] > 1000 )
 		{
 			player.pers[ "radsLastTime" ] = getTime();
-			player.pers[ "rads" ]++;
+			player.pers[ "rads" ] += 1;
 		}
 	}
 }
@@ -271,7 +276,12 @@ endRadationZone()
 	level endon( "game_ended" );
 	level endon( "endRadationZone" );
 	
-	wait 30;
+	wait 15;
+	setExpFog( 5, 100, 51/255, 51/255, 51/255, 5 );
+	wait 10;
+	setExpFog( 20, 150, 51/255, 51/255, 51/255, 5 );
+	wait 5;
+	setExpFog( 1000, 100000, 51/255, 51/255, 51/255, 20 );
 	
 	level.nukeInProgress = undefined;
 	level notify( "endWatch" );
@@ -283,19 +293,3 @@ endRadationZone()
 		level.radiationZone delete();
 	level notify( "endRadationZone" );
 }
-
-/*
-nukeTweaks()
-{
-	self endon( "disconnect" );
-	
-	self SetClientDvars( "r_filmTweakInvert", "0",
-                         "r_filmTweakBrightness", "-0.8",
-                         "r_filmusetweaks", "1",
-                         "r_filmTweakenable", "1",
-                         "r_filmtweakLighttint", "1.0 0.8 1",
-                         "r_filmTweakContrast", "1.2",
-                         "r_filmTweakDesaturation", "0",
-                         "r_filmTweakDarkTint", "2 1.7 1.8" );
-}
-*/

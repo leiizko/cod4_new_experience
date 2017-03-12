@@ -160,8 +160,10 @@ killcamData( weap, means )
 				}
 			}
 			else
+			{
 				data.icon = "death_airstrike";
 				data.name = "Airstrike";
+			}
 			break;
 			
 		case "cobra":

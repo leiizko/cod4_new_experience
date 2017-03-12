@@ -27,7 +27,7 @@ nukePlayerLogic()
 		while( isDefined( self.spawnprotected ) )
 			wait .25;
 		
-		if( self.pers[ "rads" ] == 11 )
+		if( self.pers[ "rads" ] > 11 )
 		{
 			self iprintlnbold( "RADIATION LEVELS CRITICAL!" );
 			
@@ -47,20 +47,25 @@ nukePlayerLogic()
 														);
 		}
 			
-		else if( self.pers[ "rads" ] == 7 )
+		else if( self.pers[ "rads" ] == 7.2 )
 		{
 			self iprintlnbold( "RADIATION LEVELS APPROACHING CRITICAL!" );
 			self shellshock( "radiation_high", 8 );
+			self.pers[ "rads" ] += 0.1;
 		}
 			
-		else if( self.pers[ "rads" ] == 4 )
+		else if( self.pers[ "rads" ] == 4.1 )
 		{
 			self iprintlnbold( "RADIATION EXPOSURE WARNING!" );
 			self shellshock( "radiation_med", 8 );
+			self.pers[ "rads" ] += 0.1;
 		}
 			
 		else if( self.pers[ "rads" ] == 1 )
+		{
 			self iprintlnbold( "RADIATION WARNING!" );
+			self.pers[ "rads" ] += 0.1;
+		}
 		
 		wait .5;
 	}

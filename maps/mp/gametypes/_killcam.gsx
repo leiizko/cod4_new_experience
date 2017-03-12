@@ -316,13 +316,13 @@ hud( attacker, data )
 	
 	self.kc_hud[ 7 ] = newClientHudElem( self );
 	self.kc_hud[ 7 ].alpha = 1;
-	self.kc_hud[ 7 ].y = 37;
+	self.kc_hud[ 7 ].y = 44;
 	self.kc_hud[ 7 ].x = -130;
 	self.kc_hud[ 7 ].alignX = "center";
 	self.kc_hud[ 7 ].horzAlign = "center";
 	self.kc_hud[ 7 ].archived = false;
 	self.kc_hud[ 7 ].fontscale = 1.4;
-	self.kc_hud[ 7 ] setShader( data.icon, 90, 60 );
+	self.kc_hud[ 7 ] setShader( data.icon, 90, 55 );
 	self.kc_hud[ 7 ].sort = 3;
 	
 	self.kc_hud[ 8 ] = newClientHudElem( self );
