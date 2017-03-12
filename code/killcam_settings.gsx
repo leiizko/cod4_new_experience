@@ -9,6 +9,9 @@ init()
 	level.caminfo[ "axis" ] = [];
 	level.caminfo[ "axis" ][ "attacker" ] = spawnStruct();
 	level.caminfo[ "axis" ][ "victim" ] = spawnStruct();
+	
+	// TIE fix
+	level.caminfo[ "tie" ] = [];
 }
 
 onPlayerKilled( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime, deathAnimDuration )

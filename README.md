@@ -12,9 +12,10 @@ Call of Duty 4 New Experience server side modification aims to bring new life in
 * Map specific best players on game end
 * Custom spectating - You can see spectating player FPS and his vision settings
 * Script and rcon command support for vision settings
-* Geowelcome system
+* Geowelcome system ( with MaxMind GeoIP database )
 * Ability to disable attachements and perks such as grenade launcher, juggernaut, etc.
 * Optimisation to the stock code making game feel smoother
+* Mapvote system
 * And more...
 
 ## Hardpoints:

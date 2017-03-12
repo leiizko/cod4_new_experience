@@ -1471,6 +1471,9 @@ endGame( winner, endReasonText )
 	
 	code\ending::init();
 	
+	if( level.dvar[ "mapvote" ] )
+		code\mapvote::startVote();
+	
 	players = level.players;
 	for ( index = 0; index < players.size; index++ )
 	{

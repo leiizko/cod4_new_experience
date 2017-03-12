@@ -629,7 +629,7 @@ toUpper( letter )
 			break;
 			
 		case "o":
-			upper = "A";
+			upper = "O";
 			break;
 			
 		case "p":

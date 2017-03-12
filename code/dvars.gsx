@@ -72,6 +72,13 @@ init()
 	*/
 	
 	addDvar( "arty_shell_num", "int", 35, 10, 100 ); // Number of artillery shells
+	
+	
+	// Mapvote stuff
+	addDvar( "mapvote", "int", 1, 0, 1 ); // Enable map vote ( 1-enable ; 0-disable )
+	addDvar( "mapvote_mapnum", "int", 5, 3, 8 ); // Number of maps in mapvote
+	addDvar( "mapvote_norepeat", "int", 3, 0, 10 ); // For how many rounds should map not reappear
+	addDvar( "mapvote_time", "int", 15, 5, 40 ); // Mapvote time
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
