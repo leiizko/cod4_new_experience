@@ -551,8 +551,8 @@ matchStartTimer()
 	
 	visionSetNaked( getDvar( "mapname" ), 2.0 );
 	
-	matchStartText destroyElem();
-	matchStartTimer destroyElem();
+	matchStartText destroy();
+	matchStartTimer destroy();
 }
 
 matchStartTimerSkip()
@@ -1071,31 +1071,31 @@ freeGameplayHudElems()
 	{
 		if ( isdefined( self.perkicon[0] ) )
 		{
-			self.perkicon[0] destroyElem();
-			self.perkname[0] destroyElem();
+			self.perkicon[0] destroy();
+			self.perkname[0] destroy();
 		}
 		if ( isdefined( self.perkicon[1] ) )
 		{
-			self.perkicon[1] destroyElem();
-			self.perkname[1] destroyElem();
+			self.perkicon[1] destroy();
+			self.perkname[1] destroy();
 		}
 		if ( isdefined( self.perkicon[2] ) )
 		{
-			self.perkicon[2] destroyElem();
-			self.perkname[2] destroyElem();
+			self.perkicon[2] destroy();
+			self.perkname[2] destroy();
 		}
 	}
 	self notify("perks_hidden"); // stop any threads that are waiting to hide the perk icons
 	
 	// lower message
-	self.lowerMessage destroyElem();
-	self.lowerTimer destroyElem();
+	self.lowerMessage destroy();
+	self.lowerTimer destroy();
 	
 	// progress bar
 	if ( isDefined( self.proxBar ) )
-		self.proxBar destroyElem();
+		self.proxBar destroy();
 	if ( isDefined( self.proxBarText ) )
-		self.proxBarText destroyElem();
+		self.proxBarText destroy();
 }
 
 
@@ -4666,7 +4666,12 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	if( level.teamBased && isDefined( attacker.pers ) && self.team == attacker.team && sMeansOfDeath == "MOD_GRENADE" && level.friendlyfire == 0 )
 		obituary(self, self, sWeapon, sMeansOfDeath);
 	else
-		obituary(self, attacker, sWeapon, sMeansOfDeath);
+	{
+		if( sWeapon == "artillery_mp" && isDefined( self.sWeaponForKillcam ) )
+			thread obituaryText( self.name, attacker.name, self.sWeaponForKillcam );
+		else
+			obituary(self, attacker, sWeapon, sMeansOfDeath);
+	}
 
 //	self maps\mp\gametypes\_weapons::updateWeaponUsageStats();
 	if ( !level.inGracePeriod )
@@ -5715,4 +5720,34 @@ getMostKilled()
 	return mostKilled;
 }
 
-
+obituaryText( victim, killer, weapon )
+{
+	string = killer + " [ ";
+	switch( weapon )
+	{
+		case "ac130_105mm":
+		case "ac130_40mm":
+		case "ac130_25mm":
+			string += "^1AC130^7 ] ";
+			break;
+		case "nuke_main":
+			string += "^1Nuke^7 ] ";
+			break;
+		case "nuke_rad":
+			string += "^1Radiation^7 ] ";
+			break;
+		case "agm":
+			string += "^1AGM^7 ] ";
+			break;
+		case "artillery":
+			string += "^1Artillery^7 ] ";
+			break;
+		default:
+			string += "^1Airstrike^7 ] ";
+			break;
+	}
+	
+	string += victim;
+	
+	iPrintLn( string );
+}
