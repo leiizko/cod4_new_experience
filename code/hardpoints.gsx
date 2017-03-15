@@ -98,22 +98,21 @@ onDeath( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, p
 			{
 				attacker.HnotifyDone[ i ] = true;
 				string = "Press [{+actionslot 4}] to buy " + level.hardpointShopData[ i ][ 1 ];
-				n = 1;
-				if( isDefined( level.hardpointShopData[ i + n ] ) )
+
+				for( n = i + 1; n < level.hardpointShopData.size; n++ )
 				{
-					while( level.hardpointShopData[ i ][ 0 ] == level.hardpointShopData[ i + n ][ 0 ] )
-					{
-						attacker.HnotifyDone[ i + n ] = true;
-						string += "/" + level.hardpointShopData[ i + n ][ 1 ];
-						n++;
-					}
+					if( level.hardpointShopData[ i ][ 0 ] < level.hardpointShopData[ n ][ 0 ] )
+						break;
+						
+					attacker.HnotifyDone[ n ] = true;
+					string += "/" + level.hardpointShopData[ n ][ 1 ];
 				}
 				
 				string += " ($" + level.hardpointShopData[ i ][ 0 ] + ")";
 				
 				// The string is too long to fit on screen so just leave a generic message
 				if( string.size > 80 )
-					string = "New item available in shop!";
+					string = "New items available in shop!";
 				
 				attacker thread maps\mp\gametypes\_hud_message::oldNotifyMessage( undefined, string, undefined, undefined, undefined, string.size * 0.1 );
 			}
