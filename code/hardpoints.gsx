@@ -9,7 +9,6 @@ init()
 makeShopArray()
 {
 	level.hardpointShopData = [];
-	level.hardpointCount = 10;
 	
 	dvarNames = "radar;airstrike;artillery;helicopter;agm;predator;asf;ac130;mannedheli;nuke";
 	dvarNames = strTok( dvarNames, ";" );
@@ -34,7 +33,7 @@ makeShopArray()
 	extras[ 1 ] = "airstrike_mp";
 	extras[ 3 ] = "helicopter_mp";
 	
-	for( i = 0; i < level.hardpointCount; i++ )
+	for( i = 0; i < dvarNames.size; i++ )
 		addHardpoint( dvarNames[ i ], names[ i ], callbacks[ i ], extras[ i ] );
 		
 	for( i = 0; i < level.hardpointShopData.size; i++ )

@@ -57,16 +57,16 @@ init()
 	addDvar( "nuke", "int", 70, 1, 100 );
 	
 	// Hardpoints shop - required credits
-	addDvar( "radar_shop", "int", 20, 1, 2000 );
-	addDvar( "airstrike_shop", "int", 70, 1, 2000 );
-	addDvar( "helicopter_shop", "int", 180, 1, 2000 );
-	addDvar( "artillery_shop", "int", 70, 1, 2000 ); 
-	addDvar( "asf_shop", "int", 100, 1, 2000 );
-	addDvar( "agm_shop", "int", 100, 1, 2000 );
-	addDvar( "predator_shop", "int", 280, 1, 2000 );
-	addDvar( "ac130_shop", "int", 380, 1, 2000 );
-	addDvar( "mannedheli_shop", "int", 500, 1, 2000 );
-	addDvar( "nuke_shop", "int", 600, 1, 2000 );
+	addDvar( "radar_shop", "int", 20, 1, 9999 );
+	addDvar( "airstrike_shop", "int", 70, 1, 9999 );
+	addDvar( "helicopter_shop", "int", 180, 1, 9999 );
+	addDvar( "artillery_shop", "int", 70, 1, 9999 ); 
+	addDvar( "asf_shop", "int", 100, 1, 9999 );
+	addDvar( "agm_shop", "int", 100, 1, 9999 );
+	addDvar( "predator_shop", "int", 280, 1, 9999 );
+	addDvar( "ac130_shop", "int", 380, 1, 9999 );
+	addDvar( "mannedheli_shop", "int", 500, 1, 9999 );
+	addDvar( "nuke_shop", "int", 600, 1, 9999 );
 	
 	addDvar( "arty_shell_num", "int", 35, 10, 100 ); // Number of artillery shells
 	
