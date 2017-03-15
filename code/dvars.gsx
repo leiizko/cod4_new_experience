@@ -57,8 +57,6 @@ init()
 	addDvar( "nuke", "int", 70, 1, 100 );
 	
 	// Hardpoints shop - required credits
-	/*
-						WIP
 	addDvar( "radar_shop", "int", 20, 1, 2000 );
 	addDvar( "airstrike_shop", "int", 70, 1, 2000 );
 	addDvar( "helicopter_shop", "int", 180, 1, 2000 );
@@ -69,10 +67,8 @@ init()
 	addDvar( "ac130_shop", "int", 380, 1, 2000 );
 	addDvar( "mannedheli_shop", "int", 500, 1, 2000 );
 	addDvar( "nuke_shop", "int", 600, 1, 2000 );
-	*/
 	
 	addDvar( "arty_shell_num", "int", 35, 10, 100 ); // Number of artillery shells
-	
 	
 	// Mapvote stuff
 	addDvar( "mapvote", "int", 1, 0, 1 ); // Enable map vote ( 1-enable ; 0-disable )

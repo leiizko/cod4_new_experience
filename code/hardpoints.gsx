@@ -1,8 +1,67 @@
 init()
 {
+	makeShopArray();
 	thread code\events::addConnectEvent( ::onConnected );
 	thread code\events::addSpawnEvent( ::onSpawn );
 	thread code\events::addDeathEvent( ::onDeath );
+}
+
+makeShopArray()
+{
+	level.hardpointShopData = [];
+	level.hardpointCount = 10;
+	
+	dvarNames = "radar;airstrike;artillery;helicopter;agm;predator;asf;ac130;mannedheli;nuke";
+	dvarNames = strTok( dvarNames, ";" );
+	
+	names = "Radar;Airstrike;Artillery;Helicopter;Hellfire Missile;Predator Drone;Fighter Support;AC130 Gunship;Manned Helicopter;Thermonuclear Bomb";
+	names = strTok( names, ";" );
+	
+	callbacks = [];
+	callbacks[ callbacks.size ] = ::trigger;
+	callbacks[ callbacks.size ] = ::trigger;
+	callbacks[ callbacks.size ] = code\artillery::selectLocation;
+	callbacks[ callbacks.size ] = ::trigger;
+	callbacks[ callbacks.size ] = code\agm::init;
+	callbacks[ callbacks.size ] = code\predator::init;
+	callbacks[ callbacks.size ] = code\asf::init;
+	callbacks[ callbacks.size ] = code\ac130::init;
+	callbacks[ callbacks.size ] = code\heli::init;
+	callbacks[ callbacks.size ] = code\nuke::init;
+	
+	extras = [];
+	extras[ 0 ] = "radar_mp";
+	extras[ 1 ] = "airstrike_mp";
+	extras[ 3 ] = "helicopter_mp";
+	
+	for( i = 0; i < level.hardpointCount; i++ )
+		addHardpoint( dvarNames[ i ], names[ i ], callbacks[ i ], extras[ i ] );
+		
+	for( i = 0; i < level.hardpointShopData.size; i++ )
+	{
+		for( n = 0; n < level.hardpointShopData.size - 1; n++ )
+		{
+			if( level.hardpointShopData[ n ][ 0 ] > level.hardpointShopData[ n + 1 ][ 0 ] )
+			{
+				temp = level.hardpointShopData[ n ];
+				level.hardpointShopData[ n ] = level.hardpointShopData[ n + 1 ];
+				level.hardpointShopData[ n + 1 ] = temp;
+			}
+		}
+	}
+}
+
+addHardpoint( dvarName, name, callback, extraParam )
+{
+	d = dvarName + "_shop";
+	i = level.hardpointShopData.size;
+	
+	level.hardpointShopData[ i ][ 0 ] = level.dvar[ d ];
+	level.hardpointShopData[ i ][ 1 ] = name;
+	level.hardpointShopData[ i ][ 2 ] = callback;
+	
+	if( isDefined( extraParam ) )
+		level.hardpointShopData[ i ][ 3 ] = extraParam;
 }
 
 onDeath( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime, deathAnimDuration )
@@ -28,61 +87,55 @@ onDeath( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, p
 		waittillframeend;
 		
 		if( ( attacker.cur_kill_streak % 5 ) == 0 )
-			attacker maps\mp\gametypes\_hardpoints::streakNotify( attacker.cur_kill_streak );
+			attacker thread streakNotify( attacker.cur_kill_streak );
 		
 		if( isDefined( attacker.moneyhud ) )
 			attacker.moneyhud setValue( int( attacker.money ) );
 		
 		// Notify the attacker for killstreaks
-		
-		if( attacker.money >= 20 && !isDefined( attacker.HnotifyDone[ 0 ] ) )
+		for( i = 0; i < level.hardpointShopData.size; i++ )
 		{
-			attacker thread maps\mp\gametypes\_hud_message::oldNotifyMessage( undefined, "Press [{+actionslot 4}] to buy UAV (20 credits)", undefined, undefined, undefined, 5 );
-			attacker.HnotifyDone[ 0 ] = true;
-		}
-		
-		else if( attacker.money >= 70 && !isDefined( attacker.HnotifyDone[ 1 ] ) )
-		{
-			attacker thread maps\mp\gametypes\_hud_message::oldNotifyMessage( undefined, "Press [{+actionslot 4}] to buy AIR/ARTY (70 credits)", undefined, undefined, undefined, 5 );
-			attacker.HnotifyDone[ 1 ] = true;
-		}
-		
-		else if( attacker.money >= 100 && !isDefined( attacker.HnotifyDone[ 2 ] ) )
-		{
-			attacker thread maps\mp\gametypes\_hud_message::oldNotifyMessage( undefined, "Press [{+actionslot 4}] to buy AGM/ASF (100 credits)", undefined, undefined, undefined, 5 );
-			attacker.HnotifyDone[ 2 ] = true;
-		}
-		
-		else if( attacker.money >= 180 && !isDefined( attacker.HnotifyDone[ 3 ] ) )
-		{
-			attacker thread maps\mp\gametypes\_hud_message::oldNotifyMessage( undefined, "Press [{+actionslot 4}] to buy HELICOPTER (180 credits)", undefined, undefined, undefined, 5 );
-			attacker.HnotifyDone[ 3 ] = true;
-		}
-		
-		else if( attacker.money >= 280 && !isDefined( attacker.HnotifyDone[ 4 ] ) )
-		{
-			attacker thread maps\mp\gametypes\_hud_message::oldNotifyMessage( undefined, "Press [{+actionslot 4}] to buy PREDATOR DRONE (280 credits)", undefined, undefined, undefined, 6 );
-			attacker.HnotifyDone[ 4 ] = true;
-		}
-		
-		else if( attacker.money >= 380 && !isDefined( attacker.HnotifyDone[ 5 ] ) )
-		{
-			attacker thread maps\mp\gametypes\_hud_message::oldNotifyMessage( undefined, "Press [{+actionslot 4}] to buy AC130 (380 credits)", undefined, undefined, undefined, 5 );
-			attacker.HnotifyDone[ 5 ] = true;
-		}
-		
-		else if( attacker.money >= 500 && !isDefined( attacker.HnotifyDone[ 6 ] ) )
-		{
-			attacker thread maps\mp\gametypes\_hud_message::oldNotifyMessage( undefined, "Press [{+actionslot 4}] to buy MANNED HELI (500 credits)", undefined, undefined, undefined, 6 );
-			attacker.HnotifyDone[ 6 ] = true;
-		}
-		
-		else if( attacker.money >= 600 && !isDefined( attacker.HnotifyDone[ 7 ] ) )
-		{
-			attacker thread maps\mp\gametypes\_hud_message::oldNotifyMessage( undefined, "Press [{+actionslot 4}] to buy TACTICAL NUKE (600 credits)", undefined, undefined, undefined, 6 );
-			attacker.HnotifyDone[ 7 ] = true;
+			if( attacker.money >= level.hardpointShopData[ i ][ 0 ] && !isDefined( attacker.HnotifyDone[ i ] ) )
+			{
+				attacker.HnotifyDone[ i ] = true;
+				string = "Press [{+actionslot 4}] to buy " + level.hardpointShopData[ i ][ 1 ];
+				n = 1;
+				if( isDefined( level.hardpointShopData[ i + n ] ) )
+				{
+					while( level.hardpointShopData[ i ][ 0 ] == level.hardpointShopData[ i + n ][ 0 ] )
+					{
+						attacker.HnotifyDone[ i + n ] = true;
+						string += "/" + level.hardpointShopData[ i + n ][ 1 ];
+						n++;
+					}
+				}
+				
+				string += " ($" + level.hardpointShopData[ i ][ 0 ] + ")";
+				
+				// The string is too long to fit on screen so just leave a generic message
+				if( string.size > 80 )
+					string = "New item available in shop!";
+				
+				attacker thread maps\mp\gametypes\_hud_message::oldNotifyMessage( undefined, string, undefined, undefined, undefined, string.size * 0.1 );
+			}
+			
+			else if( attacker.money < level.hardpointShopData[ i ][ 0 ] )
+				break;
 		}
 	}
+}
+
+streakNotify( streak )
+{
+	self notify( "onlyOneStreakThread" );
+	self endon( "onlyOneStreakThread" );
+	
+	wait .25;
+	
+	string = "" + streak + " Kill Streak!";
+	self thread maps\mp\gametypes\_hud_message::oldNotifyMessage( string, undefined, undefined, undefined, undefined, string.size * 0.15 );
+	
+	iPrintLn( self.name + " has a killstreak of " + streak + "!" );
 }
 
 onConnected()
@@ -99,7 +152,7 @@ moneyHud()
 	self.moneyhud.archived = false;
 	self.moneyhud.alignX = "right";
 	self.moneyhud.alignY = "bottom";
-	self.moneyhud.label = &"credits: ";
+	self.moneyhud.label = &"$ ";
 	self.moneyhud.horzAlign = "right";
 	self.moneyhud.vertAlign = "bottom";
 	self.moneyhud.fontscale = 1.7;
@@ -184,88 +237,32 @@ buy()
 		
 	before = self.money;
 	
-	switch( self.selectionNum )
+	if( self.money < level.hardpointShopData[ self.selectionNum ][ 0 ] )
 	{
-		case 0:
-			if( self.money >= 20 )
-			{
-				self thread maps\mp\gametypes\_hardpoints::useRadarItem();
-				self.money -= 20;
-			}
-			else if( self.money < 20 )
-				self iprintlnbold( "Not enough credits!" );
-			break;
-		case 1:
-			if( self.money >= 70 && self maps\mp\gametypes\_hardpoints::triggerHardPoint( "airstrike_mp" ) )
-				self.money -= 70;
-			else if( self.money < 70 )
-				self iprintlnbold( "Not enough credits!" );
-			break;
-		case 2:
-			if( self.money >= 70 )
-			{
-				result = self code\artillery::selectLocation();
-				
-				if( !isDefined( result ) || !result )
-					break;
-				else
-					self.money -= 70;
-			}
-			else if( self.money < 70 )
-				self iprintlnbold( "Not enough credits!" );
-			break;
-		case 3:
-			if( self.money >= 100 && self code\asf::init() )
-				self.money -= 100;
-			else if( self.money < 100 )
-				self iprintlnbold( "Not enough credits!" );
-			break;
-		case 4:
-			if( self.money >= 100 && self code\agm::init() )
-				self.money -= 100;
-			else if( self.money < 100 )
-				self iprintlnbold( "Not enough credits!" );
-			break;
-		case 5:
-			if( self.money >= 180 && self maps\mp\gametypes\_hardpoints::triggerHardPoint( "helicopter_mp" ) )
-				self.money -= 180;
-			else if( self.money < 180 )
-				self iprintlnbold( "Not enough credits!" );
-			break;
-		case 6:
-			if( self.money >= 280 && self code\predator::init() )
-				self.money -= 280;
-			else if( self.money < 280 )
-				self iprintlnbold( "Not enough credits!" );
-			break;
-		case 7:
-			if( self.money >= 380 && self code\ac130::init() )
-				self.money -= 380;
-			else if( self.money < 380 )
-				self iprintlnbold( "Not enough credits!" );
-			break;
-		case 8:
-			if( self.money >= 500 && self code\heli::init() )
-				self.money -= 500;
-			else if( self.money < 500 )
-				self iprintlnbold( "Not enough credits!" );
-			break;
-		case 9:
-			if( self.money >= 600 )
-			{
-				result = self code\nuke::init();
-				
-				if( !isDefined( result ) || !result )
-					break;
-				else
-					self.money -= 600;
-			}
-			else if( self.money < 600 )
-				self iprintlnbold( "Not enough credits!" );
-			break;
-		
-		default:
-			break;
+		dif = level.hardpointShopData[ self.selectionNum ][ 0 ] - self.money;
+		self iPrintLnBold( "Missing ^1$" + dif + "^7 to buy " + level.hardpointShopData[ self.selectionNum ][ 1 ] );
+		return;
+	}
+	else
+	{
+		if( isDefined( level.hardpointShopData[ self.selectionNum ][ 3 ] ) )
+		{
+			result = self [[level.hardpointShopData[ self.selectionNum ][ 2 ]]]( level.hardpointShopData[ self.selectionNum ][ 3 ] );
+
+			if( !isDefined( result ) || !result )
+				return;
+			else
+				self.money -= level.hardpointShopData[ self.selectionNum ][ 0 ];
+		}
+		else
+		{
+			result = self [[level.hardpointShopData[ self.selectionNum ][ 2 ]]]();
+
+			if( !isDefined( result ) || !result )
+				return;
+			else
+				self.money -= level.hardpointShopData[ self.selectionNum ][ 0 ];
+		}
 	}
 	
 	after = self.money;
@@ -274,32 +271,77 @@ buy()
 	if( difference != 0 )
 		self thread maps\mp\gametypes\_rank::updateRankScoreHUD( difference );
 	
-	if( self.money < 600 && isDefined( self.HnotifyDone[ 7 ] ) )
-		self.HnotifyDone[ 7 ] = undefined;
-	
-	else if( self.money < 500 && isDefined( self.HnotifyDone[ 6 ] ) )
-		self.HnotifyDone[ 6 ] = undefined;
+	for( i = 0; i < level.hardpointShopData.size; i++ )
+	{
+		if( self.money < level.hardpointShopData[ i ][ 0 ] && isDefined( self.HnotifyDone[ i ] ) )
+			self.HnotifyDone[ i ] = undefined;
+	}
 		
-	else if( self.money < 380 && isDefined( self.HnotifyDone[ 5 ] ) )
-		self.HnotifyDone[ 5 ] = undefined;
-		
-	else if( self.money < 280 && isDefined( self.HnotifyDone[ 4 ] ) )
-		self.HnotifyDone[ 4 ] = undefined;
-		
-	else if( self.money < 180 && isDefined( self.HnotifyDone[ 3 ] ) )
-		self.HnotifyDone[ 3 ] = undefined;
-		
-	else if( self.money < 100 && isDefined( self.HnotifyDone[ 2 ] ) )
-		self.HnotifyDone[ 2 ] = undefined;
-		
-	else if( self.money < 70 && isDefined( self.HnotifyDone[ 1 ] ) )
-		self.HnotifyDone[ 1 ] = undefined;
-		
-	else if( self.money < 20 && isDefined( self.HnotifyDone[ 0 ] ) )
-		self.HnotifyDone[ 0 ] = undefined;
-	
 	if( isDefined( self.moneyhud ) )
 		self.moneyhud setValue( int( self.money ) );
+}
+
+trigger( hardpointType )
+{
+	if ( hardpointType == "radar_mp" )
+	{
+		self thread maps\mp\gametypes\_hardpoints::useRadarItem();
+	}
+	else if ( hardpointType == "airstrike_mp" )
+	{
+		if ( isDefined( level.airstrikeInProgress ) )
+		{
+			self iPrintLnBold( level.hardpointHints[hardpointType+"_not_available"] );
+			return false;
+		}
+			
+		result = self maps\mp\gametypes\_hardpoints::selectAirstrikeLocation();
+		
+		if ( !isDefined( result ) || !result )
+			return false;
+	}
+	else if ( hardpointType == "helicopter_mp" )
+	{
+		if ( isDefined( level.chopper ) || isDefined( level.mannedchopper ) )
+		{
+			self iPrintLnBold( level.hardpointHints[hardpointType+"_not_available"] );
+			return false;
+		}
+		
+		destination = 0;
+		random_path = randomint( level.heli_paths[destination].size );
+		startnode = level.heli_paths[destination][random_path];
+		
+		team = self.pers["team"];
+		otherTeam = level.otherTeam[team];
+		
+		if ( level.teambased )
+		{
+			maps\mp\gametypes\_globallogic::leaderDialog( "helicopter_inbound", team );
+			maps\mp\gametypes\_globallogic::leaderDialog( "enemy_helicopter_inbound", otherTeam );
+			for ( i = 0; i < level.players.size; i++ )
+			{
+				player = level.players[i];
+				playerteam = player.pers["team"];
+				if ( isdefined( playerteam ) )
+				{
+					if ( playerteam == team )
+						player iprintln( &"MP_HELICOPTER_INBOUND", self );
+				}
+			}
+		}
+		else
+		{
+			self maps\mp\gametypes\_globallogic::leaderDialogOnPlayer( "helicopter_inbound" );
+			selfarray = [];
+			selfarray[0] = self;
+			maps\mp\gametypes\_globallogic::leaderDialog( "enemy_helicopter_inbound", undefined, undefined, selfarray );
+		}
+		
+		thread maps\mp\_helicopter::heli_think( self, startnode, self.pers["team"] );
+	}
+	
+	return true;
 }
 
 updateHUD( type )
@@ -311,7 +353,7 @@ updateHUD( type )
 		
 	if( type == 1 )
 	{
-		if( self.selectionNum < 9 )
+		if( self.selectionNum < level.hardpointShopData.size - 1 )
 			self.selectionNum++;
 		
 		else
@@ -324,55 +366,11 @@ updateHUD( type )
 			self.selectionNum--;
 		
 		else
-			self.selectionNum = 9;
+			self.selectionNum = level.hardpointShopData.size - 1;
 	}
 	
 
-	switch( self.selectionNum )
-	{
-		case 0:
-			self.shop[ 4 ].y = -8;
-			self.shop[ 4 ] moveOverTime( .25 );
-			break;
-		case 1:
-			self.shop[ 4 ].y = 9;
-			self.shop[ 4 ] moveOverTime( .25 );
-			break;
-		case 2:
-			self.shop[ 4 ].y = 26;
-			self.shop[ 4 ] moveOverTime( .25 );
-			break;
-		case 3:
-			self.shop[ 4 ].y = 42.5;
-			self.shop[ 4 ] moveOverTime( .25 );
-			break;
-		case 4:
-			self.shop[ 4 ].y = 59;
-			self.shop[ 4 ] moveOverTime( .25 );
-			break;
-		case 5:
-			self.shop[ 4 ].y = 76;
-			self.shop[ 4 ] moveOverTime( .25 );
-			break;
-		case 6:
-			self.shop[ 4 ].y = 93;
-			self.shop[ 4 ] moveOverTime( .25 );
-			break;
-		case 7:
-			self.shop[ 4 ].y = 110;
-			self.shop[ 4 ] moveOverTime( .25 );
-			break;
-		case 8:
-			self.shop[ 4 ].y = 126.2;
-			self.shop[ 4 ] moveOverTime( .25 );
-			break;
-		case 9:
-			self.shop[ 4 ].y = 142.5;
-			self.shop[ 4 ] moveOverTime( .25 );
-			break;
-		default:
-			break;
-	}
+	self.shop[ 4 ].y = 190 + ( self.selectionNum * 16.9 );
 }
 
 shop()
@@ -380,63 +378,91 @@ shop()
 	self endon( "destroy_shop" );
 
 	self.shop = [];
+	n = 99;
+	
+	for( i = 0; i < level.hardpointShopData.size; i++ )
+	{
+		if( self.money < level.hardpointShopData[ i ][ 0 ] )
+		{
+			n = i;
+			break;
+		}
+	}
+	
+	string = "^3Item:^2";
+	for( i = 0; i < level.hardpointShopData.size; i++ )
+	{
+		if( i == n )
+			string += "^1";
+			
+		string += "\n" + level.hardpointShopData[ i ][ 1 ];
+	}
 	
 	self.shop[ 0 ] = newClientHudElem( self );
 	self.shop[ 0 ].archived = false;
-	self.shop[ 0 ].alignX = "center";
+	self.shop[ 0 ].alignX = "left";
 	self.shop[ 0 ].alignY = "middle";
-	self.shop[ 0 ] setText( " ^3Hardpoint:^7 \n Radar \n Airstrike \n Artillery \n Air-Air Support \n Air-Ground Missile \n Helicopter \n Predator Drone \n AC130 \n Manned Heli \n TACTICAL NUKE" );
-	self.shop[ 0 ].horzAlign = "center";
+	self.shop[ 0 ] setText( string );
+	self.shop[ 0 ].horzAlign = "left";
 	self.shop[ 0 ].vertAlign = "middle";
 	self.shop[ 0 ].fontscale = 1.4;
-	self.shop[ 0 ].x = -35;
-	self.shop[ 0 ].y = -25;
+	self.shop[ 0 ].x = 340;
+	self.shop[ 0 ].y = -60;
+	
+	string = "^3$:^2";
+	for( i = 0; i < level.hardpointShopData.size; i++ )
+	{
+		if( i == n )
+			string += "^1";
+			
+		string += "\n" + level.hardpointShopData[ i ][ 0 ];
+	}
 	
 	self.shop[ 1 ] = newClientHudElem( self );
 	self.shop[ 1 ].archived = false;
-	self.shop[ 1 ].alignX = "center";
+	self.shop[ 1 ].alignX = "right";
 	self.shop[ 1 ].alignY = "middle";
-	self.shop[ 1 ] setText( " ^3Price:^7 \n 20 \n 70 \n 70 \n 100 \n 100 \n 180 \n 280 \n 380 \n 500 \n 600" );
-	self.shop[ 1 ].horzAlign = "center";
+	self.shop[ 1 ] setText( string );
+	self.shop[ 1 ].horzAlign = "right";
 	self.shop[ 1 ].vertAlign = "middle";
 	self.shop[ 1 ].fontscale = 1.4;
-	self.shop[ 1 ].x = 35;
-	self.shop[ 1 ].y = -25;
+	self.shop[ 1 ].x = -340;
+	self.shop[ 1 ].y = -60;
 	
 	self.shop[ 2 ] = newClientHudElem( self );
 	self.shop[ 2 ].archived = false;
 	self.shop[ 2 ].alignX = "center";
-	self.shop[ 2 ].alignY = "middle";
+	self.shop[ 2 ].alignY = "top";
 	self.shop[ 2 ] setText( "Press ^1[{+melee}] ^7or ^2[{+activate}]^7 to move ^1UP ^7or ^2DOWN" );
 	self.shop[ 2 ].horzAlign = "center";
 	self.shop[ 2 ].vertAlign = "top";
 	self.shop[ 2 ].fontscale = 1.7;
 	self.shop[ 2 ].x = 0;
-	self.shop[ 2 ].y = 100;
+	self.shop[ 2 ].y = 60;
 	
 	self.shop[ 3 ] = newClientHudElem( self );
 	self.shop[ 3 ].archived = false;
 	self.shop[ 3 ].alignX = "center";
-	self.shop[ 3 ].alignY = "middle";
+	self.shop[ 3 ].alignY = "top";
 	self.shop[ 3 ] setText( "Press ^3[{+attack}]^7 to ^3BUY^7 the hardpoint" );
 	self.shop[ 3 ].horzAlign = "center";
 	self.shop[ 3 ].vertAlign = "top";
 	self.shop[ 3 ].fontscale = 1.7;
 	self.shop[ 3 ].x = 0;
-	self.shop[ 3 ].y = 120;
+	self.shop[ 3 ].y = 80;
 	
 	self.shop[ 4 ] = newClientHudElem( self );
 	self.shop[ 4 ].archived = false;
 	self.shop[ 4 ].alignX = "center";
-	self.shop[ 4 ].alignY = "middle";
-	self.shop[ 4 ] setShader( "white", 145, 15 );
+	self.shop[ 4 ].alignY = "top";
+	self.shop[ 4 ] setShader( "white", 180, 15 );
 	self.shop[ 4 ].alpha = 0.3;
 	self.shop[ 4 ].color = ( 1, 0.2, 0.2 );
 	self.shop[ 4 ].horzAlign = "center";
-	self.shop[ 4 ].vertAlign = "middle";
+	self.shop[ 4 ].vertAlign = "top";
 	self.shop[ 4 ].fontscale = 1.4;
-	self.shop[ 4 ].x = -20;
-	self.shop[ 4 ].y = -8;
+	self.shop[ 4 ].x = 0;
+	self.shop[ 4 ].y = 190;
 }
 
 exitShop()
