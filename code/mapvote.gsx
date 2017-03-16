@@ -155,14 +155,25 @@ voteLogic( players )
 
 mapNameCapitalised( string )
 {
-	trash = strTok( string, "_" );
-	string = trash[ 1 ];
+	stringArray = strTok( string, "_" );
 	new = "";
 	
-	new += code\common::toUpper( string[ 0 ] );
-	
-	for( i = 1; i < string.size; i++ )
-		new += string[ i ];
+	for( t = 1; t < stringArray.size; t++ )
+	{
+		if( stringArray[ t ].size > 2 )
+		{
+			new += code\common::toUpper( stringArray[ t ][ 0 ] );
+			for( i = 1; i < stringArray[ t ].size; i++ )
+				new += stringArray[ t ][ i ];
+			
+			new += " ";
+		}
+		else if( stringArray[ t ].size == 2 && stringArray[ t ][ 0 ] == "v" && int( stringArray[ t ][ 1 ] ) )
+		{
+			new += stringArray[ t ];
+			new += " ";
+		}
+	}
 		
 	return new;
 }
