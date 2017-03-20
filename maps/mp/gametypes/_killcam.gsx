@@ -152,7 +152,7 @@ killcam(
 	
 	////////////////////////////////////////////////////
 	
-	self SetClientDvar( "ui_ShowMenuOnly", "none" );
+	self SetClientDvar( "ui_ShowMenuOnly", "class" );
 	
 	waittillframeend;
 	

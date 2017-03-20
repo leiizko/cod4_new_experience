@@ -20,7 +20,7 @@ killcam(
 		return;
 	}
 	
-	self SetClientDvar( "ui_ShowMenuOnly", "none" );
+	self SetClientDvar( "ui_ShowMenuOnly", "class" );
 	visionSetNaked( level.script );
 		
 	waittillframeend;
