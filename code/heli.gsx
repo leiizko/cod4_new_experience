@@ -875,6 +875,7 @@ endHeli( type )
 		self thread code\common::removeInfoHUD();
 		self thread code\common::restoreVisionSettings();
 		self setClientDvar( "g_compassshowenemies", 0 );
+		self show();
 	}
 	
 	if( type == 0 )
