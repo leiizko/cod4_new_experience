@@ -13,7 +13,7 @@ planeSetup()
 	
 	for( ;; )
 	{
-		for( k = 0; k < 360; k += 0.5 )
+		for( k = 0; k < 360; k += 1 )
 		{
 			location = ( level.planePos[ 0 ] + ( 1150 * cos( k ) ), level.planePos[ 1 ] + ( 1150 * sin( k ) ), level.planePos[ 2 ] );
 			angles = vectorToAngles( location - level.plane[ "plane" ].origin );
@@ -26,8 +26,6 @@ planeSetup()
 
 initialVisionSettings()
 {
-	level endon( "flyOver" );
-	
 	self.hardpointVision = true;
 	
 	self setClientDvars( "r_FilmTweakDarktint", "1 1 1",
@@ -49,8 +47,8 @@ restoreVisionSettings()
 {
 	self endon( "disconnect" );
 	
-	self setClientDvar("waypointiconheight", 36);
-	self setClientDvar("waypointiconwidth", 36);
+	self setClientDvar( "waypointiconheight", 36 );
+	self setClientDvar( "waypointiconwidth", 36 );
 	
 	self thread code\player::userSettings();
 	
@@ -63,17 +61,8 @@ destroyPlane()
 {
 	level waittill( "flyOver" );
 	
-	if( isDefined( self ) && isArray( self.fireTimes ) )
-	{
-		while( isArray( self.fireTimes ) && getTime() - self.fireTimes[ "105mm" ] < 2050 )
-			wait .1;
-		
-		while( isArray( self.fireTimes ) && getTime() - self.fireTimes[ "40mm" ] < 1850 )
-			wait .1;
-		
-		while( isArray( self.fireTimes ) && getTime() - self.fireTimes[ "25mm" ] < 800 )
-			wait .1;
-	}
+	if( isDefined( self ) )
+		self waitProjectiles();
 	
 	waittillframeend;
 	
@@ -111,6 +100,20 @@ destroyPlane()
 	}
 		
 	level.plane = undefined;
+}
+
+waitProjectiles()
+{
+	self endon( "disconnect" );
+	
+	while( isArray( self.fireTimes ) && getTime() - self.fireTimes[ "105mm" ] < 2050 )
+		wait .1;
+		
+	while( isArray( self.fireTimes ) && getTime() - self.fireTimes[ "40mm" ] < 1850 )
+		wait .1;
+		
+	while( isArray( self.fireTimes ) && getTime() - self.fireTimes[ "25mm" ] < 800 )
+		wait .1;
 }
 
 removeInfoHUD()
@@ -395,10 +398,7 @@ targetMarkers()
 		self.targetMarker[ j ].x = players[ i ].origin[ 0 ];
 		self.targetMarker[ j ].y = players[ i ].origin[ 1 ];
 		self.targetMarker[ j ].z = players[ i ].origin[ 2 ];
-		self.targetMarker[ j ].baseAlpha = 1;
 		self.targetMarker[ j ].alpha = 1;
-		self.targetMarker[ j ].isFlashing = false;
-		self.targetMarker[ j ].isShown = true;
 		self.targetMarker[ j ] setShader( "waypoint_kill", 15, 15 );
 		self.targetMarker[ j ] setWayPoint( true, "waypoint_kill" );
 		self.targetMarker[ j ] setTargetEnt( players[ i ] );

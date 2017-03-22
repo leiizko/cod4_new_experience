@@ -238,8 +238,6 @@ waitKillcamTime()
 
 endKillcam()
 {
-	self endon( "disconnect" );
-		
 	if( isArray( self.kc_hud ) )
 	{
 		for( i = 0; i < self.kc_hud.size; i++ )
@@ -248,6 +246,7 @@ endKillcam()
 				self.kc_hud[ i ] destroy();
 		}
 	}
+	self.kc_hud = undefined;
 	
 	self.pers[ "fullbright" ] = self.visiondata.fps;
 	self.pers[ "fov" ] = self.visiondata.fov;

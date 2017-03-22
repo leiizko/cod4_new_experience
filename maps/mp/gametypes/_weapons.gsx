@@ -110,7 +110,7 @@ onPlayerConnect()
 		player.hits = 0;
 
 		player thread onPlayerSpawned();
-		//player thread info();
+		//player thread setAccuracyStuff();
 	}
 }
 
@@ -441,26 +441,11 @@ watchWeaponUsage()
 	}
 }
 
-info()
+setAccuracyStuff()
 {
-	self endon( "disconnect" );
-	
 	self.Accuracy = 0;
 	self.shotsFired = 0;
 	self.allhits = 0;
-	
-	self.blabla = newClientHudElem( self );
-	self.blabla.archived = false;
-	self.blabla.alignX = "right";
-	self.blabla.alignY = "bottom";
-	self.blabla.label = &"Accuracy: ";
-	self.blabla.horzAlign = "right";
-	self.blabla.vertAlign = "bottom";
-	self.blabla.fontscale = 1.7;
-	self.blabla.x = -20;
-	self.blabla.y = -80;
-	
-	self.blabla setValue( self.Accuracy );
 }
 
 watchCurrentFiring( curWeapon )
@@ -500,16 +485,13 @@ watchCurrentFiring( curWeapon )
 	self maps\mp\gametypes\_persistence::statSet( "hits", statHits );
 	self maps\mp\gametypes\_persistence::statSet( "misses", statMisses );
 	self maps\mp\gametypes\_persistence::statSet( "accuracy", int(statHits * 10000 / statTotal) );
-	/*self.shotsFired += shotsFired;
+	
+	/*
+	self.shotsFired += shotsFired;
 	self.allhits += self.hits;
 	self.Accuracy = (self.allhits / self.shotsFired);
-	self.blabla setValue( self.Accuracy );*/
-/*
-	printLn( "total:    " + statTotal );
-	printLn( "hits:     " + statHits );
-	printLn( "misses:   " + statMisses );
-	printLn( "accuracy: " + int(statHits * 10000 / statTotal) );
-*/
+	*/
+
 	self.hits = 0;
 }
 

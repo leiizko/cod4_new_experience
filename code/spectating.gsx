@@ -55,6 +55,8 @@ spectating()
 		self thread visionSettings( data );
 		
 		self common_scripts\utility::waittill_any( "joined_team", "joined_spectators" );
+		
+		wait .05; // Incase player goes to spec during killcam, let the code reset vision settings.
 	}
 }
 

@@ -4549,23 +4549,24 @@ Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, s
 		if ( level.dvar[ "hitmarker" ] > 0 && isdefined(eAttacker) && eAttacker != self )
 		{
 			hasBodyArmor = false;
+			
 			if ( self hasPerk( "specialty_armorvest" ) )
-			{
 				hasBodyArmor = true;
-				/*
-				damageScalar = level.cac_armorvest_data / 100;
-				if ( prevHealthRatio > damageScalar )
-					hasBodyArmor = true;
-				*/
-			}
+
 			if ( iDamage > 0 )
 			{
 				if( level.dvar[ "hitmarker" ] == 1 )
 					eAttacker thread maps\mp\gametypes\_damagefeedback::updateDamageFeedback( hasBodyArmor );
 					
 				else if( level.dvar[ "hitmarker" ] == 2 )
-					if( bulletTracePassed( eAttacker getEye(), self getEye(), false, eAttacker ) )
+				{
+					if( self.health <= 0 ) // isAlive function doesn't catch death fast enough
 						eAttacker thread maps\mp\gametypes\_damagefeedback::updateDamageFeedback( hasBodyArmor );
+
+					else
+						if( bulletTracePassed( eAttacker getEye(), self getEye(), false, eAttacker ) )
+							eAttacker thread maps\mp\gametypes\_damagefeedback::updateDamageFeedback( hasBodyArmor );
+				}
 			}
 		}
 		
