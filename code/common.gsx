@@ -118,8 +118,6 @@ waitProjectiles()
 
 removeInfoHUD()
 {
-	self endon( "disconnect" );
-	
 	if( isDefined( self.info ) )
 	{
 		for( i = 0; i < self.info.size; i++ )
@@ -221,9 +219,6 @@ hudLogic( type )
 */
 setHUD( type )
 {
-	self endon( "disconnect" );
-	level endon( "game_ended" );
-
 	waittillframeend;
 	
 	if( isDefined( self.r ) ) 
@@ -541,16 +536,12 @@ playSoundinSpace( alias, origin )
 
 godMod()
 {
-	self endon( "disconnect" );
-	
 	self.maxHealth = 9999999999;
 	self.health = self.maxHealth;
 }
 
 restoreHP()
 {
-	self endon( "disconnect" );
-	
 	if( level.hardcoreMode )
 		self.maxhealth = 30;
 		

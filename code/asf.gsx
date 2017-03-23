@@ -3,10 +3,6 @@
 
 init()
 {
-	self endon( "disconnect" );
-	level endon( "game_ended" );
-	
-	// Seriously?
 	if( !isDefined( level.chopper ) && !isDefined( level.mannedchopper ) )
 	{
 		self iPrintLnBold( "ASF reports no enemy chopper" );

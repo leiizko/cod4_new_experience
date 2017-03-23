@@ -23,7 +23,7 @@ processRcon( data )
 {
 	cmd = data[ 0 ];
 	
-	player = findPlayer( int( data[ 1 ] ) );
+	player = getEntByNum( int( data[ 1 ] ) );
 	
 	if( isDefined( data[ 2 ] ) )
 		args = data[ 2 ];
@@ -31,15 +31,4 @@ processRcon( data )
 		args = "";
 	
 	player thread code\scriptcommands::commandHandler( cmd, args );
-}
-
-findPlayer( num )
-{
-	players = code\common::getPlayers();
-
-	for ( i = 0; i < players.size; i++ )
-	{
-		if ( players[i] getEntityNumber() == num ) 
-			return players[i];
-	}
 }

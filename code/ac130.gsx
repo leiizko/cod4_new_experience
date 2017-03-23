@@ -26,9 +26,6 @@ init()
 
 setup()
 {
-	self endon( "disconnect" );
-	level endon( "game_ended" );
-	
 	thread notifyTeam( "FRIENDLY AC130 INBOUND!", ( 0.1, 0.1, 1 ), 3 );
 	self thread notifyTeamLn( "Friendly AC130 called by^1 " + self.name );
 	

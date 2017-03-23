@@ -26,9 +26,6 @@ init()
 
 setup()
 {
-	self endon( "disconnect" );
-	level endon( "game_ended" );
-	
 	self thread notifyTeamLn( "Friendly AGM called by^1 " + self.name );
 	
 	waittillframeend;

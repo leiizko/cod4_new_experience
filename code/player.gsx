@@ -6,8 +6,6 @@ init()
 
 onSpawn()
 {
-	self endon( "disconnect" );
-	
 	waittillframeend;
 	
 	if( isDefined( level.nukeInProgress ) && level.tacticalNuke.owner.team != self.team )
@@ -202,8 +200,6 @@ userSettings()
 
 welcome()
 {
-	self endon( "disconnect" );
-	
 	dvar = "welcome_" + self getEntityNumber();
 	
 	if( getDvar( dvar ) == self getPlayerID() ) // Player is already welcomed
@@ -221,8 +217,6 @@ welcome()
 
 isVIP()
 {
-	self endon( "disconnect" );
-	
 	vips = [];
 	vips[ vips.size ] = "[U:12:345678]";
 	

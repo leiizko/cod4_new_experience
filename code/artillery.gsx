@@ -197,8 +197,6 @@ finishUsage( location )
 
 calculateDirection( pos )
 {
-	self endon( "disconnect" );
-	
 	// Get the location on the upper layer of ground
 	trace = bullettrace( self.origin + ( 0, 0, 100000 ), self.origin, false, undefined );
 	pos = ( pos[ 0 ], pos[ 1 ], trace[ "position" ][ 2 ] - 400 );
