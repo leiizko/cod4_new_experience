@@ -15,8 +15,8 @@
 init()
 {
 	addDvar( "xp_multi", "int", 1, 1, 100 ); // XP multiplier - 1 normal XP, up to x100
-	addDvar( "final_killcam", "int", 1, 0, 1 ); // Enable final killcam Steady sniper score ( 1-yes ; 0-no )
-	addDvar( "promod_sniper", "int", 1, 0, 1 ); // Steady sniper score ( 1-yes ; 0-no )
+	addDvar( "final_killcam", "int", 1, 0, 1 ); // Enable final killcam ( 1-yes ; 0-no )
+	addDvar( "promod_sniper", "int", 1, 0, 1 ); // Steady sniper scope ( 1-yes ; 0-no )
 	addDvar( "rcon_interface", "int", 0, 0, 1 ); // aka B3 custom command support ( 1-yes ; 0-no )
 	addDvar( "fast_paced", "int", 1, 0, 1 ); // Increase sprint time and overall walking/running speed ( 1-yes ; 0-no )
 	addDvar( "hitmarker", "int", 2, 0, 2 ); // Show hitmarker ( 0-no ; 1-always yes ; 2-yes if not wallbang )
@@ -43,18 +43,19 @@ init()
 	addDvar( "default_fps", "int", 0, 0, 1 ); // Fullbright setting, players won't be able to change it ( 1-enable ; 0-disable )
 	addDvar( "default_fov", "int", 0, 0, 2 ); // Field of view setting, players won't be able to change it ( 2-FOV=100 ; 1-FOV=90 ; 0-FOV=80 )
 	addDvar( "default_promod", "int", 0, 0, 1 ); // promod setting, players won't be able to change it ( 1-enable ; 0-disable )
+	addDvar( "hardpoint_streak", "int", 0, 0, 1 ); // Hardpoint kills count toward kill streak ( 1-yes ; 0-no )
 	
 	// Hardpoints - old style, required kill streak
 	addDvar( "radar", "int", 3, 1, 100 );
 	addDvar( "airstrike", "int", 5, 1, 100 );
-	addDvar( "helicopter", "int", 18, 1, 100 );
+	addDvar( "helicopter", "int", 15, 1, 100 );
 	addDvar( "artillery", "int", 7, 1, 100 ); 
 	addDvar( "asf", "int", 12, 1, 100 );
 	addDvar( "agm", "int", 10, 1, 100 );
-	addDvar( "predator", "int", 25, 1, 100 );
-	addDvar( "ac130", "int", 35, 1, 100 );
-	addDvar( "mannedheli", "int", 48, 1, 100 );
-	addDvar( "nuke", "int", 70, 1, 100 );
+	addDvar( "predator", "int", 20, 1, 100 );
+	addDvar( "ac130", "int", 28, 1, 100 );
+	addDvar( "mannedheli", "int", 35, 1, 100 );
+	addDvar( "nuke", "int", 45, 1, 100 );
 	
 	// Hardpoints shop - required credits
 	addDvar( "radar_shop", "int", 20, 1, 9999 );

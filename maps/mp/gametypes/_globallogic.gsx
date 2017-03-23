@@ -4852,12 +4852,20 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 
 				if ( isAlive( attacker ) )
 				{
-					if ( !isDefined( eInflictor ) || !isDefined( eInflictor.requiredDeathCount ) || attacker.deathCount == eInflictor.requiredDeathCount )
+					if( sWeapon != "artillery_mp" && sWeapon != "helicopter_mp" )
+					{
 						attacker.cur_kill_streak++;
+						if( level.dvar["old_hardpoints"] )
+							attacker thread maps\mp\gametypes\_hardpoints::giveHardpointItemForStreak();
+					}
+						
+					else if( ( sWeapon == "artillery_mp" || sWeapon == "helicopter_mp" ) && level.dvar[ "hardpoint_streak" ] )
+					{
+						attacker.cur_kill_streak++;
+						if( level.dvar["old_hardpoints"] )
+							attacker thread maps\mp\gametypes\_hardpoints::giveHardpointItemForStreak();
+					}
 				}
-				
-				if ( isDefined( level.hardpointItems ) && isAlive( attacker ) && level.dvar["old_hardpoints"] )
-					attacker thread maps\mp\gametypes\_hardpoints::giveHardpointItemForStreak();
 	
 				attacker.cur_death_streak = 0;
 				
