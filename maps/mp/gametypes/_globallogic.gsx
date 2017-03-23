@@ -551,8 +551,10 @@ matchStartTimer()
 	
 	visionSetNaked( getDvar( "mapname" ), 2.0 );
 	
-	matchStartText destroy();
-	matchStartTimer destroy();
+	if( isDefined( matchStartText ) )
+		matchStartText destroy();
+	if( isDefined( matchStartTimer ) )
+		matchStartTimer destroy();
 }
 
 matchStartTimerSkip()
@@ -1088,8 +1090,10 @@ freeGameplayHudElems()
 	self notify("perks_hidden"); // stop any threads that are waiting to hide the perk icons
 	
 	// lower message
-	self.lowerMessage destroy();
-	self.lowerTimer destroy();
+	if( isDefined( self.lowerMessage ) )
+		self.lowerMessage destroy();
+	if( isDefined( self.lowerTimer ) )
+		self.lowerTimer destroy();
 	
 	// progress bar
 	if ( isDefined( self.proxBar ) )

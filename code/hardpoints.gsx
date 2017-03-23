@@ -1,3 +1,19 @@
+/*
+	ADDING CUSTOM HARDPOINTS
+	
+	addHardpoint( DVARNAME, NAME, CALLBACK, EXTRAPARAM )
+	DVARNAME - Must be set in dvars script and must have _shop suffix ( nuke_shop )
+	NAME - Hardpoint full name that will show in notify ( ex: nuke --> Thermonuclear Bomb )
+	CALLBACK - callback to hardpoint script entry point ( ex: code\heli::init() )
+	EXTRAPARAM - extra parameter if needed with script callback, maximum 1. Set it to undefined if not needed
+	
+	Add it starting at line 58!
+	
+	Full example:
+	
+	addHardpoint( "nuke", "Thermonuclear Bomb", code\nuke::init, undefined );
+*/
+
 init()
 {
 	makeShopArray();
@@ -35,6 +51,11 @@ makeShopArray()
 	
 	for( i = 0; i < dvarNames.size; i++ )
 		addHardpoint( dvarNames[ i ], names[ i ], callbacks[ i ], extras[ i ] );
+		
+	///////////////////////////////////////
+	//    YOUR CUSTOM HARDPOINTS HERE    //
+	///////////////////////////////////////
+	
 		
 	for( i = 0; i < level.hardpointShopData.size; i++ )
 	{
