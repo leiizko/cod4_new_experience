@@ -4567,8 +4567,7 @@ Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, s
 					if( self.health <= 0 ) // isAlive function doesn't catch death fast enough
 						eAttacker thread maps\mp\gametypes\_damagefeedback::updateDamageFeedback( hasBodyArmor );
 
-					else
-						if( bulletTracePassed( eAttacker getEye(), self getEye(), false, eAttacker ) )
+					else if( !( iDFlags & level.iDFLAGS_PENETRATION ) )
 							eAttacker thread maps\mp\gametypes\_damagefeedback::updateDamageFeedback( hasBodyArmor );
 				}
 			}
