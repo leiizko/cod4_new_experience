@@ -86,8 +86,7 @@ addHardpoint( dvarName, name, callback, extraParam )
 
 onDeath( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime, deathAnimDuration )
 {
-	level endon( "game_ended" );
-	
+	streak = attacker.cur_kill_streak;
 	waittillframeend;
 
 	if( !isDefined( attacker ) || !isDefined( attacker.money ) || sMeansOfDeath == "MOD_FALLING" )
@@ -106,8 +105,8 @@ onDeath( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, p
 			
 		waittillframeend;
 		
-		if( ( attacker.cur_kill_streak % 5 ) == 0 )
-			attacker thread streakNotify( attacker.cur_kill_streak );
+		if( ( streak % 5 ) == 0 )
+			attacker thread streakNotify( streak );
 		
 		if( isDefined( attacker.moneyhud ) )
 			attacker.moneyhud setValue( int( attacker.money ) );
@@ -146,11 +145,6 @@ onDeath( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, p
 
 streakNotify( streak )
 {
-	self notify( "onlyOneStreakThread" );
-	self endon( "onlyOneStreakThread" );
-	
-	wait .25;
-	
 	string = "" + streak + " Kill Streak!";
 	self thread maps\mp\gametypes\_hud_message::oldNotifyMessage( string, undefined, undefined, undefined, undefined, string.size * 0.15 );
 	
