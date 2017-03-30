@@ -89,7 +89,7 @@ onDeath( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, p
 	streak = attacker.cur_kill_streak;
 	waittillframeend;
 
-	if( !isDefined( attacker ) || !isDefined( attacker.money ) || sMeansOfDeath == "MOD_FALLING" )
+	if( !isDefined( attacker ) || !isDefined( attacker.money ) || sMeansOfDeath == "MOD_FALLING" || level.gameEnded )
 		return;
 
 	if( attacker != self )
@@ -105,7 +105,7 @@ onDeath( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, p
 			
 		waittillframeend;
 		
-		if( ( streak % 5 ) == 0 )
+		if( streak > 0 && ( streak % 5 ) == 0 )
 			attacker thread streakNotify( streak );
 		
 		if( isDefined( attacker.moneyhud ) )

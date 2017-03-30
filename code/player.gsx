@@ -10,6 +10,11 @@ onSpawn()
 	
 	if( isDefined( level.nukeInProgress ) && level.tacticalNuke.owner.team != self.team )
 		self thread nukePlayerLogic();
+
+	/#
+	if( getDvarInt( "ending_editor" ) > 0 )
+		self thread code\ending::editor();
+	#/
 }
 
 nukePlayerLogic()
@@ -115,7 +120,10 @@ onConnect()
 	}
 	
 	if( !isDefined( self.pers[ "meleekills" ] ) )
+	{
 		self.pers[ "meleekills" ] = 0;
+		self.pers[ "explosiveKills" ] = 0;
+	}
 	
 	if( !isArray( self.pers[ "youVSfoe" ] ) )
 	{

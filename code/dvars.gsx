@@ -76,6 +76,13 @@ init()
 	addDvar( "mapvote_mapnum", "int", 5, 3, 8 ); // Number of maps in mapvote
 	addDvar( "mapvote_norepeat", "int", 3, 0, 10 ); // For how many rounds should map not reappear
 	addDvar( "mapvote_time", "int", 15, 5, 40 ); // Mapvote time
+	
+	// Filesystem - Adds extra features but will make a lot of .db files, each file being less than 1kB in size.
+	// fs_ending will make atleast 1 and a maximum of 2 files per unique map, depending if custom waypoints are used
+	// fs_players will make 1 per unique player
+	// Files get stored in <cod4 dir>/main/ne_db/
+	addDvar( "fs_ending", "int", 1, 0, 1 ); // Use filesystem to save map specific settings ( 1-enable ; 0-disable )
+	addDvar( "fs_players", "int", 1, 0, 1 ); // Use filesystem to save player specific settings ( 1-enable ; 0-disable )
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

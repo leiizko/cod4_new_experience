@@ -1473,25 +1473,12 @@ endGame( winner, endReasonText )
 	
 	logString( "game ended" );
 	
-	code\ending::init();
+	thread code\ending::init();
+	
+	wait 20;
 	
 	if( level.dvar[ "mapvote" ] )
 		code\mapvote::startVote();
-	
-	players = level.players;
-	for ( index = 0; index < players.size; index++ )
-	{
-		player = players[index];
-		
-		player closeMenu();
-		player closeInGameMenu();
-		player notify ( "reset_outcome" );
-		player allowSpectateTeam( "freelook", true );
-		player thread spawnIntermission();
-		player setclientdvar( "g_scriptMainMenu", game["menu_eog_main"] );
-	}
-	
-	wait 5;
 	
 	exitLevel( false );
 }

@@ -25,7 +25,7 @@ startGameType()
 		thread code\spawnprotection::init();
 	
 	thread serverDvars();
-	thread code\ending::setup();
+	thread code\ending::setstuff();
 	thread code\spectating::init();
 	
 	if( level.dvar[ "rcon_interface" ] )
@@ -57,6 +57,10 @@ fx_cache()
 	level.hardEffects[ "tankerExp" ] = loadfx( "explosions/tanker_explosion" );
 	level.hardEffects[ "smallExp" ] = loadfx( "impacts/large_mud" );
 	level.hardEffects[ "fire" ] = loadfx( "fire/tank_fire_engine" );
+	
+	/#
+	level.pointEffext = loadfx( "misc/ui_pickup_unavailable" );
+	#/
 }
 
 serverDvars()

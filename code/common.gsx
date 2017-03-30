@@ -433,7 +433,7 @@ targetMarkerEvent( owner, j )
 	{
 		self common_scripts\utility::waittill_any( "death", "spawnProtectionDisabled" );
 
-		if( !isReallyAlive( self ) )
+		if( !isReallyAlive( self ) || self hasPerk( "specialty_gpsjammer" ) )
 		{
 			owner.TargetMarker[ j ].alpha = 0;
 			owner.TargetMarker[ j ].baseAlpha = 0;
