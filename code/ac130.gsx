@@ -442,4 +442,5 @@ endHardpoint()
 	self.fireTimes = undefined;
 	
 	level.flyingPlane = undefined;
+	level notify( "flyOverDC" );
 }

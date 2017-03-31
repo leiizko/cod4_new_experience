@@ -42,6 +42,7 @@ setup()
 	
 	thread onPlayerDisconnect( self );
 	self thread onGameEnd( ::finish );
+	thread destroyPlane();
 	
 	if( isDefined( level.chopper ) )
 	{
@@ -58,24 +59,24 @@ setup()
 		ent = level.mannedchopper;
 	}
 	
-	self.plane = spawnplane( self, "script_model", pathStart );
-	self.plane setModel( "vehicle_mig29_desert" );
-	self.plane.angles = VectorToAngles( ent.origin - self.plane.origin );
-	self.missile = spawn( "script_model", self.plane.origin );
-	self.missile setModel( "projectile_hellfire_missile" );
-	self.missile linkTo( self.plane, "tag_left_wingtip" );
-	thread callStrike_planeSound_credit( self.plane, ent.origin );
+	level.plane[ "plane" ] = spawnplane( self, "script_model", pathStart );
+	level.plane[ "plane" ] setModel( "vehicle_mig29_desert" );
+	level.plane[ "plane" ].angles = VectorToAngles( ent.origin - level.plane[ "plane" ].origin );
+	level.plane[ "missile" ] = spawn( "script_model", level.plane[ "plane" ].origin );
+	level.plane[ "missile" ] setModel( "projectile_hellfire_missile" );
+	level.plane[ "missile" ] linkTo( level.plane[ "plane" ], "tag_left_wingtip" );
+	thread callStrike_planeSound_credit( level.plane[ "plane" ], ent.origin );
 	
 	for( ;; )
 	{
-		self.plane.angles = VectorToAngles( ent.origin - self.plane.origin );
-		vector = anglesToForward( self.plane.angles );
-		forward = self.plane.origin + ( vector[ 0 ] * 1600, vector[ 1 ] * 1600, vector[ 2 ] * 1600 );
-		self.plane moveTo( forward, .25 );
+		level.plane[ "plane" ].angles = VectorToAngles( ent.origin - level.plane[ "plane" ].origin );
+		vector = anglesToForward( level.plane[ "plane" ].angles );
+		forward = level.plane[ "plane" ].origin + ( vector[ 0 ] * 1600, vector[ 1 ] * 1600, vector[ 2 ] * 1600 );
+		level.plane[ "plane" ] moveTo( forward, .25 );
 		
 		wait .25;
 		
-		if( distanceSquared( self.plane.origin, ent.origin ) < 16000000 )
+		if( distanceSquared( level.plane[ "plane" ].origin, ent.origin ) < 16000000 )
 		{
 			if( isDefined( level.mannedchopper ) )
 				level.mannedchopper.owner thread code\heli::warning();
@@ -84,23 +85,23 @@ setup()
 		}
 	}
 	
-	self.plane.angles = self.plane.angles + ( 0, 0, 45 );
+	level.plane[ "plane" ].angles = level.plane[ "plane" ].angles + ( 0, 0, 45 );
 	
 	for( i = 0; i < 20; i++ )
 	{
-		angles = self.plane.angles;
-		self.plane.angles = ( angles[ 0 ] - 0.1, angles[ 1 ] - 8, angles[ 2 ] );
-		vector = anglesToForward( self.plane.angles );
-		forward = self.plane.origin + ( vector[ 0 ] * 280, vector[ 1 ] * 280, vector[ 2 ] * 280 );
-		self.plane moveTo( forward, .05 );
+		angles = level.plane[ "plane" ].angles;
+		level.plane[ "plane" ].angles = ( angles[ 0 ] - 0.1, angles[ 1 ] - 8, angles[ 2 ] );
+		vector = anglesToForward( level.plane[ "plane" ].angles );
+		forward = level.plane[ "plane" ].origin + ( vector[ 0 ] * 280, vector[ 1 ] * 280, vector[ 2 ] * 280 );
+		level.plane[ "plane" ] moveTo( forward, .05 );
 		
 		wait .05;
 	}
 	
-	self.plane.angles = self.plane.angles - ( 0, 0, 45 );
-	vector = anglesToForward( self.plane.angles );
-	forward = self.plane.origin + ( vector[ 0 ] * 200000, vector[ 1 ] * 200000, vector[ 2 ] * 200000 );
-	self.plane moveTo( forward, 12 );
+	level.plane[ "plane" ].angles = level.plane[ "plane" ].angles - ( 0, 0, 45 );
+	vector = anglesToForward( level.plane[ "plane" ].angles );
+	forward = level.plane[ "plane" ].origin + ( vector[ 0 ] * 200000, vector[ 1 ] * 200000, vector[ 2 ] * 200000 );
+	level.plane[ "plane" ] moveTo( forward, 12 );
 	
 			 // For manned chopper missile exp must terminate it
 	wait 12; // heliLeave function will terminate the killstreak, this is just safety net incase missile goes all batshit crazy
@@ -115,7 +116,7 @@ heliLeave()
 	level endon( "flyOver" );
 	
 	level.chopper common_scripts\utility::waittill_any( "death", "crashing", "leaving", "helicopter gone", "ASFsafetynet" );
-	self.plane notify("del");
+	level.plane[ "plane" ] notify("del");
 	self thread finish();
 }
 
@@ -126,27 +127,17 @@ mannedHeliLeave()
 	level endon( "flyOver" );
 	
 	level.mannedchopper common_scripts\utility::waittill_any( "ASFsafetynet", "heliEnd" );
-	self.plane notify("del");
+	level.plane[ "plane" ] notify("del");
 	self thread finish();
 }
 
 finish()
 {
 	level notify( "flyOver" );
-	
-	self.plane notify("del");
-	
-	wait .2;
-	
-	if( isDefined( self.plane ) )
-		self.plane delete();
 
 	level.flyingplane = undefined;
-	
-	if( isDefined( self.missile ) )
-		self.missile delete();
-		
 	level.missileLaunched = undefined;
+	level notify( "flyOverDC" );
 }
 
 launchAA( ent )
@@ -158,7 +149,7 @@ launchAA( ent )
 	level.missileLaunched = true;
 	counterNum = undefined;
 	
-	self.missile unLink();
+	level.plane[ "missile" ] unLink();
 	self thread trailFX();
 	
 	if( isDefined( level.counterMeasures ) )
@@ -170,37 +161,42 @@ launchAA( ent )
 	{
 		if( !isDefined( level.counterMeasuresInAir ) || !isDefined( level.counterMeasures )  )
 		{
-			self.missile.angles = VectorToAngles( ( ent.origin - ( 0, 0, 64 ) ) - self.missile.origin );
-			vector = anglesToForward( self.missile.angles );
-			forward = self.missile.origin + ( vector[ 0 ] * 85, vector[ 1 ] * 85, vector[ 2 ] * 85 );
-			collision = bulletTrace( self.missile.origin, forward, false, self );
-			self.missile moveTo( forward, .05 );
+			level.plane[ "missile" ].angles = VectorToAngles( ( ent.origin - ( 0, 0, 64 ) ) - level.plane[ "missile" ].origin );
+			vector = anglesToForward( level.plane[ "missile" ].angles );
+			forward = level.plane[ "missile" ].origin + ( vector[ 0 ] * 85, vector[ 1 ] * 85, vector[ 2 ] * 85 );
+			collision = bulletTrace( level.plane[ "missile" ].origin, forward, false, self );
+			level.plane[ "missile" ] moveTo( forward, .05 );
 			
 			if( collision[ "surfacetype" ] != "default" && collision[ "fraction" ] < 1 )
 			{
-				thread playSoundinSpace( "grenade_explode_default", self.missile.origin );
-				PlayFX( level.chopper_fx["explode"]["large"], self.missile.origin );
+				thread playSoundinSpace( "grenade_explode_default", level.plane[ "missile" ].origin );
+				PlayFX( level.chopper_fx["explode"]["large"], level.plane[ "missile" ].origin );
 				level.missileLaunched = undefined;
 				if( !isDefined( level.mannedchopper ) )
 					level.chopper.damageTaken = level.chopper.maxHealth + 1;
 				else
 				{
-					level.mannedchopper.damageTaken = level.mannedchopper.maxHealth;
 					if( isDefined( level.mannedchopper.playerInside ) )
+					{
+						level.mannedchopper.owner.sWeaponForKillcam = "ASF";
+						level.mannedchopper.owner restoreHP();
 						level.mannedchopper.owner thread [[level.callbackPlayerDamage]](
-																						self.missile,
+																						level.plane[ "missile" ],
 																						self, 
 																						1000000,
 																						0,
 																						"MOD_PROJECTILE_SPLASH", 
 																						"artillery_mp", 
-																						self.missile.origin,
-																						vectornormalize( self.missile.origin - level.mannedchopper.owner.origin ),
+																						level.plane[ "missile" ].origin,
+																						vectornormalize( level.plane[ "missile" ].origin - level.mannedchopper.owner.origin ),
 																						"none",
 																						0 
 																						);
+					}
+					level.mannedchopper.damageTaken = level.mannedchopper.maxHealth;
 				}
 				self notify( "destroyed_helicopter" );
+				self thread finish();
 				break;
 			}
 		}
@@ -210,48 +206,63 @@ launchAA( ent )
 			if( !isDefined( counterNum ) )
 				counterNum = randomInt( 5 );
 			
-			self.missile.angles = VectorToAngles( level.counterMeasures[ counterNum ].origin - self.missile.origin );
-			vector = anglesToForward( self.missile.angles );
-			forward = self.missile.origin + ( vector[ 0 ] * 85, vector[ 1 ] * 85, vector[ 2 ] * 85 );
-			self.missile moveTo( forward, .05 );
+			level.plane[ "missile" ].angles = VectorToAngles( level.counterMeasures[ counterNum ].origin - level.plane[ "missile" ].origin );
+			vector = anglesToForward( level.plane[ "missile" ].angles );
+			forward = level.plane[ "missile" ].origin + ( vector[ 0 ] * 85, vector[ 1 ] * 85, vector[ 2 ] * 85 );
+			level.plane[ "missile" ] moveTo( forward, .05 );
 			
-			if( abs( distanceSquared( level.counterMeasures[ counterNum ].origin, self.missile.origin ) ) < 10000 )
+			if( abs( distanceSquared( level.counterMeasures[ counterNum ].origin, level.plane[ "missile" ].origin ) ) < 10000 )
 			{
-				thread playSoundinSpace( "grenade_explode_default", self.missile.origin );
-				PlayFX( level.chopper_fx["explode"]["large"], self.missile.origin );
+				thread playSoundinSpace( "grenade_explode_default", level.plane[ "missile" ].origin );
+				PlayFX( level.chopper_fx["explode"]["large"], level.plane[ "missile" ].origin );
 				level.missileLaunched = undefined;
-				dist = distance( self.missile.origin, level.mannedchopper.origin );
-
-				if( dist < 500 )
+				dist = distance( level.plane[ "missile" ].origin, level.mannedchopper.origin );
+				damage = 0;
+				
+				if( dist < 1000 )
 				{
-					level.mannedchopper.damageTaken += level.mannedchopper.maxHealth / ( dist / 20 );
-					level.mannedchopper.owner.heliHud[ 5 ] setValue( int( level.mannedchopper.maxHealth - level.mannedchopper.damageTaken ) );
+					damage = level.mannedchopper.maxHealth / ( dist / 20 );
+					level.mannedchopper.owner.heliHud[ 5 ] setValue( int( level.mannedchopper.maxHealth - level.mannedchopper.damageTaken - damage ) );
+				}
+				
+				if( level.mannedchopper.damageTaken + damage >= level.mannedchopper.maxHealth )
+				{
+					if( isDefined( level.mannedchopper.playerInside ) )
+					{
+						level.mannedchopper.owner.sWeaponForKillcam = "ASF";
+						level.mannedchopper.owner restoreHP();
+						level.mannedchopper.owner thread [[level.callbackPlayerDamage]](
+																						level.plane[ "missile" ],
+																						self, 
+																						1000000,
+																						0,
+																						"MOD_PROJECTILE_SPLASH", 
+																						"artillery_mp", 
+																						level.plane[ "missile" ].origin,
+																						vectornormalize( level.plane[ "missile" ].origin - level.mannedchopper.owner.origin ),
+																						"none",
+																						0 
+																						);
+					}
 					
-					if( level.mannedchopper.damageTaken > level.mannedchopper.maxHealth )
-						level.mannedchopper.damageTaken = level.mannedchopper.maxHealth;
+					level.mannedchopper.damageTaken = level.mannedchopper.maxHealth;
+					
+					r = 0.0 + ( level.mannedchopper.damageTaken / level.mannedchopper.maxHealth );
+					g = 1.0 - ( level.mannedchopper.damageTaken / level.mannedchopper.maxHealth );
+					
+					level.mannedchopper.owner.heliHud[ 5 ].color = ( r, g, 0.0 );
+					self notify( "destroyed_helicopter" );
+				}
+				else
+				{
+					level.mannedchopper.damageTaken += damage;
 					
 					r = 0.0 + ( level.mannedchopper.damageTaken / level.mannedchopper.maxHealth );
 					g = 1.0 - ( level.mannedchopper.damageTaken / level.mannedchopper.maxHealth );
 					
 					level.mannedchopper.owner.heliHud[ 5 ].color = ( r, g, 0.0 );
 				}
-				if( level.mannedchopper.damageTaken >= level.mannedchopper.maxHealth )
-				{
-					if( isDefined( level.mannedchopper.playerInside ) )
-						level.mannedchopper.owner thread [[level.callbackPlayerDamage]](
-																						self.missile,
-																						self, 
-																						1000000,
-																						0,
-																						"MOD_PROJECTILE_SPLASH", 
-																						"artillery_mp", 
-																						self.missile.origin,
-																						vectornormalize( self.missile.origin - level.mannedchopper.owner.origin ),
-																						"none",
-																						0 
-																						);
-					self notify( "destroyed_helicopter" );
-				}
+				
 				self thread finish();
 				break;
 			}
@@ -260,8 +271,8 @@ launchAA( ent )
 		wait .05;
 	}
 	
-	if( isDefined( self.missile ) )
-		self.missile delete();
+	if( isDefined( level.plane[ "missile" ] ) )
+		level.plane[ "missile" ] delete();
 }
 
 trailFX( )
@@ -272,7 +283,7 @@ trailFX( )
 
 	while( isDefined( level.missileLaunched ) )
 	{
-		playFxonTag( level.hardEffects[ "hellfireGeo" ], self.missile, "tag_origin" );
+		playFxonTag( level.hardEffects[ "hellfireGeo" ], level.plane[ "missile" ], "tag_origin" );
 		
 		wait 2;
 	}

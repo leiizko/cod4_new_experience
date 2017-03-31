@@ -316,6 +316,8 @@ doFlares()
 		if( isDefined( level.counterMeasures[ i ] ) )
 			level.counterMeasures[ i ] delete();
 	}
+	
+	level.counterMeasures = undefined;
 }
 
 warning()
@@ -932,9 +934,11 @@ endHeli( type )
 	
 	if( isDefined( level.heliCockpit ) )
 		level.heliCockpit delete();
+	level.heliCockpit = undefined;
 		
 	if( isDefined( level.gunnerCockpit ) )
 		level.gunnerCockpit delete();
+	level.gunnerCockpit = undefined;
 		
 	if( isDefined( level.counterMeasures ) )
 	{
@@ -944,6 +948,7 @@ endHeli( type )
 				level.counterMeasures[ i ] delete();
 		}
 	}
+	level.counterMeasures = undefined;
 		
 	waittillframeend;
 	
@@ -958,6 +963,7 @@ endHeli( type )
 				self.heliHud[ i ] destroy();
 		}
 	}
+	self.heliHud = undefined;
 	
 	waittillframeend;
 	
@@ -967,6 +973,7 @@ endHeli( type )
 			if( isDefined( self.r[ k ] ) )
 				self.r[ k ] destroy();
 	}
+	self.r = undefined;
 	
 	waittillframeend;
 	
@@ -978,6 +985,7 @@ endHeli( type )
 		if( isDefined( self.countdown[ 1 ] ) )
 			self.countdown[ 1 ] destroy();
 	}
+	self.countdown = undefined;
 }
 
 heli_crash()

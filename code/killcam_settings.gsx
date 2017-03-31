@@ -156,6 +156,10 @@ killcamData( weap, means )
 						data.icon = "compass_objpoint_flak";
 						data.name = "Artillery";
 						break;
+					case "ASF":
+						data.icon = "compass_objpoint_airstrike_busy";
+						data.name = "Air Superiority Fighter";
+						break;
 					default:
 						data.icon = "death_airstrike";
 						data.name = "Airstrike";

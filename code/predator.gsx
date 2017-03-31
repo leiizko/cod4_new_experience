@@ -409,4 +409,5 @@ endHardpoint()
 	wait .1;
 	
 	level.flyingPlane = undefined;
+	level notify( "flyOverDC" );
 }

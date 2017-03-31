@@ -65,6 +65,7 @@ endBarage()
 			waittillframeend;
 		}
 	}
+	level.mortarShell = undefined;
 	
 	wait .1;
 	

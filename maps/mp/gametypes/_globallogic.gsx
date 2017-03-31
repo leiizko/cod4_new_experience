@@ -5741,6 +5741,9 @@ obituaryText( victim, killer, weapon )
 		case "artillery":
 			string += "^1Artillery^7 ] ";
 			break;
+		case "ASF":
+			string += "^1ASF^7 ] ";
+			break;
 		default:
 			string += "^1Airstrike^7 ] ";
 			break;

@@ -289,13 +289,12 @@ setHUD( type )
 onPlayerDisconnect( player )
 {
 	level endon( "game_ended" );
-	level endon( "flyOver" );
+	level endon( "flyOverDC" );
 	
 	player waittill( "disconnect" );
 	
-	thread resetVariables(); // wait for other functions to terminate before reseting the variables used in them
-	
 	level notify( "flyOver" );
+	thread resetVariables(); // wait for other functions to terminate before reseting the variables used in them
 }
 
 resetVariables()
