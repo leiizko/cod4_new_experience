@@ -864,6 +864,7 @@ endHeli( type )
 	
 	level.mannedchopper notify( "heliEnd" );
 	level.heliCockpit unLink();
+	level.gunnerCockpit unLink();
 	
 	level.mannedchopper.playerInside = undefined;
 	
@@ -878,6 +879,7 @@ endHeli( type )
 		self thread code\common::restoreVisionSettings();
 		self setClientDvar( "g_compassshowenemies", 0 );
 		self show();
+		self.inGunner = undefined;
 	}
 	
 	if( type == 0 )
@@ -909,6 +911,7 @@ endHeli( type )
 
 	else if( type == 1 )
 	{	
+		self unLink();
 		self thread jumpOut();
 		
 		level.mannedchopper thread heli_crash();
