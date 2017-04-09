@@ -1390,7 +1390,7 @@ endGame( winner, endReasonText )
 	roundEndWait( level.postRoundTime, true );
 	
 	// -Final- //
-	if( getDvar( "g_gametype" ) == "dm" )
+	if( !level.teambased )
 	{
 		if( !isDefined( winner ) )
 			team = "dc";

@@ -78,4 +78,7 @@ serverDvars()
 		setDvar( "g_gravity", 600 );
 		setDvar( "g_speed", 210 );
 	}
+	
+	setDvar( "_mod", "New Experience" );
+	setDvar( "_modVer", "c42" ); // Commit number
 }

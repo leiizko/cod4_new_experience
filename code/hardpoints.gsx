@@ -140,6 +140,15 @@ onDeath( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, p
 			else if( attacker.money < level.hardpointShopData[ i ][ 0 ] )
 				break;
 		}
+		
+		// Notifying the player about UAV assists may cause too much spam on full server
+		if( isDefined( level.radarPlayer ) && level.radarPlayer != attacker )
+		{
+			level.radarPlayer.money++;
+
+			if( isDefined( level.radarPlayer.moneyhud ) )
+				level.radarPlayer.moneyhud setValue( int( attacker.money ) );
+		}
 	}
 }
 
@@ -298,6 +307,15 @@ trigger( hardpointType )
 {
 	if ( hardpointType == "radar_mp" )
 	{
+		if( isDefined( level.radarPlayer ) )
+		{
+			iPrintLnBold( "UAV RECON NOT AVAILABLE" );
+			return false;
+		}
+
+		if( level.teambased )
+			level.radarPlayer = self;
+
 		self thread maps\mp\gametypes\_hardpoints::useRadarItem();
 	}
 	else if ( hardpointType == "airstrike_mp" )

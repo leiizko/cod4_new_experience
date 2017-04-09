@@ -370,11 +370,6 @@ targetMarkers()
 
 	j = 0;
 	
-	if( getDvar( "g_gametype" ) == "dm" )
-		isFFA = true;
-	else
-		isFFA = false;
-	
 	players = getPlayers();
 	
 	for( i = 0; i < players.size; i++ )
@@ -385,7 +380,7 @@ targetMarkers()
 		if( players[ i ] == self )
 			continue;
 			
-		if( ( players[ i ].pers[ "team" ] == self.pers[ "team" ] && !isFFA ) || players[ i ].pers[ "team" ] == "spectator" )
+		if( ( players[ i ].pers[ "team" ] == self.pers[ "team" ] && level.teambased ) || players[ i ].pers[ "team" ] == "spectator" )
 			continue;
 
 		self.targetMarker[ j ] = newClientHudElem( self );
@@ -447,7 +442,7 @@ targetMarkerEvent( owner, j )
 
 getPlayers()
 {
-	return getEntarray( "player", "classname" );
+	return level.players;
 }
 
 isReallyAlive( player )
@@ -460,7 +455,7 @@ isReallyAlive( player )
 
 notifyTeam( string, glow, duration )
 {
-	if( getDvar( "g_gametype" ) == "dm" )
+	if( !level.teambased )
 		return;
 	
 	players = getPlayers();
@@ -476,7 +471,7 @@ notifyTeam( string, glow, duration )
 
 notifyTeamLn( string )
 {
-	if( getDvar( "g_gametype" ) == "dm" )
+	if( !level.teambased )
 		return;
 
 	players = getPlayers();
@@ -492,7 +487,7 @@ notifyTeamLn( string )
 
 notifyTeamBig( string, glow, duration )
 {
-	if( getDvar( "g_gametype" ) == "dm" )
+	if( !level.teambased )
 		return;
 
 	players = getPlayers();
@@ -552,8 +547,7 @@ restoreHP()
 
 	self.health = self.maxhealth;
 	
-	if( !level.hardcoreMode )
-		self setClientDvar( "ui_hud_hardcore", 0 );
+	self setClientDvar( "ui_hud_hardcore", level.hardcoreMode );
 }
 
 toUpper( letter )
