@@ -880,6 +880,8 @@ giveLoadout( team, class )
 
 		self thread logClassChoice( class, primaryWeapon, grenadeTypeSecondary, self.specialty );
 	}
+	
+	self.pers[ "weaponClassPrimary" ] = weaponClass( primaryWeapon );
 
 	switch ( weaponClass( primaryWeapon ) )
 	{

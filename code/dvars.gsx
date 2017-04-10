@@ -81,8 +81,12 @@ init()
 	// fs_ending will make atleast 1 and a maximum of 2 files per unique map, depending if custom waypoints are used
 	// fs_players will make 1 per unique player
 	// Files get stored in <cod4 dir>/main/ne_db/
+	// fs_players may cause lag on slower server if there is a lot of players online
 	addDvar( "fs_ending", "int", 1, 0, 1 ); // Use filesystem to save map specific settings ( 1-enable ; 0-disable )
 	addDvar( "fs_players", "int", 1, 0, 1 ); // Use filesystem to save player specific settings ( 1-enable ; 0-disable )
+	
+	addDvar( "shopbuttons_allowchange", "int", 1, 0, 1 ); // Allow the player do decide which buttons to use to navigate hardpoint shop ( 1-W/S ; 0-F/V )
+	addDvar( "shopbuttons_default", "int", 1, 0, 1 ); // If above is set to 0, the players will be forced to use this buttons ( 1-W/S ; 0-F/V )
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -203,11 +203,17 @@ onSpawn()
 		
 		if( currentWeapon == "radar_mp" )
 		{	
+			if( self.pers[ "hardpointSType" ] )
+				self SetMoveSpeedScale( 0 );
+
 			self thread shop();
 			self thread exitShop();
 			self thread shopThink();
 			
 			self waittill( "destroy_shop" );
+			
+			if( self.pers[ "hardpointSType" ] )
+				self thread restoreMoveSpeed();
 			
 			wait .1;
 			
@@ -220,6 +226,31 @@ onSpawn()
 		else
 			self.pers[ "lastWeapon" ] = currentWeapon;
 	}
+}
+
+restoreMoveSpeed()
+{
+	switch ( self.pers[ "weaponClassPrimary" ] )
+	{
+		case "rifle":
+			self setMoveSpeedScale( 0.95 );
+			break;
+		case "pistol":
+			self setMoveSpeedScale( 1.0 );
+			break;
+		case "mg":
+			self setMoveSpeedScale( 0.875 );
+			break;
+		case "smg":
+			self setMoveSpeedScale( 1.0 );
+			break;
+		case "spread":
+			self setMoveSpeedScale( 1.0 );
+			break;
+		default:
+			self setMoveSpeedScale( 1.0 );
+			break;
+		}
 }
 
 shopThink()
@@ -235,12 +266,12 @@ shopThink()
 			self notify( "destroy_shop" );
 			break;
 		}
-		else if ( self useButtonPressed() )
+		else if ( ( self useButtonPressed() && !self.pers[ "hardpointSType" ] ) || ( self backButtonPressed() && self.pers[ "hardpointSType" ] ) )
 		{
 			self thread updateHUD( 1 );
 			wait .25;
 		}
-		else if ( self meleeButtonPressed() )
+		else if ( ( self meleeButtonPressed() && !self.pers[ "hardpointSType" ] ) || ( self forwardButtonPressed() && self.pers[ "hardpointSType" ] ) )
 		{
 			self thread updateHUD( 2 );
 			wait .25;
@@ -464,7 +495,10 @@ shop()
 	self.shop[ 2 ].archived = false;
 	self.shop[ 2 ].alignX = "center";
 	self.shop[ 2 ].alignY = "top";
-	self.shop[ 2 ] setText( "Press ^1[{+melee}] ^7or ^2[{+activate}]^7 to move ^1UP ^7or ^2DOWN" );
+	if( !self.pers[ "hardpointSType" ] )
+		self.shop[ 2 ] setText( "Press ^1[{+melee}] ^7or ^2[{+activate}]^7 to move ^1UP ^7or ^2DOWN" );
+	else
+		self.shop[ 2 ] setText( "Press ^1[{+forward}] ^7or ^2[{+back}]^7 to move ^1UP ^7or ^2DOWN" );
 	self.shop[ 2 ].horzAlign = "center";
 	self.shop[ 2 ].vertAlign = "top";
 	self.shop[ 2 ].fontscale = 1.7;

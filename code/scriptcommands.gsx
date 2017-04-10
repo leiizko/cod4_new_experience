@@ -14,6 +14,7 @@ init()
 	addscriptcommand( "fov", 1 );
 	addscriptcommand( "fps", 1 );
 	addscriptcommand( "promod", 1 );
+	addscriptcommand( "shop", 1 );
 }
 
 /*
@@ -22,6 +23,7 @@ init()
 	Stat 3160 used for r_fullbright setting
 	Stat 3161 used for cg_fovscale / cg_fov setting
 	Stat 3162 used for promod vision tweak setting
+	Stat 3163 used for hardpoint shop button setting
 */
 
 commandHandler( cmd, arg )
@@ -112,6 +114,28 @@ commandHandler( cmd, arg )
 				self.pers["promodTweaks"] = 0;
 			}
 			self thread code\player::userSettings();
+			break;
+		
+		case "shop":
+			if( !level.dvar[ "shopbuttons_allowchange" ] )
+			{
+				self iPrintlnBold( "This command was disabled by server admin." );
+				break;
+			}
+			
+			if( self.pers[ "hardpointSType" ] == 1 )
+			{
+				self.pers[ "hardpointSType" ] = 0;
+				self setStat( 3163, 0 );
+				self iPrintlnBold( "Shop buttons changed to [{+melee}] / [{+activate}]" );
+			}
+			
+			else
+			{
+				self.pers[ "hardpointSType" ] = 1;
+				self setStat( 3163, 1 );
+				self iPrintlnBold( "Shop buttons changed to [{+forward}] / [{+back}]" );
+			}
 			break;
 				
 		default:

@@ -119,6 +119,21 @@ onConnect()
 		}
 	}
 	
+	if( !isDefined( self.pers[ "hardpointSType" ] ) )
+	{
+		if( level.dvar[ "shopbuttons_allowchange" ] )
+			self.pers[ "hardpointSType" ] = self getStat( 3163 );
+		else
+			self.pers[ "hardpointSType" ] = level.dvar[ "shopbuttons_default" ];
+			
+		if( self.pers[ "hardpointSType" ] != 1 && self.pers[ "hardpointSType" ] != 0 )
+		{
+			self setstat( 3163, 0 );
+			self.pers[ "hardpointSType" ] = 0;
+			self iprintlnbold( "Error: illegal shop value, setting 3163 to 0" );
+		}
+	}
+	
 	if( !isDefined( self.pers[ "meleekills" ] ) )
 	{
 		self.pers[ "meleekills" ] = 0;
