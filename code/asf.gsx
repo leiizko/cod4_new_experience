@@ -9,13 +9,13 @@ init()
 		return false;
 	}
 	
-	if( isDefined( level.chopper ) && level.chopper.team == self.team )
+	if( isDefined( level.chopper ) && level.chopper.team == self.team && level.teambased )
 	{
 		self iPrintLnBold( "ASF reports no enemy chopper" );
 		return false;
 	}
 	
-	if( isDefined( level.mannedchopper ) && level.mannedchopper.team == self.team )
+	if( isDefined( level.mannedchopper ) && level.mannedchopper.team == self.team && level.teambased )
 	{
 		self iPrintLnBold( "ASF reports no enemy chopper" );
 		return false;
