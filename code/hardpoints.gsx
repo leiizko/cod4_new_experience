@@ -321,7 +321,7 @@ buy()
 	after = self.money;
 	difference = int( after - before );
 	
-	if( difference != 0 )
+	if( difference != 0 && level.dvar[ "shopXP" ] )
 		self thread maps\mp\gametypes\_rank::updateRankScoreHUD( difference );
 	
 	for( i = 0; i < level.hardpointShopData.size; i++ )

@@ -44,6 +44,8 @@ init()
 	addDvar( "default_fov", "int", 0, 0, 2 ); // Field of view setting, players won't be able to change it ( 2-FOV=100 ; 1-FOV=90 ; 0-FOV=80 )
 	addDvar( "default_promod", "int", 0, 0, 1 ); // promod setting, players won't be able to change it ( 1-enable ; 0-disable )
 	addDvar( "hardpoint_streak", "int", 0, 0, 1 ); // Hardpoint kills count toward kill streak ( 1-yes ; 0-no )
+	addDvar( "showXP", "int", 1, 0, 1 ); // Show score XP on kills
+	addDvar( "shopXP", "int", 1, 0, 1 ); // Show shop $ gain instead of kill XP on kills
 	
 	// Hardpoints - old style, required kill streak
 	addDvar( "radar", "int", 3, 1, 100 );

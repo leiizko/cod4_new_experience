@@ -379,13 +379,13 @@ giveRankXP( type, value, melee )
 	if ( level.rankedMatch && updateRank() )
 		self thread updateRankAnnounceHUD();
 
-	if ( isDefined( self.enableText ) && self.enableText && !level.hardcoreMode )
+	if ( isDefined( self.enableText ) && self.enableText && level.dvar[ "showXP" ] )
 	{
 		if ( type == "teamkill" )
 			self thread updateRankScoreHUD( 0 - getScoreInfoValue( "kill" ) );
 		else
 		{
-			if( level.dvar["old_hardpoints"] )
+			if( level.dvar["old_hardpoints"] || !level.dvar[ "shopXP" ] )
 				self thread updateRankScoreHUD( value );
 				
 			else
