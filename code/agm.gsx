@@ -222,11 +222,10 @@ launchMissile()
 		if( angles[ 0 ] <= 30 )
 			self setPlayerAngles( ( 30, angles[1], angles[2] ) );
 			
-		
+		level.plane[ "missile" ].angles = angles;
 		vector = anglesToForward( level.plane[ "missile" ].angles );
 		forward = level.plane[ "missile" ].origin + ( vector[ 0 ] * speed, vector[ 1 ] * speed, vector[ 2 ] * speed );
 		collision = bulletTrace( level.plane[ "missile" ].origin, forward, false, self );
-		level.plane[ "missile" ].angles = self getPlayerAngles();
 		level.plane[ "missile" ] moveTo( forward, .05 );
 		
 		if( collision[ "surfacetype" ] != "default" && collision[ "fraction" ] < 1 ) 

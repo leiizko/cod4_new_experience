@@ -131,6 +131,9 @@ showNotifyMessage( notifyData )
 	self endon("disconnect");
 	level endon( "game_ended" );
 	
+	if( level.gameEnded || !isDefined( notifyData ) )
+		return;
+	
 	self.doingNotify = true;
 
 	waitRequireVisibility( 0 );
