@@ -59,7 +59,7 @@ init()
 */
 bestPlayers()
 {
-	filename = "./ne_db/mapstats/" + getDvar( "mapname" ) + ".db";
+	filename = "./ne_db/mapstats/" + toLower( getDvar( "mapname" ) ) + ".db";
 	array = 0;
 	if( level.dvar[ "fs_ending" ] && FS_TestFile( filename ) )
 	{
@@ -77,7 +77,7 @@ bestPlayers()
 		array = [];
 		for( i = 0; i < 5; i++ )
 		{
-			array[ i ] = getDvar( "mapstat_" + i + "_" + getDvar( "mapname" ) );
+			array[ i ] = getDvar( "mapstat_" + i + "_" + toLower( getDvar( "mapname" ) ) );
 			array[ i ] = strTok( array[ i ], ";" );
 		}
 	}
@@ -148,7 +148,7 @@ bestPlayers()
 	else
 	{
 		for( i = 0; i < saveArray.size; i++ )
-			setDvar( "mapstat_" + i + "_" + getDvar( "mapname" ), saveArray[ i ] );
+			setDvar( "mapstat_" + i + "_" + toLower( getDvar( "mapname" ) ), saveArray[ i ] );
 	}
 	
 	huds = [];
@@ -228,7 +228,7 @@ setStuff()
 	
 	
 	array = 0;
-	filename = "./ne_db/waypoints/" + getDvar( "mapname" ) + ".db";
+	filename = "./ne_db/waypoints/" + toLower( getDvar( "mapname" ) ) + ".db";
 	if( level.dvar[ "fs_ending" ] && FS_TestFile( filename ) )
 	{
 		array = readFile( filename );
@@ -243,7 +243,7 @@ setStuff()
 	if( !isArray( array ) || ( isArray( array ) && array.size < 2 ) )
 	{
 		array = [];
-		switch( getDvar( "mapname" ) )
+		switch( toLower( getDvar( "mapname" ) ) )
 		{
 			case "mp_backlot":
 				array[ array.size ] = ( 632.152, -259.681, 436.125 );
@@ -663,61 +663,20 @@ endingAngles()
 	}
 }
 
+
+// #OVERTHINK
 toVector( string )
 {
-	vec = [];
-	nums = [];
-	nums[ 0 ][ 0 ] = "";
-	nums[ 0 ][ 1 ] = "";
-	nums[ 1 ][ 0 ] = "";
-	nums[ 1 ][ 1 ] = "";
-	nums[ 2 ][ 0 ] = "";
-	nums[ 2 ][ 1 ] = "";
+	cleanedString = "";
+	for( i = 1; i < string.size - 1; i++ )
+		cleanedString += string[ i ];
 	
-	n = 0;
-	j = 0;
-	for( i = 0; i < string.size; i++ )
-	{
-		if( int( string[ i ] ) || string[ i ] == "-" || string[ i ] == "0" ) // int( 0 ) = boolean false
-			nums[ n ][ j ] += string[ i ];
-		else if( string[ i ] == "." )
-			j++;
-		else if( string[ i ] == "," )
-		{
-			n++;
-			if( j > 0 )
-				j--;
-		}
-	}
+	vec3 = strTok( cleanedString, ", " );
 	
-	for( i = 0; i < nums.size; i++ )
-	{
-		nums[ i ][ 0 ] = int( nums[ i ][ 0 ] );
-		
-		if( nums[ i ][ 1 ] != "" )
-		{
-			by = pow( nums[ i ][ 1 ].size );
-			nums[ i ][ 1 ] = int( nums[ i ][ 1 ] ) / by;
-		}
-		else
-			nums[ i ][ 1 ] = 0;
-		
-		if( nums[ i ][ 0 ] > 0 )
-			vec[ i ] = nums[ i ][ 0 ] + nums[ i ][ 1 ];
-		else
-			vec[ i ] = nums[ i ][ 0 ] - nums[ i ][ 1 ];
-	}
+	for( i = 0; i < 3; i++ )
+		setDvar( "toVec_" + i, vec3[ i ] );
 	
-	return ( vec[ 0 ], vec[ 1 ], vec[ 2 ] );
-}
-
-pow( times )
-{
-	num = 10;
-	for( i = 1; i < times; i++ )
-		num *= 10;
-	
-	return num;
+	return ( getDvarFloat( "toVec_0" ), getDvarFloat( "toVec_1" ), getDvarFloat( "toVec_2" ) );
 }
 
 createElem( horzAlign, vertAlign, alignX, alignY, x, y, scale, alpha )
@@ -802,7 +761,7 @@ editor()
 		
 		if( self reloadButtonPressed() )
 		{
-			filename = "./ne_db/waypoints/" + getDvar( "mapname" ) + ".db";
+			filename = "./ne_db/waypoints/" + toLower( getDvar( "mapname" ) ) + ".db";
 			writeToFile( filename, array );
 			iPrintLnBold( "Points have been saved to file!" );
 			break;
