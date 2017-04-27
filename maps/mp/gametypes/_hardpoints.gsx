@@ -1304,7 +1304,8 @@ useTeamUAV( team, otherteam )
 	
 	setTeamRadarWrapper( team, false );
 	
-	level.radarPlayer = undefined;
+	if( isDefined( level.radarPlayer ) )
+		level.radarPlayer[ team ] = undefined;
 	
 	printAndSoundOnEveryone( team, otherteam, &"MP_WAR_RADAR_EXPIRED", &"MP_WAR_RADAR_EXPIRED_ENEMY", undefined, undefined, "" );
 }

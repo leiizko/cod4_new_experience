@@ -20,6 +20,8 @@ init()
 	thread code\events::addConnectEvent( ::onConnected );
 	thread code\events::addSpawnEvent( ::onSpawn );
 	thread code\events::addDeathEvent( ::onDeath );
+	
+	level.radarPlayer = [];
 }
 
 makeShopArray()
@@ -142,12 +144,12 @@ onDeath( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, p
 		}
 		
 		// Notifying the player about UAV assists may cause too much spam on full server
-		if( isDefined( level.radarPlayer ) && level.radarPlayer != attacker )
+		if( isDefined( level.radarPlayer[ attacker.team ] ) && level.radarPlayer[ attacker.team ] != attacker )
 		{
-			level.radarPlayer.money++;
+			level.radarPlayer[ attacker.team ].money++;
 
-			if( isDefined( level.radarPlayer.moneyhud ) )
-				level.radarPlayer.moneyhud setValue( int( attacker.money ) );
+			if( isDefined( level.radarPlayer[ attacker.team ].moneyhud ) )
+				level.radarPlayer[ attacker.team ].moneyhud setValue( int( attacker.money ) );
 		}
 	}
 }
@@ -338,14 +340,14 @@ trigger( hardpointType )
 {
 	if ( hardpointType == "radar_mp" )
 	{
-		if( isDefined( level.radarPlayer ) )
+		if( isDefined( level.radarPlayer[ self.team ] ) )
 		{
-			iPrintLnBold( "UAV RECON NOT AVAILABLE" );
+			self iPrintLnBold( "UAV RECON NOT AVAILABLE" );
 			return false;
 		}
 
 		if( level.teambased )
-			level.radarPlayer = self;
+			level.radarPlayer[ self.team ] = self;
 
 		self thread maps\mp\gametypes\_hardpoints::useRadarItem();
 	}

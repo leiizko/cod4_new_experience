@@ -80,5 +80,5 @@ serverDvars()
 	}
 	
 	setDvar( "_mod", "New Experience" );
-	setDvar( "_modVer", "c43" ); // Commit number
+	setDvar( "_modVer", "0.9" );
 }
