@@ -149,7 +149,7 @@ onDeath( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, p
 			level.radarPlayer[ attacker.team ].money++;
 
 			if( isDefined( level.radarPlayer[ attacker.team ].moneyhud ) )
-				level.radarPlayer[ attacker.team ].moneyhud setValue( int( attacker.money ) );
+				level.radarPlayer[ attacker.team ].moneyhud setValue( int( level.radarPlayer[ attacker.team ].money ) );
 		}
 	}
 }
