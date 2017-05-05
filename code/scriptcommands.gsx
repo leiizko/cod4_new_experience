@@ -15,6 +15,8 @@ init()
 	addscriptcommand( "fps", 1 );
 	addscriptcommand( "promod", 1 );
 	addscriptcommand( "shop", 1 );
+	addscriptcommand( "stats", 1 );
+	addscriptcommand( "emblem", 1 );
 }
 
 /*
@@ -36,26 +38,38 @@ commandHandler( cmd, arg )
 				self iPrintlnBold( "This command was disabled by server admin." );
 				break;
 			}
+			killTweaks = undefined;
+			stat = 0;
 
 			if( self.pers["fullbright"] == 0 )
 			{
 				self iPrintlnBold( "Fullbright ^2ON ^7" );
-				self setstat(3160,1);
+				stat = 1;
 				self.pers["fullbright"] = 1;
 					
 				if( self.pers["promodTweaks"] == 1 )
 				{
 					self iPrintlnBold( "Promod vision ^1OFF" );
-					self setstat(3162,0);
+					killTweaks = true;
 					self.pers["promodTweaks"] = 0;
 				}
 			}
 			else
 			{
 				self iPrintlnBold( "Fullbright ^1OFF" );
-				self setstat(3160,0);
+				stat = 0;
 				self.pers["fullbright"] = 0;
 			}
+			
+			if( !level.dvar[ "fs_players" ] )
+			{
+				self setstat( 3160, stat );
+				
+				if( isDefined( killTweaks ) )
+					self setstat(3162,0);
+				
+			}
+			
 			self thread code\player::userSettings();
 			break;
 
@@ -65,25 +79,30 @@ commandHandler( cmd, arg )
 				self iPrintlnBold( "This command was disabled by server admin." );
 				break;
 			}
+			stat = 0;
 				
 			if(self.pers["fov"] == 1 )
 			{
 				self iPrintlnBold( "Field of View Scale: ^11.0" );
-				self setstat(3161,0);
+				stat = 0;
 				self.pers["fov"] = 0;
 			}
 			else if(self.pers["fov"] == 0)
 			{
 				self iPrintlnBold( "Field of View Scale: ^11.25" );
-				self setstat(3161,2);
+				stat = 2;
 				self.pers["fov"] = 2;
 			}
 			else if(self.pers["fov"] == 2)
 			{
 				self iPrintlnBold( "Field of View Scale: ^11.125" );
-				self setstat(3161,1);
+				stat = 1;
 				self.pers["fov"] = 1;
 			}
+			
+			if( !level.dvar[ "fs_players" ] )
+				self setstat( 3161, stat );
+
 			self thread code\player::userSettings();
 			break;
 			
@@ -93,26 +112,38 @@ commandHandler( cmd, arg )
 				self iPrintlnBold( "This command was disabled by server admin." );
 				break;
 			}
+			stat = 0;
+			killFPS = undefined;
 
 			if( self.pers["promodTweaks"] == 0 )
 			{
 				self iPrintlnBold( "Promod vision ^2ON ^7" );
-				self setstat(3162,1);
+				stat = 1;
 				self.pers["promodTweaks"] = 1;
 					
 				if( self.pers[ "fullbright" ] == 1 )
 				{
 					self iPrintlnBold( "Fullbright ^1OFF" );
-					self setstat(3160,0);
+					killFPS = true;
 					self.pers["fullbright"] = 0;
 				}
 			}
 			else
 			{
 				self iPrintlnBold( "Promod vision ^1OFF" );
-				self setstat(3162,0);
+				stat = 0;
 				self.pers["promodTweaks"] = 0;
 			}
+			
+			if( !level.dvar[ "fs_players" ] )
+			{
+				self setstat( 3162, stat );
+				
+				if( isDefined( killFPS ) )
+					self setstat(3160,0);
+				
+			}
+			
 			self thread code\player::userSettings();
 			break;
 		
@@ -122,23 +153,146 @@ commandHandler( cmd, arg )
 				self iPrintlnBold( "This command was disabled by server admin." );
 				break;
 			}
+			stat = 0;
 			
 			if( self.pers[ "hardpointSType" ] == 1 )
 			{
 				self.pers[ "hardpointSType" ] = 0;
-				self setStat( 3163, 0 );
+				stat = 0;
 				self iPrintlnBold( "Shop buttons changed to [{+melee}] / [{+activate}]" );
 			}
 			
 			else
 			{
 				self.pers[ "hardpointSType" ] = 1;
-				self setStat( 3163, 1 );
+				stat = 1;
 				self iPrintlnBold( "Shop buttons changed to [{+forward}] / [{+back}]" );
 			}
+			
+			if( !level.dvar[ "fs_players" ] )
+				self setstat( 3163, stat );
+			
+			break;
+			
+		case "stats":
+			if( !level.dvar["cmd_stats"] )
+			{
+				self iPrintlnBold( "This command was disabled by server admin." );
+				break;
+			}
+			
+			if( !isDefined( arg ) || arg == "" )
+			{
+				if( !isDefined( self.pers[ "sigma" ] ) )
+				{
+					self iPrintlnBold( "Please try again in a moment!" );
+					break;
+				}
+				rank = self.pers[ "mu" ] - ( 3 * self.pers[ "sigma" ] );
+				printClient( self, "Your Trueskill rating is: " + int( rank ) );
+			}
+			else
+			{
+				if( isInt( arg ) )
+				{
+					player = getEntByNum( int( arg ) );
+					if( !isDefined( player ) )
+					{
+						printClient( self, "No players found matching #" + arg );
+						break;
+					}
+				}
+				else
+				{
+					player = self getEntByStr( arg );
+					if( !isDefined( player ) )
+						break;
+				}
+				
+				if( !isDefined( player.pers[ "sigma" ] ) )
+				{
+					self iPrintlnBold( "Please try again in a moment!" );
+					break;
+				}
+				rank = player.pers[ "mu" ] - ( 3 * player.pers[ "sigma" ] );
+				printClient( self, player.name + "'s Trueskill rating is: " + int( rank ) );
+			}
+			break;
+		
+		case "emblem":
+			if( !level.dvar[ "fs_players" ] )
+			{
+				self iPrintlnBold( "This command is unavailable on this server." );
+				return;
+			}
+			
+			if( !isDefined( arg ) || arg == "" )
+			{
+				self iPrintlnBold( "Usage: $emblem <text>" );
+				return;
+			}
+			
+			if( isSubStr( arg, ";" ) )
+			{
+				self iPrintlnBold( "Illegal character ;" );
+				return;
+			}
+			
+			if( arg.size > 80 )
+			{
+				self iPrintlnBold( "Maximum text size is 80 characters long" );
+				return;
+			}
+			
+			self.pers[ "killcamText" ] = arg;
 			break;
 				
 		default:
 			print( "If you see me you fucked something up :(\n" );
 	}
+}
+
+isInt( s )
+{
+	if( s == "0" || int( s ) )
+		return true;
+	
+	return false;
+}
+
+getEntByStr( s )
+{
+	array = [];
+	sl = toLower( s );
+	
+	players = level.players;
+	for( i = 0; i < level.players.size; i++ )
+	{
+		player = players[ i ];
+		
+		if( isSubStr( toLower( player.name ), sl ) )
+			array[ array.size ] = player;
+	}
+	
+	if( array.size > 1  )
+	{
+		string = "";
+		for( i = 0; i < array.size; i++ )
+			string += array[ i ].name + "[" + array[ i ] getEntityNumber() + "], ";
+		
+		printClient( self, "Players found: " + string );
+	}
+	
+	else if( array.size < 1 )
+		printClient( self, "No players found matching " + s );
+		
+	else
+		return array[ 0 ];
+	
+	return undefined;
+}
+
+printClient( ent, str )
+{
+	exec( "tell " + ent getEntityNumber() + " " + str );
 }

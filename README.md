@@ -1,5 +1,5 @@
 # CoD4 New Experience
-Call of Duty 4 New Experience server side modification aims to bring new life into the game. This modification requires CoD4x server modification which is available at [CoD4x.me](https://cod4x.me/) and supports only TDM and DM gametypes. This modification is still work in progress and may include bugs. Current feature list is not final and will be updated as more exciting stuff is added.
+Call of Duty 4 New Experience server side modification aims to bring new life into the game and provide a library of scripts for server admins to explore.
 
 ## Features:
 * Brand new hardpoint system
@@ -16,6 +16,8 @@ Call of Duty 4 New Experience server side modification aims to bring new life in
 * Ability to disable attachements and perks such as grenade launcher, juggernaut, etc.
 * Optimisation to the stock code making game feel smoother
 * Mapvote system
+* Trueskill rating system (WIP)
+* Ability to save client data serverside
 * And more...
 
 ## Hardpoints:
@@ -32,3 +34,14 @@ Call of Duty 4 New Experience server side modification aims to bring new life in
 
 ## New hardpoint system
 Buy hardpoints by spending your hard earned credits and take control of the game. There is no longer need to camp to get hard to reach hardpoints, get your credits by killing your enemies and gain even more by getting headshots and melee kills. You won't lose any of the credits on death so feel free to rush enemy team or bring your hidden ninja to the game.
+
+## Requirements:
+* Latest version of CoD4X server modification, available on [CoD4x.me](https://cod4x.me/) or [Github repo](https://github.com/callofduty4x/CoD4x_Server)
+* Maxmind geoIP database, available on [MaxMind.com](http://dev.maxmind.com/geoip/legacy/install/country/)
+* CoD4X Trueskill plugin (WIP)
+
+## Installation:
+* Place both code and maps folders into your <CoD4x Server Dir>/main_shared/ folder
+* Place config.cfg into your <CoD4x Server Dir>/main/ folder
+* Customise settings in config file to your desire and exec it from your main config file
+* Start the server

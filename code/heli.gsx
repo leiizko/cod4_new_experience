@@ -90,6 +90,7 @@ setup()
 	chopper.attacker = undefined;
 	chopper.waittime = level.heli_dest_wait;
 	chopper setHoverParams( 0, 0, 0 );
+	chopper.angles = self.angles;
 	
 	self linkTo( cockpit, "tag_origin", ( 0, 0, 0 ), ( 0, 0, 0 ) );
 	

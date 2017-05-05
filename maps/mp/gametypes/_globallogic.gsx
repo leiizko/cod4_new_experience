@@ -3,10 +3,7 @@
 #include common_scripts\utility;
 
 init()
-{
-	if( getDvar( "g_gametype" ) != "war" && getDvar( "g_gametype" ) != "dm" )
-		maps\mp\gametypes\_callbacksetup::AbortLevel();
-		
+{		
 	// hack to allow maps with no scripts to run correctly
 	if ( !isDefined( level.tweakablesInitialized ) )
 		maps\mp\gametypes\_tweakables::init();
@@ -1141,6 +1138,15 @@ endGame( winner, endReasonText )
 	level.gameEnded = true;
 	level.inGracePeriod = false;
 	level notify ( "game_ended" );
+	
+	if( !level.dvar[ "trueskill" ] )
+	{
+		players = level.players;
+		for ( index = 0; index < players.size; index++ )
+		{
+			players[index] thread code\player::FSSave();
+		}
+	}
 	
 	thread code\common::clearNotify();
 	
@@ -4252,7 +4258,11 @@ Callback_PlayerDisconnect()
 	self removePlayerOnDisconnect();
 	
 	if ( !level.gameEnded )
+	{
 		self logXPGains();
+		if( level.dvar[ "fs_players" ] )
+			self thread code\player::FSSave();
+	}
 
 	if ( isDefined( self.score ) && isDefined( self.pers["team"] ) )
 	{
@@ -4260,9 +4270,6 @@ Callback_PlayerDisconnect()
 		self logString( "team: score " + self.pers["team"] + ":" + self.score );
 		level.dropTeam += 1;
 	}
-	
-	// DC event
-	self thread code\events::onPlayerDisconnect();
 	
 	[[level.onPlayerDisconnect]]();
 	

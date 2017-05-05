@@ -3,6 +3,7 @@ GloballogicInit()
 	thread code\dvars::init();
 	thread code\events::init();
 	thread fx_cache();
+	level.openFiles = [];
 }
 
 startGameType()
@@ -11,7 +12,10 @@ startGameType()
 	thread code\heli::plotMap();
 
 	if( !level.dvar[ "old_hardpoints" ] )
-		thread code\hardpoints::init(); 
+		thread code\hardpoints::init();
+	
+//	if( level.dvar[ "trueskill" ] )
+//		thread code\trueskill::init();
 		
 	thread code\player::init();
 	
@@ -80,5 +84,5 @@ serverDvars()
 	}
 	
 	setDvar( "_mod", "New Experience" );
-	setDvar( "_modVer", "0.9" );
+	setDvar( "_modVer", "1.0a" );
 }

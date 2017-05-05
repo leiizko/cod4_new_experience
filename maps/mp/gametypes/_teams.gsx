@@ -15,9 +15,8 @@ init()
 	precacheString( &"MP_AUTOBALANCE_NEXT_ROUND" );
 	precacheString( &"MP_AUTOBALANCE_SECONDS" );
 
-	if(getdvar("scr_teambalance") == "")
-		setdvar("scr_teambalance", "0");
-	level.teamBalance = getdvarInt("scr_teambalance");
+	setdvar("scr_teambalance", "1");
+	level.teamBalance = 1;
 	level.maxClients = getDvarInt( "sv_maxclients" );
 	
 	setPlayerModels();
@@ -185,25 +184,9 @@ updateTeamTime()
 	self.pers["teamTime"] = getTime();
 }
 
-
-updateTeamBalanceDvar()
-{
-	for(;;)
-	{
-		teambalance = getdvarInt("scr_teambalance");
-		if(level.teambalance != teambalance)
-			level.teambalance = getdvarInt("scr_teambalance");
-
-		wait 1;
-	}
-}
-
-
 updateTeamBalance()
 {
 	level.teamLimit = level.maxclients / 2;
-	
-	level thread updateTeamBalanceDvar();
 
 	wait .15;
 
@@ -346,6 +329,7 @@ balanceTeams()
 
 changeTeam( team )
 {
+	alive = isAlive( self );
 	if (self.sessionstate != "dead")
 	{
 		// Set a flag on the player to they aren't robbed points for dying - the callback will remove the flag
@@ -366,18 +350,24 @@ changeTeam( team )
 	// update spectator permissions immediately on change of team
 	self maps\mp\gametypes\_spectating::setSpectatePermissions();
 	
-	if ( self.pers["team"] == "allies" )
-	{
-		self setclientdvar("g_scriptMainMenu", game["menu_class_allies"]);
-		self openMenu( game[ "menu_changeclass_allies" ] );
-	}
-	else
-	{
-		self setclientdvar("g_scriptMainMenu", game["menu_class_axis"]);
-		self openMenu( game[ "menu_changeclass_axis" ] );
-	}
+	if( alive )
+		self maps\mp\gametypes\_globallogic::spawnPlayer();
 	
-	self notify( "end_respawn" );
+	if( !alive )
+	{
+		if ( self.pers["team"] == "allies" )
+		{
+			self setclientdvar("g_scriptMainMenu", game["menu_class_allies"]);
+			self openMenu( game[ "menu_changeclass_allies" ] );
+		}
+		else
+		{
+			self setclientdvar("g_scriptMainMenu", game["menu_class_axis"]);
+			self openMenu( game[ "menu_changeclass_axis" ] );
+		}
+		
+		self notify( "end_respawn" );
+	}
 }
 
 

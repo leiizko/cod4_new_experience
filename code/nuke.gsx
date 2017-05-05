@@ -257,7 +257,7 @@ radiationZone( location )
 	{
 		level.radiationZone waittill( "trigger", player );
 		
-		if( isDefined( player.spawnprotected ) )
+		if( isDefined( player.spawnprotected ) || !isDefined( player ) )
 			continue;
 		
 		if( !isDefined( player.pers[ "radsLastTime" ] ) )
@@ -266,7 +266,34 @@ radiationZone( location )
 		if( getTime() - player.pers[ "radsLastTime" ] > 1000 )
 		{
 			player.pers[ "radsLastTime" ] = getTime();
-			player.pers[ "rads" ] += 1;
+			
+			if( player.health - ( int( player.maxHealth / 8 ) ) <= 0 )
+			{
+				player.sWeaponForKillcam = "nuke_rad";
+			
+				player thread [[level.callbackPlayerDamage]](
+															level.tacticalNuke,
+															level.tacticalNuke.owner, 
+															100,
+															0,
+															"MOD_PROJECTILE_SPLASH", 
+															"artillery_mp", 
+															level.tacticalNuke.origin,
+															vectornormalize( level.tacticalNuke.origin - player.origin ),
+															"none",
+															0 
+															);
+			}
+			else
+			{
+				player.health -= int( player.maxHealth / 8 );
+			
+				if( player.health < player.maxHealth / 2.2 )
+					player shellshock( "radiation_high", 4 );
+				
+				else if( player.health < player.maxHealth / 1.3 )
+					player shellshock( "radiation_med", 2 );
+			}
 		}
 	}
 }

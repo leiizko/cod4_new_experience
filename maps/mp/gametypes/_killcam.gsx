@@ -347,11 +347,14 @@ hud( attacker, data )
 	self.kc_hud[ 9 ] setShader( maps\mp\gametypes\_rank::getRankInfoIcon( attacker.pers[ "rank" ], attacker.pers[ "prestige" ] ), 50, 50 );
 	self.kc_hud[ 9 ].sort = 3;
 	
-	// 24 chars per line - or was it 34 lol
 	quote = [];
 	quote[ 0 ] = "War is peace. \nFreedom is slavery. \nIgnorance is strength.";
 	quote[ 1 ] = "The supreme art of war \nis to subdue the enemy \nwithout fighting.";
 	quote[ 2 ] = "In time of peace prepare \nfor war.";
+	
+	kctarray = undefined;
+	if( level.dvar[ "kcemblem" ] && isDefined( attacker.pers[ "killcamText" ] ) )
+		kctarray = StrTokByPixLen( attacker.pers[ "killcamText" ], 150 );
  	
 	self.kc_hud[ 10 ] = newClientHudElem( self );
 	self.kc_hud[ 10 ].alpha = 1;
@@ -361,7 +364,16 @@ hud( attacker, data )
 	self.kc_hud[ 10 ].horzAlign = "center";
 	self.kc_hud[ 10 ].archived = false;
 	self.kc_hud[ 10 ].fontscale = 1.4;
-	self.kc_hud[ 10 ] setText( quote[ randomInt( quote.size ) ] );
+	if( !isDefined( kctarray ) )
+		self.kc_hud[ 10 ] setText( quote[ randomInt( quote.size ) ] );
+	else
+	{
+		str = "";
+		for( i = 0; i < kctarray.size; i++ )
+			str += kctarray[ i ] + "\n ";
+		
+		self.kc_hud[ 10 ] setText( str );
+	}
 	self.kc_hud[ 10 ].sort = 3;
 }
 

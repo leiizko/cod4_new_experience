@@ -15,7 +15,7 @@ rconSupport()
 			}
 		}
 
-		wait .1;
+		wait .05;
 	}
 }
 

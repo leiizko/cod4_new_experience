@@ -1,77 +1,19 @@
+#include code\file;
+
 init()
 {		
 	thread code\events::addConnectEvent( ::onConnect );
+	/#
 	thread code\events::addSpawnEvent( ::onSpawn );
+	#/
 }
 
 onSpawn()
 {
-	waittillframeend;
-	
-	if( isDefined( level.nukeInProgress ) && level.tacticalNuke.owner.team != self.team )
-		self thread nukePlayerLogic();
-
 	/#
 	if( getDvarInt( "ending_editor" ) > 0 )
 		self thread code\ending::editor();
 	#/
-}
-
-nukePlayerLogic()
-{
-	self endon( "disconnect" );
-	self endon( "death" );
-	level endon( "endRadationZone" );
-	
-	self.pers[ "rads" ] = 0;
-	
-	while( 1 )
-	{ 
-		while( isDefined( self.spawnprotected ) )
-			wait .25;
-		
-		if( self.pers[ "rads" ] > 11 )
-		{
-			self iprintlnbold( "RADIATION LEVELS CRITICAL!" );
-			
-			self.sWeaponForKillcam = "nuke_rad";
-			
-			self thread [[level.callbackPlayerDamage]](
-														level.tacticalNuke,
-														level.tacticalNuke.owner, 
-														100,
-														0,
-														"MOD_PROJECTILE_SPLASH", 
-														"artillery_mp", 
-														level.tacticalNuke.origin,
-														vectornormalize( level.tacticalNuke.origin - self.origin ),
-														"none",
-														0 
-														);
-		}
-			
-		else if( self.pers[ "rads" ] == 7.2 )
-		{
-			self iprintlnbold( "RADIATION LEVELS APPROACHING CRITICAL!" );
-			self shellshock( "radiation_high", 8 );
-			self.pers[ "rads" ] += 0.1;
-		}
-			
-		else if( self.pers[ "rads" ] == 4.1 )
-		{
-			self iprintlnbold( "RADIATION EXPOSURE WARNING!" );
-			self shellshock( "radiation_med", 8 );
-			self.pers[ "rads" ] += 0.1;
-		}
-			
-		else if( self.pers[ "rads" ] == 1 )
-		{
-			self iprintlnbold( "RADIATION WARNING!" );
-			self.pers[ "rads" ] += 0.1;
-		}
-		
-		wait .5;
-	}
 }
 
 onConnect()
@@ -80,58 +22,10 @@ onConnect()
 	
 	if( !isDefined( self.pers[ "fullbright" ] ) )
 	{
-		if( level.dvar["cmd_fps"] )
-			self.pers[ "fullbright" ] = self getStat( 3160 );
+		if( level.dvar[ "fs_players" ] )
+			self thread FSLookup();
 		else
-			self.pers[ "fullbright" ] = level.dvar[ "default_fps" ];
-			
-		if( level.dvar["cmd_fov"] )
-			self.pers[ "fov" ] = self getStat( 3161 );
-		else
-			self.pers[ "fov" ] = level.dvar[ "default_fov" ];
-			
-		if( level.dvar["cmd_promod"] )
-			self.pers[ "promodTweaks" ] = self getStat( 3162 );
-		else
-			self.pers[ "promodTweaks" ] = level.dvar[ "default_promod" ];
-			
-		if( abs( self.pers[ "fov" ] > 2 ) )
-		{
-			self.pers[ "fov" ] = 0;
-			self setstat( 3161, 0 );
-			self setClientDvar( "cg_fovscale", 1.0 );
-			self setClientDvar( "cg_fov", 80 );
-			self iprintlnbold( "Error: illegal fov value, setting 3161 to 0" );
-		}
-		
-		if( self.pers[ "fullbright" ] != 1 && self.pers[ "fullbright" ] != 0 )
-		{
-			self setstat( 3160, 0 );
-			self.pers[ "fullbright" ] = 0;
-			self iprintlnbold( "Error: illegal fullbright value, setting 3160 to 0" );
-		}
-		
-		if( self.pers[ "promodTweaks" ] != 1 && self.pers[ "promodTweaks" ] != 0 )
-		{
-			self setstat( 3162, 0 );
-			self.pers[ "promodTweaks" ] = 0;
-			self iprintlnbold( "Error: illegal promod value, setting 3162 to 0" );
-		}
-	}
-	
-	if( !isDefined( self.pers[ "hardpointSType" ] ) )
-	{
-		if( level.dvar[ "shopbuttons_allowchange" ] )
-			self.pers[ "hardpointSType" ] = self getStat( 3163 );
-		else
-			self.pers[ "hardpointSType" ] = level.dvar[ "shopbuttons_default" ];
-			
-		if( self.pers[ "hardpointSType" ] != 1 && self.pers[ "hardpointSType" ] != 0 )
-		{
-			self setstat( 3163, 0 );
-			self.pers[ "hardpointSType" ] = 0;
-			self iprintlnbold( "Error: illegal shop value, setting 3163 to 0" );
-		}
+			self thread statLookup();
 	}
 	
 	if( !isDefined( self.pers[ "meleekills" ] ) )
@@ -156,12 +50,15 @@ onConnect()
 	/////////////////////////////////////////////////
 	self waittill( "spawned_player" );
 	
-	if( !isDefined( self.pers[ "welcomed" ] ) )
+	if( level.dvar[ "geowelcome" ] && !isDefined( self.pers[ "welcomed" ] ) )
 		self thread welcome();
+	
+	while( !isDefined( self.pers[ "hardpointSType" ] ) )
+		wait .05;
 	
 	self thread userSettings();
 	
-	waittillframeend;
+	wait .05;
 	
 	if( level.dvar[ "gun_position" ] )
 		self setClientDvars( "cg_gun_move_u", "1.5",
@@ -169,12 +66,154 @@ onConnect()
 							 "cg_gun_ofs_u", "1",
 							 "cg_gun_ofs_r", "-1",
 							 "cg_gun_ofs_f", "-2" );
+							 
+	wait .05;
 						 
 	if( level.dvar[ "promod_sniper" ] )
 		self setClientDvars( "player_breath_gasp_lerp", "0",
 						 	 "player_breath_gasp_time", "0",
 							 "player_breath_gasp_scale", "0", 
 							 "cg_drawBreathHint", "0" );
+}
+
+/*
+Index:
+	0 = Fullbright
+	1 = Fov
+	2 = Promod
+	3 = ShopBtn
+	4 = Mean
+	5 = Variance
+	6 = Killcam text
+*/
+FSLookup()
+{
+	path = "./ne_db/players/" + self getGuid() + ".db";
+	array = readFile( path );
+	
+	if( !isArray( array ) || array.size < 7 )
+	{
+		FSDefault();
+		return;
+	}
+	
+	// Integer values
+	n = 0;
+	for( i = 0; i < 4; i++ )
+	{
+		tok = strTok( array[ i ], ";" );
+		self.pers[ tok[ 0 ] ] = int( tok[ 1 ] );
+		n++;
+	}
+	
+	
+	tok = strTok( array[ i ], ";" );
+	self.pers[ tok[ 0 ] ] = tok[ 1 ];
+	n++;
+	
+	
+	for( i = n; i < array.size; i++ )
+	{
+		tok = strTok( array[ i ], ";" );
+		self.pers[ tok[ 0 ] ] = code\trueskill::floatNoDvar( tok[ 1 ] );
+	}
+}
+
+FSDefault()
+{
+	self.pers[ "fullbright" ] = level.dvar[ "default_fps" ];
+	self.pers[ "fov" ] = level.dvar[ "default_fov" ];
+	self.pers[ "promodTweaks" ] = level.dvar[ "default_promod" ];
+	self.pers[ "hardpointSType" ] = level.dvar[ "shopbuttons_default" ];
+	self.pers[ "killcamText" ] = level.dvar[ "kct_default" ];
+	// Trueskill
+	self.pers[ "mu" ] = 25;
+	self.pers[ "sigma" ] = 25 / 3;
+}
+
+FSSave()
+{
+	path = "./ne_db/players/" + self getGuid() + ".db";
+
+	array = [];
+	array[ array.size ] = "fullbright;" + self.pers[ "fullbright" ];
+	array[ array.size ] = "fov;" + self.pers[ "fov" ];
+	array[ array.size ] = "promodTweaks;" + self.pers[ "promodTweaks" ];
+	array[ array.size ] = "hardpointSType;" + self.pers[ "hardpointSType" ];
+	array[ array.size ] = "killcamText;" + self.pers[ "killcamText" ];
+	array[ array.size ] = "mu;" + self.pers[ "mu" ];
+	array[ array.size ] = "sigma;" + self.pers[ "sigma" ];
+	
+	writeToFile( path, array );
+}
+
+statLookup()
+{
+	self endon( "disconnect" );
+	
+	if( level.dvar["cmd_fps"] )
+		self.pers[ "fullbright" ] = self getStat( 3160 );
+	else
+		self.pers[ "fullbright" ] = level.dvar[ "default_fps" ];
+		
+	wait .05;
+			
+	if( level.dvar["cmd_fov"] )
+		self.pers[ "fov" ] = self getStat( 3161 );
+	else
+		self.pers[ "fov" ] = level.dvar[ "default_fov" ];
+		
+	wait .05;
+			
+	if( level.dvar["cmd_promod"] )
+		self.pers[ "promodTweaks" ] = self getStat( 3162 );
+	else
+		self.pers[ "promodTweaks" ] = level.dvar[ "default_promod" ];
+		
+	wait .05;
+	
+	if( level.dvar[ "shopbuttons_allowchange" ] )
+		self.pers[ "hardpointSType" ] = self getStat( 3163 );
+	else
+		self.pers[ "hardpointSType" ] = level.dvar[ "shopbuttons_default" ];
+		
+	waittillframeend;
+		
+	if( abs( self.pers[ "fov" ] > 2 ) )
+	{
+		self.pers[ "fov" ] = 0;
+		self setstat( 3161, 0 );
+		self setClientDvar( "cg_fovscale", 1.0 );
+		self setClientDvar( "cg_fov", 80 );
+		self iprintlnbold( "Error: illegal fov value, setting 3161 to 0" );
+	}
+	
+	waittillframeend;
+		
+	if( self.pers[ "fullbright" ] != 1 && self.pers[ "fullbright" ] != 0 )
+	{
+		self setstat( 3160, 0 );
+		self.pers[ "fullbright" ] = 0;
+		self iprintlnbold( "Error: illegal fullbright value, setting 3160 to 0" );
+	}
+	
+	waittillframeend;
+		
+	if( self.pers[ "promodTweaks" ] != 1 && self.pers[ "promodTweaks" ] != 0 )
+	{
+		self setstat( 3162, 0 );
+		self.pers[ "promodTweaks" ] = 0;
+		self iprintlnbold( "Error: illegal promod value, setting 3162 to 0" );
+	}
+	
+	waittillframeend;
+			
+	if( self.pers[ "hardpointSType" ] != 1 && self.pers[ "hardpointSType" ] != 0 )
+	{
+		self setstat( 3163, 0 );
+		self.pers[ "hardpointSType" ] = 0;
+		self iprintlnbold( "Error: illegal shop value, setting 3163 to 0" );
+	}
 }
 
 userSettings()
@@ -206,6 +245,8 @@ userSettings()
 		self setClientDvar( "r_fullbright", 1 );
 	else
 		self setClientDvar( "r_fullbright", 0 );
+		
+	waittillframeend;
 	
 	if( self.pers[ "promodTweaks" ] == 1 )
 		self SetClientDvars( "r_filmTweakInvert", "0",
@@ -218,7 +259,7 @@ userSettings()
                        	     "r_filmTweakDarkTint", "1.8 1.8 2" );
 	else
 		self SetClientDvars( "r_filmusetweaks", "0",
-							"r_filmTweakenable", "0" );
+							 "r_filmTweakenable", "0" );
 }
 
 welcome()

@@ -26,6 +26,7 @@ init()
 	addDvar( "cmd_fov", "int", 1, 0, 1 ); // Allow players to change r_fullbright setting with script command ( 1-yes ; 0-no )
 	addDvar( "cmd_fps", "int", 1, 0, 1 ); // Allow players to change cg_fovscale setting with script command ( 1-yes ; 0-no )
 	addDvar( "cmd_promod", "int", 1, 0, 1 ); // Allow players to change promod vision setting with script command ( 1-yes ; 0-no )
+	addDvar( "cmd_stats", "int", 1, 0, 1 ); // Allow players to see stats with script command ( 1-yes ; 0-no )
 	addDvar( "old_hardpoints", "int", 0, 0, 1 ); // Hardpoints based off killstreak ( 1-yes ; 0-no )
 	addDvar( "intro_text", "string", "Welcome to CoD4:NE" ); // Big text that shows when you first spawn
 	addDvar( "website", "string", "www.mysite.com" ); // Will show under ^ big text
@@ -41,8 +42,8 @@ init()
 	addDvar( "disable_marty", "int", 1, 0, 1 ); // Disable MARTYDROP perk ( 1-yes ; 0-no )
 	// Used when script command support is disabled for specific setting
 	addDvar( "default_fps", "int", 0, 0, 1 ); // Fullbright setting, players won't be able to change it ( 1-enable ; 0-disable )
-	addDvar( "default_fov", "int", 0, 0, 2 ); // Field of view setting, players won't be able to change it ( 2-FOV=100 ; 1-FOV=90 ; 0-FOV=80 )
-	addDvar( "default_promod", "int", 0, 0, 1 ); // promod setting, players won't be able to change it ( 1-enable ; 0-disable )
+	addDvar( "default_fov", "int", 2, 0, 2 ); // Field of view setting, players won't be able to change it ( 2-FOV=100 ; 1-FOV=90 ; 0-FOV=80 )
+	addDvar( "default_promod", "int", 1, 0, 1 ); // promod setting, players won't be able to change it ( 1-enable ; 0-disable )
 	addDvar( "hardpoint_streak", "int", 0, 0, 1 ); // Hardpoint kills count toward kill streak ( 1-yes ; 0-no )
 	addDvar( "showXP", "int", 1, 0, 1 ); // Show score XP on kills
 	addDvar( "shopXP", "int", 1, 0, 1 ); // Show shop $ gain instead of kill XP on kills
@@ -88,7 +89,12 @@ init()
 	addDvar( "fs_players", "int", 1, 0, 1 ); // Use filesystem to save player specific settings ( 1-enable ; 0-disable )
 	
 	addDvar( "shopbuttons_allowchange", "int", 1, 0, 1 ); // Allow the player do decide which buttons to use to navigate hardpoint shop ( 1-W/S ; 0-F/V )
-	addDvar( "shopbuttons_default", "int", 1, 0, 1 ); // If above is set to 0, the players will be forced to use this buttons ( 1-W/S ; 0-F/V )
+	addDvar( "shopbuttons_default", "int", 0, 0, 1 ); // If above is set to 0, the players will be forced to use this buttons ( 1-W/S ; 0-F/V )
+	
+	addDvar( "trueskill", "int", 0, 0, 1 ); // Trueskill ranking system ( 1-enable ; 0-disable )
+	addDvar( "kct_default", "string", "Owned!" ); // Killcam default text
+	addDvar( "geowelcome", "int", 1, 0, 1 ); // Geowelcome on player first connect ( 1-enable ; 0-disable )
+	addDvar( "kcemblem", "int", 1, 0, 1 ); // Allow custom killcam emblem ( 1-enable ; 0-disable )
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

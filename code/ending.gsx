@@ -236,7 +236,10 @@ setStuff()
 		if( isArray( array ) )
 		{
 			for( i = 0; i < array.size; i++ )
+			{
 				array[ i ] = toVector( array[ i ] );
+				wait .05;
+			}
 		}
 	}
 	
