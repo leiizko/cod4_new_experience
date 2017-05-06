@@ -69,6 +69,12 @@ commandHandler( cmd, arg )
 					self setstat(3162,0);
 				
 			}
+			else
+			{
+				guid = self getGuid();
+				level.FSCD[ guid ][ 0 ] = "fullbright;" + self.pers[ "fullbright" ];
+				level.FSCD[ guid ][ 2 ] = "promodTweaks;" + self.pers[ "promodTweaks" ];
+			}
 			
 			self thread code\player::userSettings();
 			break;
@@ -102,6 +108,8 @@ commandHandler( cmd, arg )
 			
 			if( !level.dvar[ "fs_players" ] )
 				self setstat( 3161, stat );
+			else
+				level.FSCD[ self getGuid() ][ 1 ] = "fov;" + self.pers[ "fov" ];
 
 			self thread code\player::userSettings();
 			break;
@@ -143,6 +151,12 @@ commandHandler( cmd, arg )
 					self setstat(3160,0);
 				
 			}
+			else
+			{
+				guid = self getGuid();
+				level.FSCD[ guid ][ 0 ] = "fullbright;" + self.pers[ "fullbright" ];
+				level.FSCD[ guid ][ 2 ] = "promodTweaks;" + self.pers[ "promodTweaks" ];
+			}
 			
 			self thread code\player::userSettings();
 			break;
@@ -171,6 +185,8 @@ commandHandler( cmd, arg )
 			
 			if( !level.dvar[ "fs_players" ] )
 				self setstat( 3163, stat );
+			else
+				level.FSCD[ self getGuid() ][ 3 ] = "hardpointSType;" + self.pers[ "hardpointSType" ];
 			
 			break;
 			
@@ -245,6 +261,7 @@ commandHandler( cmd, arg )
 			}
 			
 			self.pers[ "killcamText" ] = arg;
+			level.FSCD[ self getGuid() ][ 4 ] = "killcamText;" + self.pers[ "killcamText" ];
 			break;
 				
 		default:

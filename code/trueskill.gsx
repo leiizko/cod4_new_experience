@@ -17,7 +17,7 @@ init()
 		players = level.players;
 		for ( index = 0; index < players.size; index++ )
 		{
-			players[ index ] thread code\player::FSSave();
+			players[ index ] thread code\player::FSSave( players[ index ] getGuid() );
 		}
 	}
 	else

@@ -74,6 +74,22 @@ onConnect()
 						 	 "player_breath_gasp_time", "0",
 							 "player_breath_gasp_scale", "0", 
 							 "cg_drawBreathHint", "0" );
+							 
+	if( level.dvar[ "fs_players" ] )
+	{
+		while( !isDefined( self.pers[ "sigma" ] ) )
+			wait .05;
+
+		guid = self getGuid();
+		level.FSCD[ guid ] = [];
+		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "fullbright;" + self.pers[ "fullbright" ];
+		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "fov;" + self.pers[ "fov" ];
+		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "promodTweaks;" + self.pers[ "promodTweaks" ];
+		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "hardpointSType;" + self.pers[ "hardpointSType" ];
+		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "killcamText;" + self.pers[ "killcamText" ];
+		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "mu;" + self.pers[ "mu" ];
+		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "sigma;" + self.pers[ "sigma" ];
+	}
 }
 
 /*
@@ -131,20 +147,18 @@ FSDefault()
 	self.pers[ "sigma" ] = 25 / 3;
 }
 
-FSSave()
+FSSave( guid )
 {
-	path = "./ne_db/players/" + self getGuid() + ".db";
+	if( !isDefined( level.FSCD[ guid ] ) )
+		return;
 
-	array = [];
-	array[ array.size ] = "fullbright;" + self.pers[ "fullbright" ];
-	array[ array.size ] = "fov;" + self.pers[ "fov" ];
-	array[ array.size ] = "promodTweaks;" + self.pers[ "promodTweaks" ];
-	array[ array.size ] = "hardpointSType;" + self.pers[ "hardpointSType" ];
-	array[ array.size ] = "killcamText;" + self.pers[ "killcamText" ];
-	array[ array.size ] = "mu;" + self.pers[ "mu" ];
-	array[ array.size ] = "sigma;" + self.pers[ "sigma" ];
+	path = "./ne_db/players/" + guid + ".db";
 	
-	writeToFile( path, array );
+	writeToFile( path, level.FSCD[ guid ] );
+	
+	wait .05;
+	
+	level.FSCD[ guid ] = undefined;
 }
 
 statLookup()

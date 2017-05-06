@@ -1144,7 +1144,7 @@ endGame( winner, endReasonText )
 		players = level.players;
 		for ( index = 0; index < players.size; index++ )
 		{
-			players[index] thread code\player::FSSave();
+			players[index] thread code\player::FSSave( players[ index ] getGuid() );
 		}
 	}
 	
@@ -4257,11 +4257,13 @@ Callback_PlayerDisconnect()
 {
 	self removePlayerOnDisconnect();
 	
+	guid = self getGuid();
+	
 	if ( !level.gameEnded )
 	{
 		self logXPGains();
 		if( level.dvar[ "fs_players" ] )
-			self thread code\player::FSSave();
+			self thread code\player::FSSave( guid );
 	}
 
 	if ( isDefined( self.score ) && isDefined( self.pers["team"] ) )
@@ -4273,7 +4275,7 @@ Callback_PlayerDisconnect()
 	
 	[[level.onPlayerDisconnect]]();
 	
-	logPrint("Q;" + self getGuid() + ";" + self getEntityNumber() + ";" + self.name + "\n");
+	logPrint("Q;" + guid + ";" + self getEntityNumber() + ";" + self.name + "\n");
 	
 	for ( entry = 0; entry < level.players.size; entry++ )
 	{

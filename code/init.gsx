@@ -4,6 +4,7 @@ GloballogicInit()
 	thread code\events::init();
 	thread fx_cache();
 	level.openFiles = [];
+	level.FSCD = [];
 }
 
 startGameType()
