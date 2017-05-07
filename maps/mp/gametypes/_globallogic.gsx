@@ -1321,6 +1321,70 @@ endGame( winner, endReasonText )
 
 			roundEndWait( level.halftimeRoundEndDelay, !(hitRoundLimit() || hitScoreLimit()) );
 		}
+		
+		// -Final- //
+		if( !level.teambased )
+		{
+			if( !isDefined( winner ) )
+				team = "dc";
+			else
+				team = winner.team;
+		}
+		else
+			team = winner;
+
+		if( level.dvar[ "final_killcam" ] && team != "dc" && isDefined( level.caminfo[ team ][ "attackerNum" ] ) )
+		{
+			level.finalcamshowing = true;
+			for(i=0;i<level.players.size;i++)
+			{
+				level.players[i] notify("reset_outcome");
+				level.players[i] thread code\killcam::killcam(  level.caminfo[ team ][ "attackerNum" ],
+																level.caminfo[ team ][ "killcamentity" ],
+																level.caminfo[ team ][ "sWeapon" ],
+																level.caminfo[ team ][ "predelay" ],
+																level.caminfo[ team ][ "psOffsetTime" ],
+																undefined,
+																level.caminfo[ team ][ "attacker" ],
+																level.caminfo[ team ][ "victim" ],
+																level.caminfo[ team ][ "time" ],
+																level.caminfo[ team ][ "sWeaponForKillcam" ] );
+			}
+				
+			wait 1;
+
+			level.finalcamtime = getTime();
+
+			while( level.finalcamshowing ) // or 1 for that matter
+			{
+				finalnum = 0;
+
+				for(i=0;i<level.players.size;i++)
+				{
+					player = players[i];
+						
+					if( !isDefined( player ) )
+						continue;
+						
+					if( isDefined( player.finalcam ) )
+					{
+						finalnum++;
+						break; // no point in going forward as FKC is still playing
+					}
+				}
+					
+				if( finalnum == 0 )
+					break;
+
+				// FAILSAFE
+				if( getTime() - level.finalcamtime > 8000 )
+					break;
+				
+				wait .25;
+			}
+		}
+		wait .1;
+		//  //
 
         if ( !hitRoundLimit() && !hitScoreLimit() )
         {
@@ -1329,7 +1393,7 @@ endGame( winner, endReasonText )
             map_restart( true );
             return;
         }
-        
+			
 		if ( hitRoundLimit() )
 			endReasonText = game["strings"]["round_limit_reached"];
 		else if ( hitScoreLimit() )
@@ -1405,6 +1469,9 @@ endGame( winner, endReasonText )
 	}
 	else
 		team = winner;
+	
+	if( isDefined( level.finalcamshowing ) )
+		team = "dc";
 
 	if( level.dvar[ "final_killcam" ] && team != "dc" && isDefined( level.caminfo[ team ][ "attackerNum" ] ) )
 	{
@@ -2818,6 +2885,9 @@ timeLimitClock()
 	
 	wait .05;
 	
+	if( isDefined( level.stratInProgress ) )
+		level waittill( "endStratTimer" );
+	
 	clockObject = spawn( "script_origin", (0,0,0) );
 	
 	while ( game["state"] == "playing" )
@@ -2870,6 +2940,9 @@ gameTimer()
 	level endon ( "game_ended" );
 	
 	level waittill("prematch_over");
+	
+	if( isDefined( level.stratInProgress ) )
+		level waittill( "endStratTimer" );
 	
 	level.startTime = getTime();
 	level.discardTime = 0;

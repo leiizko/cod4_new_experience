@@ -37,7 +37,10 @@ startGameType()
 		thread code\rcon_commands::rconSupport();
 	
 	if( level.dvar[ "mapvote" ] )
-		code\mapvote::init();
+		thread code\mapvote::init();
+		
+	if( level.dvar[ "strat" ] )
+		thread code\strat::init();
 		
 	// Dev only
 	if( getDvarInt( "developer" ) > 0 )

@@ -95,6 +95,10 @@ init()
 	addDvar( "kct_default", "string", "Owned!" ); // Killcam default text
 	addDvar( "geowelcome", "int", 1, 0, 1 ); // Geowelcome on player first connect ( 1-enable ; 0-disable )
 	addDvar( "kcemblem", "int", 1, 0, 1 ); // Allow custom killcam emblem ( 1-enable ; 0-disable )
+	
+	addDvar( "strat_text", "string", "Strat time:" ); // Strat default text
+	addDvar( "strat_time", "int", 5, 0, 10 ); // Default strat time
+	addDvar( "strat", "int", 0, 0, 1 ); // use strat ( 1-enable ; 0-disable )
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
