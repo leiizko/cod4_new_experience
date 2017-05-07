@@ -99,6 +99,9 @@ init()
 	addDvar( "strat_text", "string", "Strat time:" ); // Strat default text
 	addDvar( "strat_time", "int", 5, 0, 10 ); // Default strat time
 	addDvar( "strat", "int", 0, 0, 1 ); // use strat ( 1-enable ; 0-disable )
+	
+	addDvar( "cmd_spec_keys", "int", 0, 0, 1 ); // Allow changing setting to see spectators pressed keys ( 1-enable ; 0-disable )
+	addDvar( "spec_keys_default", "int", 0, 0, 1 ); // Default cmd_spec_keys value, if == 0 then this is forced value ( 1-enable ; 0-disable )
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

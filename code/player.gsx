@@ -53,7 +53,7 @@ onConnect()
 	if( level.dvar[ "geowelcome" ] && !isDefined( self.pers[ "welcomed" ] ) )
 		self thread welcome();
 	
-	while( !isDefined( self.pers[ "hardpointSType" ] ) )
+	while( !isDefined( self.pers[ "spec_keys" ] ) )
 		wait .05;
 	
 	self thread userSettings();
@@ -86,6 +86,7 @@ onConnect()
 		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "fov;" + self.pers[ "fov" ];
 		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "promodTweaks;" + self.pers[ "promodTweaks" ];
 		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "hardpointSType;" + self.pers[ "hardpointSType" ];
+		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "spec_keys;" + self.pers[ "spec_keys" ];
 		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "killcamText;" + self.pers[ "killcamText" ];
 		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "mu;" + self.pers[ "mu" ];
 		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "sigma;" + self.pers[ "sigma" ];
@@ -98,16 +99,17 @@ Index:
 	1 = Fov
 	2 = Promod
 	3 = ShopBtn
-	4 = Mean
-	5 = Variance
-	6 = Killcam text
+	4 = Spec Keys
+	5 = Killcam text
+	6 = Mean
+	7 = Variance
 */
 FSLookup()
 {
 	path = "./ne_db/players/" + self getGuid() + ".db";
 	array = readFile( path );
 	
-	if( !isArray( array ) || array.size < 7 )
+	if( !isArray( array ) || array.size != 8 )
 	{
 		FSDefault();
 		return;
@@ -115,7 +117,7 @@ FSLookup()
 	
 	// Integer values
 	n = 0;
-	for( i = 0; i < 4; i++ )
+	for( i = 0; i < 5; i++ )
 	{
 		tok = strTok( array[ i ], ";" );
 		self.pers[ tok[ 0 ] ] = int( tok[ 1 ] );
@@ -141,6 +143,7 @@ FSDefault()
 	self.pers[ "fov" ] = level.dvar[ "default_fov" ];
 	self.pers[ "promodTweaks" ] = level.dvar[ "default_promod" ];
 	self.pers[ "hardpointSType" ] = level.dvar[ "shopbuttons_default" ];
+	self.pers[ "spec_keys" ] = level.dvar[ "spec_keys_default" ];
 	self.pers[ "killcamText" ] = level.dvar[ "kct_default" ];
 	// Trueskill
 	self.pers[ "mu" ] = 25;
@@ -191,6 +194,13 @@ statLookup()
 	else
 		self.pers[ "hardpointSType" ] = level.dvar[ "shopbuttons_default" ];
 		
+	wait .05;
+	
+	if( level.dvar[ "cmd_spec_keys" ] )
+		self.pers[ "spec_keys" ] = self getStat( 3164 );
+	else
+		self.pers[ "spec_keys" ] = level.dvar[ "spec_keys_default" ];
+		
 	waittillframeend;
 		
 	if( abs( self.pers[ "fov" ] > 2 ) )
@@ -227,6 +237,15 @@ statLookup()
 		self setstat( 3163, 0 );
 		self.pers[ "hardpointSType" ] = 0;
 		self iprintlnbold( "Error: illegal shop value, setting 3163 to 0" );
+	}
+	
+	waittillframeend;
+			
+	if( self.pers[ "spec_keys" ] != 1 && self.pers[ "spec_keys" ] != 0 )
+	{
+		self setstat( 3164, 0 );
+		self.pers[ "spec_keys" ] = 0;
+		self iprintlnbold( "Error: illegal spec keys value, setting 3164 to 0" );
 	}
 }
 

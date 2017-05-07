@@ -17,6 +17,7 @@ init()
 	addscriptcommand( "shop", 1 );
 	addscriptcommand( "stats", 1 );
 	addscriptcommand( "emblem", 1 );
+	addscriptcommand( "speckeys", 1 );
 }
 
 /*
@@ -261,7 +262,37 @@ commandHandler( cmd, arg )
 			}
 			
 			self.pers[ "killcamText" ] = arg;
-			level.FSCD[ self getGuid() ][ 4 ] = "killcamText;" + self.pers[ "killcamText" ];
+			level.FSCD[ self getGuid() ][ 5 ] = "killcamText;" + self.pers[ "killcamText" ];
+			break;
+			
+		case "speckeys":
+			if( !level.dvar["cmd_spec_keys"] )
+			{
+				self iPrintlnBold( "This command was disabled by server admin." );
+				break;
+			}
+			
+			stat = 0;
+			
+			if( self.pers[ "spec_keys" ] == 1 )
+			{
+				self.pers[ "spec_keys" ] = 0;
+				stat = 0;
+				self iPrintlnBold( "Spectator keys OFF" );
+			}
+			
+			else
+			{
+				self.pers[ "spec_keys" ] = 1;
+				stat = 1;
+				self iPrintlnBold( "Spectator keys ON" );
+			}
+			
+			if( !level.dvar[ "fs_players" ] )
+				self setstat( 3164, stat );
+			else
+				level.FSCD[ self getGuid() ][ 4 ] = "spec_keys;" + self.pers[ "spec_keys" ];
+			
 			break;
 				
 		default:

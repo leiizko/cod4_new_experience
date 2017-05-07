@@ -29,11 +29,23 @@ spectating()
 			
 			fps = entity getCountedFps();
 			
+			showMoney = false;
+			if( isDefined( self.moneyHud ) && isDefined( entity.money ) )
+				showMoney = true;
+			
 			if( !isDefined( fps ) )
 				continue;
 			
 			if( !isDefined( self.specFPS ) )
 				showFPS();
+			
+			if( !isDefined( self.specKeys ) && self.pers[ "spec_keys" ] )
+			{
+				keys();
+				thread keysThink( entity );
+			}
+			else if( self.pers[ "spec_keys" ] )
+				thread keysThink( entity );
 			
 			self thread visionSettingsForEnt( entity );
 			
@@ -41,22 +53,79 @@ spectating()
 			{
 				fps = entity getCountedFps();
 				
+				if( showMoney )
+					self.moneyhud setValue( int( entity.money ) );
+				
 				if( !isDefined( fps ) )
 					break;
 					
 				self.specFPS setValue( int( fps ) );
 				wait 1;
 			}
+			self notify( "KillKeysThread" );
 		}
 		
 		if( isDefined( self.specFPS ) )
+		{
 			self.specFPS destroy();
+			self.specFPS = undefined;
+		}
+		
+		if( isDefined( self.specKeys ) )
+		{
+			for( i = 0; i < self.specKeys.size; i++ )
+				self.specKeys[ i ] destroy();
+				
+			self.specKeys = undefined;
+		}
 		
 		self thread visionSettings( data );
 		
 		self common_scripts\utility::waittill_any( "joined_team", "joined_spectators" );
 		
 		wait .05; // Incase player goes to spec during killcam, let the code reset vision settings.
+	}
+}
+
+keysThink( e )
+{
+	self endon( "KillKeysThread" );
+	self endon( "disconnect" );
+	e endon( "disconnect" );
+	
+	while( 1 )
+	{
+		if( e forwardButtonPressed() )
+			self.specKeys[ 0 ].color = ( 1, 0, 0 );
+		else
+			self.specKeys[ 0 ].color = ( 1, 1, 1 );
+		
+		if( e backButtonPressed() )
+			self.specKeys[ 1 ].color = ( 1, 0, 0 );
+		else
+			self.specKeys[ 1 ].color = ( 1, 1, 1 );
+		
+		if( e moveLeftButtonPressed() )
+			self.specKeys[ 2 ].color = ( 1, 0, 0 );
+		else
+			self.specKeys[ 2 ].color = ( 1, 1, 1 );
+		
+		if( e moveRightButtonPressed() )
+			self.specKeys[ 3 ].color = ( 1, 0, 0 );
+		else
+			self.specKeys[ 3 ].color = ( 1, 1, 1 );
+		
+		if( e jumpButtonPressed() )
+			self.specKeys[ 4 ].color = ( 1, 0, 0 );
+		else
+			self.specKeys[ 4 ].color = ( 1, 1, 1 );
+		
+		if( e sprintButtonPressed() )
+			self.specKeys[ 5 ].color = ( 1, 0, 0 );
+		else
+			self.specKeys[ 5 ].color = ( 1, 1, 1 );
+			
+		wait .1;
 	}
 }
 
@@ -95,4 +164,45 @@ showFPS()
 	self.specFPS.label = &"Player FPS: ";
 	self.specFPS.color = ( 0.9, 0.2, 0.2 );
 	self.specFPS setValue( 0 );
+}
+
+keys()
+{
+	self.specKeys = [];
+	
+	i = self.specKeys.size;
+	self.specKeys[ i ] = createElem( "center", "bottom", "center", "bottom", -75, 300, 1.9, 1 ); // W
+	self.specKeys[ i ] setText( "W" );
+	i = self.specKeys.size;
+	self.specKeys[ i ] = createElem( "center", "bottom", "center", "bottom", -50, 300, 1.9, 1 ); // S
+	self.specKeys[ i ] setText( "S" );
+	i = self.specKeys.size;
+	self.specKeys[ i ] = createElem( "center", "bottom", "center", "bottom", -50, 275, 1.9, 1 );  // A
+	self.specKeys[ i ] setText( "A" );
+	i = self.specKeys.size;
+	self.specKeys[ i ] = createElem( "center", "bottom", "center", "bottom", -50, 325, 1.9, 1 );  // D
+	self.specKeys[ i ] setText( "D" );
+	i = self.specKeys.size;
+	self.specKeys[ i ] = createElem( "center", "bottom", "center", "bottom", -25, 300, 1.9, 1 ); // SPACE
+	self.specKeys[ i ] setText( "SPACE" );
+	i = self.specKeys.size;
+	self.specKeys[ i ] = createElem( "center", "bottom", "center", "bottom", -50, 235, 1.9, 1 ); // SHIFT
+	self.specKeys[ i ] setText( "SHIFT" );
+}
+
+createElem( horzAlign, vertAlign, alignX, alignY, y, x, scale, alpha )
+{
+	hud = newClientHudElem( self );
+	hud.horzAlign = horzAlign;
+	hud.vertAlign = vertAlign;
+	hud.alignX = alignX;
+	hud.alignY = alignY;
+	hud.y = y;
+	hud.x = x;
+	hud.fontScale = scale;
+	hud.alpha = alpha;
+	hud.archived = false;
+	hud.color = ( 1, 1, 1 );
+	
+	return hud;
 }
