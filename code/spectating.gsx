@@ -79,6 +79,9 @@ spectating()
 			self.specKeys = undefined;
 		}
 		
+		if( isDefined( self.moneyHud ) )
+			self.moneyhud setValue( int( self.money ) );
+		
 		self thread visionSettings( data );
 		
 		self common_scripts\utility::waittill_any( "joined_team", "joined_spectators" );
