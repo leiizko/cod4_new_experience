@@ -883,26 +883,29 @@ giveLoadout( team, class )
 	
 	self.pers[ "weaponClassPrimary" ] = weaponClass( primaryWeapon );
 
-	switch ( weaponClass( primaryWeapon ) )
+	if( !isDefined( level.stratInProgress ) )
 	{
-		case "rifle":
-			self setMoveSpeedScale( 0.95 );
-			break;
-		case "pistol":
-			self setMoveSpeedScale( 1.0 );
-			break;
-		case "mg":
-			self setMoveSpeedScale( 0.875 );
-			break;
-		case "smg":
-			self setMoveSpeedScale( 1.0 );
-			break;
-		case "spread":
-			self setMoveSpeedScale( 1.0 );
-			break;
-		default:
-			self setMoveSpeedScale( 1.0 );
-			break;
+		switch ( weaponClass( primaryWeapon ) )
+		{
+			case "rifle":
+				self setMoveSpeedScale( 0.95 );
+				break;
+			case "pistol":
+				self setMoveSpeedScale( 1.0 );
+				break;
+			case "mg":
+				self setMoveSpeedScale( 0.875 );
+				break;
+			case "smg":
+				self setMoveSpeedScale( 1.0 );
+				break;
+			case "spread":
+				self setMoveSpeedScale( 1.0 );
+				break;
+			default:
+				self setMoveSpeedScale( 1.0 );
+				break;
+		}
 	}
 	
 	// cac specialties that require loop threads
