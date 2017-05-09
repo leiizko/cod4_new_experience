@@ -248,10 +248,13 @@ endKillcam()
 	}
 	self.kc_hud = undefined;
 	
-	self.pers[ "fullbright" ] = self.visiondata.fps;
-	self.pers[ "fov" ] = self.visiondata.fov;
-	self.pers[ "promodTweaks" ] = self.visiondata.promod;
-	self.visiondata = undefined;
+	if( isDefined( self.visiondata ) )
+	{
+		self.pers[ "fullbright" ] = self.visiondata.fps;
+		self.pers[ "fov" ] = self.visiondata.fov;
+		self.pers[ "promodTweaks" ] = self.visiondata.promod;
+		self.visiondata = undefined;
+	}
 	
 	self thread code\player::userSettings();
 	

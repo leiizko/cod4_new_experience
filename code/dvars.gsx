@@ -102,6 +102,8 @@ init()
 	
 	addDvar( "cmd_spec_keys", "int", 0, 0, 1 ); // Allow changing setting to see spectators pressed keys ( 1-enable ; 0-disable )
 	addDvar( "spec_keys_default", "int", 0, 0, 1 ); // Default cmd_spec_keys value, if == 0 then this is forced value ( 1-enable ; 0-disable )
+	
+	addDvar( "force_autoassign", "int", 1, 0, 1 ); // Force players to autoassign ( 1-enable ; 0-disable )
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

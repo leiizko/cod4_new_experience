@@ -53,7 +53,7 @@ onConnect()
 	if( level.dvar[ "geowelcome" ] && !isDefined( self.pers[ "welcomed" ] ) )
 		self thread welcome();
 	
-	while( !isDefined( self.pers[ "spec_keys" ] ) )
+	while( !isDefined( self.pers[ "promodTweaks" ] ) )
 		wait .05;
 	
 	self thread userSettings();

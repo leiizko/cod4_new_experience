@@ -1359,12 +1359,10 @@ endGame( winner, endReasonText )
 			{
 				finalnum = 0;
 
-				for(i=0;i<level.players.size;i++)
+				players = level.players;
+				for(i=0;i<players.size;i++)
 				{
 					player = players[i];
-						
-					if( !isDefined( player ) )
-						continue;
 						
 					if( isDefined( player.finalcam ) )
 					{
@@ -1378,7 +1376,15 @@ endGame( winner, endReasonText )
 
 				// FAILSAFE
 				if( getTime() - level.finalcamtime > 8000 )
+				{
+					players = level.players;
+					for ( i = 0; i < players.size; i++ )
+					{
+						if( isDefined( players[ i ].finalcam ) )
+							players[ i ] thread code\killcam::endKillcam();
+					}
 					break;
+				}
 				
 				wait .25;
 			}
@@ -1499,12 +1505,10 @@ endGame( winner, endReasonText )
 		{
 			finalnum = 0;
 
-			for(i=0;i<level.players.size;i++)
+			players = level.players;
+			for(i=0;i<players.size;i++)
 			{
 				player = players[i];
-					
-				if( !isDefined( player ) )
-					continue;
 					
 				if( isDefined( player.finalcam ) )
 				{
@@ -1518,7 +1522,15 @@ endGame( winner, endReasonText )
 
 			// FAILSAFE
 			if( getTime() - level.finalcamtime > 8000 )
+			{
+				players = level.players;
+				for ( i = 0; i < players.size; i++ )
+				{
+					if( isDefined( players[ i ].finalcam ) )
+						players[ i ] thread code\killcam::endKillcam();
+				}
 				break;
+			}
 			
 			wait .25;
 		}
@@ -2243,6 +2255,12 @@ showMainMenuForTeam()
 
 menuAllies()
 {
+	if( level.dvar[ "force_autoassign" ] )
+	{
+		self thread menuAutoAssign();
+		return;
+	}
+	
 	self closeMenus();
 	
 	if(self.pers["team"] != "allies")
@@ -2292,6 +2310,12 @@ menuAllies()
 
 menuAxis()
 {
+	if( level.dvar[ "force_autoassign" ] )
+	{
+		self thread menuAutoAssign();
+		return;
+	}
+	
 	self closeMenus();
 	
 	if(self.pers["team"] != "axis")
