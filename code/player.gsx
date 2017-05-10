@@ -135,6 +135,21 @@ FSLookup()
 		tok = strTok( array[ i ], ";" );
 		self.pers[ tok[ 0 ] ] = code\trueskill::floatNoDvar( tok[ 1 ] );
 	}
+	
+	if( !level.dvar["cmd_fps"] )
+		self.pers[ "fullbright" ] = level.dvar[ "default_fps" ];
+	
+	if( !level.dvar["cmd_fov"] )
+		self.pers[ "fov" ] = level.dvar[ "default_fov" ];
+	
+	if( !level.dvar["cmd_promod"] )
+		self.pers[ "promodTweaks" ] = level.dvar[ "default_promod" ];
+	
+	if( !level.dvar[ "shopbuttons_allowchange" ] )
+		self.pers[ "hardpointSType" ] = level.dvar[ "shopbuttons_default" ];
+	
+	if( !level.dvar[ "cmd_spec_keys" ] )
+		self.pers[ "spec_keys" ] = level.dvar[ "spec_keys_default" ];
 }
 
 FSDefault()
