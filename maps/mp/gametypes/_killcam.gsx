@@ -333,8 +333,27 @@ hud( attacker, data )
 	self.kc_hud[ 8 ].horzAlign = "center";
 	self.kc_hud[ 8 ].archived = false;
 	self.kc_hud[ 8 ].fontscale = 1.4;
-	self.kc_hud[ 8 ] setText( "Rank" );
 	self.kc_hud[ 8 ].sort = 3;
+	
+	if( !isDefined( self.pers[ "vip" ] ) && self.pers[ "prestige" ] == 0 )
+		self.kc_hud[ 8 ] setText( "Rank" );
+	else if( self.pers[ "prestige" ] > 0 )
+	{
+		text = "";
+		if( isDefined( self.pers[ "vip" ] ) )
+			text += "^3VIP ^7";
+		
+		if( self.pers[ "prestige" ] == 6 )
+			text += "Rank #3";
+		else if( self.pers[ "prestige" ] == 8 )
+			text += "Rank #2";
+		else
+			text += "Rank #1";
+			
+		self.kc_hud[ 8 ] setText( text );
+	}
+	else
+		self.kc_hud[ 8 ] setText( "^3VIP" );
 	
 	self.kc_hud[ 9 ] = newClientHudElem( self );
 	self.kc_hud[ 9 ].alpha = 1;
@@ -344,8 +363,14 @@ hud( attacker, data )
 	self.kc_hud[ 9 ].horzAlign = "center";
 	self.kc_hud[ 9 ].archived = false;
 	self.kc_hud[ 9 ].fontscale = 1.4;
-	self.kc_hud[ 9 ] setShader( maps\mp\gametypes\_rank::getRankInfoIcon( attacker.pers[ "rank" ], attacker.pers[ "prestige" ] ), 50, 50 );
 	self.kc_hud[ 9 ].sort = 3;
+	
+	if( !isDefined( self.pers[ "vip" ] ) && self.pers[ "prestige" ] == 0 )
+		self.kc_hud[ 9 ] setShader( maps\mp\gametypes\_rank::getRankInfoIcon( attacker.pers[ "rank" ], attacker.pers[ "prestige" ] ), 50, 50 );
+	else if( !isDefined( self.pers[ "vip" ] ) && self.pers[ "prestige" ] > 0 )
+		self.kc_hud[ 9 ] setShader( "rank_prestige" + self.pers[ "prestige" ], 50, 50 );
+	else
+		self.kc_hud[ 9 ] setShader( "rank_prestige10", 50, 50 );
 	
 	quote = [];
 	quote[ 0 ] = "War is peace. \nFreedom is slavery. \nIgnorance is strength.";

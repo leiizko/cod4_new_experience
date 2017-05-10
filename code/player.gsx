@@ -41,6 +41,9 @@ onConnect()
 		self.pers[ "youVSfoe" ][ "killed" ] = [];
 	}
 	
+	if( self isVIP() )
+		self.pers[ "vip" ] = true;
+	
 	self.pers[ "rads" ] = 0;
 	
 	self setClientDvar( "ui_ShowMenuOnly", "" ); // if admin rotates the map while in killcam
@@ -320,7 +323,10 @@ welcome()
 		return;
 	}
 	
-	exec( "say Welcome^5 " + self.name + " ^7from ^5" + self getGeoLocation( 2 ) );
+	if( !isDefined( self.pers[ "vip" ] ) )
+		exec( "say Welcome^5 " + self.name + " ^7from ^5" + self getGeoLocation( 2 ) );
+	else
+		iprintlnbold( "Welcome ^3VIP^5 " + self.name + " ^7from ^5" + self getGeoLocation( 2 ) );
 	
 	setDvar( dvar, self getPlayerID() );
 	
@@ -329,14 +335,15 @@ welcome()
 
 isVIP()
 {
-	vips = [];
-	vips[ vips.size ] = "[U:12:345678]";
-	
 	player = self getPlayerID();
 	
-	for( i = 0; i < vips.size; i++ )
+	for( i = 0; i < 100; i++ )
 	{
-		if( player == vips[ i ] )
+		vip = getDvar( "vip_" + i );
+		if( vip == "" )
+			break;
+
+		else if( player == vip )
 			return true;
 	}
 	

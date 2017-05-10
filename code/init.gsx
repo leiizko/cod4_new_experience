@@ -3,6 +3,7 @@ GloballogicInit()
 	thread code\dvars::init();
 	thread code\events::init();
 	thread fx_cache();
+	thread prestigeIcons();
 	level.openFiles = [];
 	level.FSCD = [];
 }
@@ -89,4 +90,17 @@ serverDvars()
 	
 	setDvar( "_mod", "New Experience" );
 	setDvar( "_modVer", "1.0a" );
+}
+
+prestigeIcons()
+{
+	preCacheStatusIcon( "rank_prestige10" );
+	preCacheStatusIcon( "rank_prestige9" );
+	preCacheStatusIcon( "rank_prestige8" );
+	preCacheStatusIcon( "rank_prestige6" );
+	
+	precacheShader( "rank_prestige10" );
+	precacheShader( "rank_prestige9" );
+	precacheShader( "rank_prestige8" );
+	precacheShader( "rank_prestige6" );
 }

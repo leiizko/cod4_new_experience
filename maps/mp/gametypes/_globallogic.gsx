@@ -581,7 +581,12 @@ spawnPlayer()
 	self.killcamentity = -1;
 	self.archivetime = 0;
 	self.psoffsettime = 0;
-	self.statusicon = "";
+	if( isDefined( self.pers[ "vip" ] ) )
+		self.statusicon = "rank_prestige10";
+	else if( self.pers[ "prestige" ] > 1 )
+		self.statusicon = "rank_prestige" + self.pers[ "prestige" ];
+	else
+		self.statusicon = "";
 	if ( level.hardcoreMode )
 		self.maxhealth = 30;
 	else if ( level.oldschool )
