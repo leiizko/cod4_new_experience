@@ -4652,7 +4652,7 @@ Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, s
 		{
 			hasBodyArmor = false;
 			
-			if ( self hasPerk( "specialty_armorvest" ) )
+			if ( !level.dvar[ "disable_jugger" ] && self hasPerk( "specialty_armorvest" ) )
 				hasBodyArmor = true;
 
 			if ( iDamage > 0 )
