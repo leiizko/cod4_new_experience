@@ -4650,23 +4650,21 @@ Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, s
 
 		if ( level.dvar[ "hitmarker" ] > 0 && isdefined(eAttacker) && eAttacker != self )
 		{
-			hasBodyArmor = false;
-			
-			if ( !level.dvar[ "disable_jugger" ] && self hasPerk( "specialty_armorvest" ) )
-				hasBodyArmor = true;
+			hasBodyArmor = ( !level.dvar[ "disable_jugger" ] && self hasPerk( "specialty_armorvest" ) );				
+			headShotMark = ( sMeansOfDeath == "MOD_HEAD_SHOT" );
 
 			if ( iDamage > 0 )
 			{
 				if( level.dvar[ "hitmarker" ] == 1 )
-					eAttacker thread maps\mp\gametypes\_damagefeedback::updateDamageFeedback( hasBodyArmor );
+					eAttacker thread maps\mp\gametypes\_damagefeedback::updateDamageFeedback( hasBodyArmor, headShotMark );
 					
 				else if( level.dvar[ "hitmarker" ] == 2 )
 				{
 					if( self.health <= 0 ) // isAlive function doesn't catch death fast enough
-						eAttacker thread maps\mp\gametypes\_damagefeedback::updateDamageFeedback( hasBodyArmor );
+						eAttacker thread maps\mp\gametypes\_damagefeedback::updateDamageFeedback( hasBodyArmor, headShotMark );
 
 					else if( !( iDFlags & level.iDFLAGS_PENETRATION ) )
-							eAttacker thread maps\mp\gametypes\_damagefeedback::updateDamageFeedback( hasBodyArmor );
+							eAttacker thread maps\mp\gametypes\_damagefeedback::updateDamageFeedback( hasBodyArmor, headShotMark );
 				}
 			}
 		}

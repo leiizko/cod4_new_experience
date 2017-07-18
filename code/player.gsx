@@ -136,7 +136,7 @@ FSLookup()
 	for( i = n; i < array.size; i++ )
 	{
 		tok = strTok( array[ i ], ";" );
-		self.pers[ tok[ 0 ] ] = code\trueskill::floatNoDvar( tok[ 1 ] );
+		self.pers[ tok[ 0 ] ] = float( tok[ 1 ] );
 	}
 	
 	if( !level.dvar["cmd_fps"] )

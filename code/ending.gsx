@@ -10,6 +10,8 @@ init()
 	time = 20;
 	if( level.dvar[ "mapvote" ] )
 		time += level.dvar[ "mapvote_time" ] + 4;
+	if( level.dvar[ "gametypeVote" ] )
+		time += level.dvar[ "mapvote_time" ];
 	
 	waittillframeend;
 	
@@ -238,7 +240,6 @@ setStuff()
 			for( i = 0; i < array.size; i++ )
 			{
 				array[ i ] = toVector( array[ i ] );
-				wait .05;
 			}
 		}
 	}
@@ -679,7 +680,7 @@ toVector( string )
 	for( i = 0; i < 3; i++ )
 		setDvar( "toVec_" + i, vec3[ i ] );
 	
-	return ( getDvarFloat( "toVec_0" ), getDvarFloat( "toVec_1" ), getDvarFloat( "toVec_2" ) );
+	return ( float( "toVec_0" ), float( "toVec_1" ), float( "toVec_2" ) );
 }
 
 createElem( horzAlign, vertAlign, alignX, alignY, x, y, scale, alpha )

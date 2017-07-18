@@ -1,4 +1,6 @@
-/*
+//
+//	TO BE USED WITH TRUESKILL COD4X PLUGIN
+//
 init()
 {
 	thread code\events::addConnectEvent( ::onCon );
@@ -10,14 +12,18 @@ init()
 	
 	updateSkill();
 	
-	wait .1;
-	
 	if( level.dvar[ "fs_players" ] )
 	{
 		players = level.players;
 		for ( index = 0; index < players.size; index++ )
 		{
-			players[ index ] thread code\player::FSSave( players[ index ] getGuid() );
+			player = players[ index ];
+			guid = player getGuid();
+			
+			level.FSCD[ guid ][ 6 ] = player.pers[ "mu" ];
+			level.FSCD[ guid ][ 7 ] = player.pers[ "sigma" ];
+			
+			player thread code\player::FSSave( guid );
 		}
 	}
 	else
@@ -34,11 +40,18 @@ init()
 
 updateSkill()
 {
-	addPlayers();
+	players = addPlayers();
 	
-	TS_Rate();
+	// TS_Rate: players must be added via TS_AddPlayer, returns 2D array of players with updated ratings in same order as added, deletes all added players.
+	ratedPlayers = TS_Rate();
 	
-	TS_ClearAllPlayers();
+	for( i = 0; i < players.size; i++ )
+	{
+		player = players[ i ];
+		
+		player.pers[ "mu" ] = ratedPlayers[ i ];
+		player.pers[ "sigma" ] = ratedPlayers[ i ];
+	}	
 }
 
 onCon()
@@ -52,17 +65,17 @@ onCon()
 	if( !isDefined( game[ "firstSpawnTime" ] ) )
 		game[ "firstSpawnTime" ] = self.pers[ "firstSpawnTime" ];
 	
-	wait .5;
+	wait .1;
 	
 	if( !level.dvar[ "fs_players" ] )
 	{
-		str = "" + self getStat( 3170 ) + "." + self getStat( 3170 );
-		self.pers[ "mu" ] = floatNoDvar( str );
+		str = "" + self getStat( 3170 ) + "." + self getStat( 3171 );
+		self.pers[ "mu" ] = float( str );
 		
 		wait .05;
 		
 		str = "" + self getStat( 3172 ) + "." + self getStat( 3173 );
-		self.pers[ "sigma" ] = floatNoDvar( str );
+		self.pers[ "sigma" ] = float( str );
 		
 		wait .05;
 		
@@ -75,7 +88,8 @@ onCon()
 		}
 	}
 }
-*/
+
+// legacy
 floatNoDvar( string )
 {
 	nums = strTok( string, "." );
@@ -92,7 +106,7 @@ floatNoDvar( string )
 	
 	return num1 + num2;
 }
-/*
+
 saveRank( player )
 {
 	str = "" + player.pers[ "mu" ];
@@ -116,12 +130,11 @@ saveRank( player )
 	player setStat( 3174, int( player.pers[ "mu" ] - ( 3 * player.pers[ "sigma" ] ) ) );
 }
 
-
-// Plugin_Scr_Error( "Usage: TS_AddPlayer( <player_cid>, <player mu>, <player sigma>, <player team>, [<player weight>] )\n" );
 addPlayers()
 {
 	players = level.players;
-	for( i = 0; i < level.players.size; i++ )
+	rGroup = [];
+	for( i = 0; i < players.size; i++ )
 	{
 		player = players[ i ];
 		
@@ -129,10 +142,15 @@ addPlayers()
 			continue;
 			
 		weight = ( player.pers[ "firstSpawnTime" ] - level.TSGameTimeEnd ) / level.TSGameTime;
-		if( weight > 0.98 )
-			weight = 1;
+		if( weight > 0.95 )
+			weight = 1.0;
+		else if( weight < 0.05 )
+			weight = 0.0;
 		
-		TS_AddPlayer( player getEntityNumber(), player.pers[ "mu" ], player.pers[ "sigma" ], player.team, weight );
+		// Usage: TS_AddPlayer( (INT)<player ID>, (FLOAT)<player mu>, (FLOAT)<player sigma>, (STRING)<player team>, (FLOAT)[<player weight>] )
+		TS_AddPlayer( int( player getGuid() ), player.pers[ "mu" ], player.pers[ "sigma" ], player.team, weight );
+		rGroup[ rGroup.size ] = player;
 	}
+	
+	return rGroup;
 }
-*/

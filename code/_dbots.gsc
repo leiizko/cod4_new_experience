@@ -59,9 +59,11 @@ TestClient(team)
         self notify("menuresponse", "changeclass", class);
 
         self waittill( "spawned_player" );
-		//self maps\mp\gametypes\_hardpoints::triggerHardPoint( "helicopter_mp" );
-		self code\asf::init();
-        //self freezecontrols(true);
+		
+		//self thread botLookAtBFast();
+		self thread botFire();
+		
+		self botMoveTo( ( 0,0,0 ) );
        
    
         wait ( 0.10 );
@@ -69,6 +71,18 @@ TestClient(team)
     
     
 }
+
+botLookAtBFast()
+{
+	entity = GetEntByNum( 0 );
+    self botLookAt( entity.origin );
+}
+
+botFire()
+{
+    self botAction("+fire");
+}
+
 onPlayerConnect()
 {
     for(;;)

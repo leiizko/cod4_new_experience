@@ -300,6 +300,8 @@ commandHandler( cmd, arg )
 	}
 }
 
+/*
+	Legacy
 isInt( s )
 {
 	if( s == "0" || int( s ) )
@@ -307,6 +309,7 @@ isInt( s )
 	
 	return false;
 }
+*/
 
 getEntByStr( s )
 {
