@@ -78,11 +78,10 @@ onConnect()
 							 "player_breath_gasp_scale", "0", 
 							 "cg_drawBreathHint", "0" );
 							 
+	wait .05;
+							 
 	if( level.dvar[ "fs_players" ] )
 	{
-		while( !isDefined( self.pers[ "sigma" ] ) )
-			wait .05;
-
 		guid = self getGuid();
 		level.FSCD[ guid ] = [];
 		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "fullbright;" + self.pers[ "fullbright" ];
@@ -94,6 +93,10 @@ onConnect()
 		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "mu;" + self.pers[ "mu" ];
 		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "sigma;" + self.pers[ "sigma" ];
 	}
+	
+	wait .1;
+	
+	setDvar( "firstTime_" + self getEntityNumber(), self getPlayerID() );
 }
 
 /*
@@ -219,8 +222,15 @@ statLookup()
 	else
 		self.pers[ "spec_keys" ] = level.dvar[ "spec_keys_default" ];
 		
-	waittillframeend;
+	wait .05;
 		
+	dvar = "firstTime_" + self getEntityNumber();
+	if( getDvar( dvar ) != self getPlayerID() )
+		self thread statIntegrityCheck();
+}
+
+statIntegrityCheck()
+{
 	if( abs( self.pers[ "fov" ] > 2 ) )
 	{
 		self.pers[ "fov" ] = 0;
@@ -229,8 +239,6 @@ statLookup()
 		self setClientDvar( "cg_fov", 80 );
 		self iprintlnbold( "Error: illegal fov value, setting 3161 to 0" );
 	}
-	
-	waittillframeend;
 		
 	if( self.pers[ "fullbright" ] != 1 && self.pers[ "fullbright" ] != 0 )
 	{
@@ -238,8 +246,6 @@ statLookup()
 		self.pers[ "fullbright" ] = 0;
 		self iprintlnbold( "Error: illegal fullbright value, setting 3160 to 0" );
 	}
-	
-	waittillframeend;
 		
 	if( self.pers[ "promodTweaks" ] != 1 && self.pers[ "promodTweaks" ] != 0 )
 	{
@@ -247,8 +253,6 @@ statLookup()
 		self.pers[ "promodTweaks" ] = 0;
 		self iprintlnbold( "Error: illegal promod value, setting 3162 to 0" );
 	}
-	
-	waittillframeend;
 			
 	if( self.pers[ "hardpointSType" ] != 1 && self.pers[ "hardpointSType" ] != 0 )
 	{
@@ -256,8 +260,6 @@ statLookup()
 		self.pers[ "hardpointSType" ] = 0;
 		self iprintlnbold( "Error: illegal shop value, setting 3163 to 0" );
 	}
-	
-	waittillframeend;
 			
 	if( self.pers[ "spec_keys" ] != 1 && self.pers[ "spec_keys" ] != 0 )
 	{
@@ -315,7 +317,7 @@ userSettings()
 
 welcome()
 {
-	dvar = "welcome_" + self getEntityNumber();
+	dvar = "firstTime_" + self getEntityNumber();
 	
 	if( getDvar( dvar ) == self getPlayerID() ) // Player is already welcomed
 	{
@@ -327,8 +329,6 @@ welcome()
 		exec( "say Welcome^5 " + self.name + " ^7from ^5" + self getGeoLocation( 2 ) );
 	else
 		iprintlnbold( "Welcome ^3VIP^5 " + self.name + " ^7from ^5" + self getGeoLocation( 2 ) );
-	
-	setDvar( dvar, self getPlayerID() );
 	
 	self.pers[ "welcomed" ] = true;
 }

@@ -5,12 +5,24 @@ init()
 {
 	thread code\events::addConnectEvent( ::onCon );
 	
+	while( !isDefined( level.inPrematchPeriod ) )
+		wait .05;
+	
+	if( level.inPrematchPeriod )
+		level waittill( "prematch_over" );
+		
+	waittillframeend;
+		
+	if( isDefined( game[ "firstSpawnTime" ] ) )
+		game[ "firstSpawnTime" ] = getTime();
+	
 	level waittill( "game_ended" );
 	
 	level.TSGameTimeEnd = getTime();
 	level.TSGameTime = getTime() - game[ "firstSpawnTime" ];
 	
-	updateSkill();
+	if( level.players.size > 1 )
+		updateSkill();
 	
 	if( level.dvar[ "fs_players" ] )
 	{
