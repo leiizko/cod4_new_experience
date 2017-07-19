@@ -667,8 +667,6 @@ endingAngles()
 	}
 }
 
-
-// #OVERTHINK
 toVector( string )
 {
 	cleanedString = "";
@@ -677,10 +675,7 @@ toVector( string )
 	
 	vec3 = strTok( cleanedString, ", " );
 	
-	for( i = 0; i < 3; i++ )
-		setDvar( "toVec_" + i, vec3[ i ] );
-	
-	return ( float( "toVec_0" ), float( "toVec_1" ), float( "toVec_2" ) );
+	return ( float( vec3[ 0 ] ), float( vec3[ 1 ] ), float( vec3[ 2 ] ) );
 }
 
 createElem( horzAlign, vertAlign, alignX, alignY, x, y, scale, alpha )
