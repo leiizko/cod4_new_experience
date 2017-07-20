@@ -50,10 +50,12 @@ Buy hardpoints by spending your hard earned credits and take control of the game
 * Set rcon_interface dvar to 1 in your New Experience config file
 * Enable custom commands plugin in your B3 config file
 * Add following lines to your B3 custom commands plugin:
-```fps = cmd fps:<PLAYER:PID>
+```
+fps = cmd fps:<PLAYER:PID>
 fov = cmd fov:<PLAYER:PID>
 promod = cmd promod:<PLAYER:PID>
 shop = cmd shop:<PLAYER:PID>
 stats = cmd stats:<PLAYER:PID>:<ARG:OPT:{}>
 emblem = cmd emblem:<PLAYER:PID>:<ARG>
 speckeys = cmd speckeys:<PLAYER:PID>:<ARG>
+```
