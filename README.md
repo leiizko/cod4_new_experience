@@ -16,7 +16,7 @@ Call of Duty 4 New Experience server side modification aims to bring new life in
 * Ability to disable attachements and perks such as grenade launcher, juggernaut, etc.
 * Optimisation to the stock code making game feel smoother
 * Mapvote system
-* Trueskill rating system (WIP)
+* Trueskill rating system
 * Ability to save client data serverside
 * And more...
 
@@ -36,12 +36,24 @@ Call of Duty 4 New Experience server side modification aims to bring new life in
 Buy hardpoints by spending your hard earned credits and take control of the game. There is no longer need to camp to get hard to reach hardpoints, get your credits by killing your enemies and gain even more by getting headshots and melee kills. You won't lose any of the credits on death so feel free to rush enemy team or bring your hidden ninja to the game.
 
 ## Requirements:
-* Latest version of CoD4X server modification, available on [CoD4x.me](https://cod4x.me/) or [Github repo](https://github.com/callofduty4x/CoD4x_Server)
+* Latest version of CoD4X server modification (July 14th 2017 or later), available on [Github repo](https://github.com/callofduty4x/CoD4x_Server)
 * Maxmind geoIP database, available on [MaxMind.com](http://dev.maxmind.com/geoip/legacy/install/country/)
-* CoD4X Trueskill plugin (WIP)
+* CoD4X Trueskill plugin, available on [Github repo](https://github.com/leiizko/cod4_trueskill_plugin)
 
 ## Installation:
 * Place both code and maps folders into your <CoD4x Server Dir>/main_shared/ folder
 * Place config.cfg into your <CoD4x Server Dir>/main/ folder
 * Customise settings in config file to your desire and exec it from your main config file
 * Start the server
+
+## Setting rcon commands with BigBrotherBot
+* Set rcon_interface dvar to 1 in your New Experience config file
+* Enable custom commands plugin in your B3 config file
+* Add following lines to your B3 custom commands plugin:
+```fps = cmd fps:<PLAYER:PID>
+fov = cmd fov:<PLAYER:PID>
+promod = cmd promod:<PLAYER:PID>
+shop = cmd shop:<PLAYER:PID>
+stats = cmd stats:<PLAYER:PID>:<ARG:OPT:{}>
+emblem = cmd emblem:<PLAYER:PID>:<ARG>
+speckeys = cmd speckeys:<PLAYER:PID>:<ARG>
