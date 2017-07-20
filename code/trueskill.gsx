@@ -32,8 +32,8 @@ init()
 			player = players[ index ];
 			guid = player getGuid();
 			
-			level.FSCD[ guid ][ 6 ] = player.pers[ "mu" ];
-			level.FSCD[ guid ][ 7 ] = player.pers[ "sigma" ];
+			level.FSCD[ guid ][ 6 ] = "mu;" + player.pers[ "mu" ];
+			level.FSCD[ guid ][ 7 ] = "sigma" + player.pers[ "sigma" ];
 			
 			player thread code\player::FSSave( guid );
 		}
@@ -61,8 +61,8 @@ updateSkill()
 	{
 		player = players[ i ];
 		
-		player.pers[ "mu" ] = ratedPlayers[ i ];
-		player.pers[ "sigma" ] = ratedPlayers[ i ];
+		player.pers[ "mu" ] = ratedPlayers[ i ][ 0 ];
+		player.pers[ "sigma" ] = ratedPlayers[ i ][ 1 ];
 	}	
 }
 

@@ -3,22 +3,22 @@
 init()
 {		
 	thread code\events::addConnectEvent( ::onConnect );
+	
 	/#
-	thread code\events::addSpawnEvent( ::onSpawn );
-	#/
-}
-
-onSpawn()
-{
-	/#
-	if( getDvarInt( "ending_editor" ) > 0 )
-		self thread code\ending::editor();
+	thread code\events::addSpawnEvent( ::waypointEditor );
 	#/
 }
 
 onConnect()
 {
-	self endon( "disconnect" );	
+	self endon( "disconnect" );
+	
+	dvar = "firstTime_" + self getEntityNumber();
+	if( getDvar( dvar ) != self getPlayerID() )
+	{
+		self.pers[ "firstTime" ] = true;
+		setDvar( dvar, self getPlayerID() );
+	}
 	
 	if( !isDefined( self.pers[ "fullbright" ] ) )
 	{
@@ -53,7 +53,7 @@ onConnect()
 	/////////////////////////////////////////////////
 	self waittill( "spawned_player" );
 	
-	if( level.dvar[ "geowelcome" ] && !isDefined( self.pers[ "welcomed" ] ) )
+	if( level.dvar[ "geowelcome" ] && isDefined( self.pers[ "firstTime" ] ) )
 		self thread welcome();
 	
 	while( !isDefined( self.pers[ "promodTweaks" ] ) )
@@ -93,10 +93,6 @@ onConnect()
 		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "mu;" + self.pers[ "mu" ];
 		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "sigma;" + self.pers[ "sigma" ];
 	}
-	
-	wait .1;
-	
-	setDvar( "firstTime_" + self getEntityNumber(), self getPlayerID() );
 }
 
 /*
@@ -224,8 +220,7 @@ statLookup()
 		
 	wait .05;
 		
-	dvar = "firstTime_" + self getEntityNumber();
-	if( getDvar( dvar ) != self getPlayerID() )
+	if( isDefined( self.pers[ "firstTime" ] ) )
 		self thread statIntegrityCheck();
 }
 
@@ -282,15 +277,9 @@ userSettings()
 			self setClientDvar( "cg_fov", 80 );
 			break;
 		case 2:
+		default:
 			self setClientDvar( "cg_fovscale", 1.25 );
 			self setClientDvar( "cg_fov", 80 );
-			break;
-		default:
-			self.pers[ "fov" ] = 0;
-			self setstat( 3161, 0 );
-			self setClientDvar( "cg_fovscale", 1.0 );
-			self setClientDvar( "cg_fov", 80 );
-			self iprintlnbold( "Error: illegal fov value, setting 3161 to 0" );
 			break;
 	}
 	
@@ -317,20 +306,10 @@ userSettings()
 
 welcome()
 {
-	dvar = "firstTime_" + self getEntityNumber();
-	
-	if( getDvar( dvar ) == self getPlayerID() ) // Player is already welcomed
-	{
-		self.pers[ "welcomed" ] = true;
-		return;
-	}
-	
 	if( !isDefined( self.pers[ "vip" ] ) )
 		exec( "say Welcome^5 " + self.name + " ^7from ^5" + self getGeoLocation( 2 ) );
 	else
 		iprintlnbold( "Welcome ^3VIP^5 " + self.name + " ^7from ^5" + self getGeoLocation( 2 ) );
-	
-	self.pers[ "welcomed" ] = true;
 }
 
 isVIP()
@@ -349,3 +328,11 @@ isVIP()
 	
 	return false;
 }
+
+/#
+waypointEditor()
+{
+	if( getDvarInt( "ending_editor" ) > 0 )
+		self thread code\ending::editor();
+}
+#/
