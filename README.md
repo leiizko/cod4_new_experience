@@ -57,5 +57,5 @@ promod = cmd promod:<PLAYER:PID>
 shop = cmd shop:<PLAYER:PID>
 stats = cmd stats:<PLAYER:PID>:<ARG:OPT:{}>
 emblem = cmd emblem:<PLAYER:PID>:<ARG>
-speckeys = cmd speckeys:<PLAYER:PID>:<ARG>
+speckeys = cmd speckeys:<PLAYER:PID>
 ```
