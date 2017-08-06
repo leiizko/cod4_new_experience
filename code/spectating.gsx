@@ -31,7 +31,7 @@ spectating()
 			if( !isDefined( self.specFPS ) )
 				showFPS();
 			
-			if( !isDefined( self.specKeys ) && self.pers[ "spec_keys" ] )
+			if( self.pers[ "spec_keys" ] )
 			{
 				if( !isDefined( self.specKeys ) )
 					keys();
@@ -40,7 +40,7 @@ spectating()
 			
 			self thread visionSettingsForEnt( entity );
 			
-			while( self.spectatorClient >= 0 && entityNum == self.spectatorClient )
+			while( entityNum == self.spectatorClient )
 			{
 				if( isDefined( self.moneyHud ) )
 					self.moneyhud setValue( int( entity.money ) );

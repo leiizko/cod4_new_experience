@@ -245,6 +245,7 @@ commandHandler( cmd, arg )
 			
 			if( !isDefined( arg ) || arg == "" )
 			{
+				printClient( self, "Your current emblem: " + self.pers[ "killcamText" ] );
 				self iPrintlnBold( "Usage: $emblem <text>" );
 				return;
 			}

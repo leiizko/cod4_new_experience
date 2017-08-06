@@ -231,7 +231,7 @@ setStuff()
 	
 	array = 0;
 	filename = "./ne_db/waypoints/" + toLower( getDvar( "mapname" ) ) + ".db";
-	if( level.dvar[ "fs_ending" ] && FS_TestFile( filename ) )
+	if( level.dvar[ "fs_ending" ] )
 	{
 		array = readFile( filename );
 		

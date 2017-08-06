@@ -33,7 +33,7 @@ init()
 			guid = player getGuid();
 			
 			level.FSCD[ guid ][ 6 ] = "mu;" + player.pers[ "mu" ];
-			level.FSCD[ guid ][ 7 ] = "sigma" + player.pers[ "sigma" ];
+			level.FSCD[ guid ][ 7 ] = "sigma;" + player.pers[ "sigma" ];
 			
 			player thread code\player::FSSave( guid );
 		}

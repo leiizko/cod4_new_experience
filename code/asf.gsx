@@ -3,6 +3,9 @@
 
 init()
 {
+	if( level.dvar[ "old_hardpoints" ] )
+		self thread drop();
+	
 	if( !isDefined( level.chopper ) && !isDefined( level.mannedchopper ) )
 	{
 		self iPrintLnBold( "ASF reports no enemy chopper" );
@@ -307,4 +310,36 @@ callStrike_planeSound_credit( plane, bombsite )
 	plane thread maps\mp\gametypes\_hardpoints::play_loop_sound_on_entity( "veh_mig29_dist_loop" );
 	plane waittill("del");
 	plane notify ( "stop sound" + "veh_mig29_dist_loop" );
+}
+
+drop()
+{
+	self endon( "disconnect" );
+	
+	wait .1;
+	
+	self iPrintLnBold( "If you'd like to drop this hardpoint hold [{+activate}] for 2 seconds!" );
+	
+	time = 6 * 20;
+	hold = 0;
+	
+	while( time > 0 )
+	{
+		while( self useButtonPressed() )
+		{
+			hold++;
+			wait .1;
+			
+			if( hold >= 20 )
+			{
+				self takeWeapon( "radar_mp" );
+				self setActionSlot( 4, "" );
+				self.pers["hardPointItem"] = undefined;
+				time = 0;
+				break;
+			}
+		}
+		hold = 0;
+		wait .05;
+	}
 }
