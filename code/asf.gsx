@@ -316,7 +316,10 @@ drop()
 {
 	self endon( "disconnect" );
 	
-	wait .1;
+	waittillframeend;
+	
+	if( isDefined( level.flyingPlane ) )
+		return;
 	
 	self iPrintLnBold( "If you'd like to drop this hardpoint hold [{+activate}] for 2 seconds!" );
 	
