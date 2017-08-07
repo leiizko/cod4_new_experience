@@ -1168,7 +1168,7 @@ endGame( winner, endReasonText )
 		}
 	}
 	
-	if ( level.dvar[ "trueskill" ] && ( hitRoundLimitOne() || hitScoreLimit() || getTimeRemaining() <= 0 ) )
+	if ( level.dvar[ "trueskill" ] && ( hitRoundLimitOne() || hitScoreLimit() ) )
 		thread code\trueskill::gameEnd( winner );
 	
 	thread code\common::clearNotify();
