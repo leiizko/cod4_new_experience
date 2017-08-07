@@ -1128,6 +1128,13 @@ hostIdledOut()
 	return false;
 }
 
+hitRoundLimitOne()
+{
+	if( level.roundLimit <= 0 )
+		return false;
+
+	return ( game["roundsplayed"] + 1 >= level.roundLimit );
+}
 
 endGame( winner, endReasonText )
 {
@@ -1144,7 +1151,7 @@ endGame( winner, endReasonText )
 	level.inGracePeriod = false;
 	level notify ( "game_ended" );
 	
-	if( !level.dvar[ "trueskill" ] )
+	if( ( !hitRoundLimitOne() && !hitScoreLimit() ) && level.dvar[ "fs_players" ] )
 	{
 		players = level.players;
 		for ( index = 0; index < players.size; index++ )
@@ -1152,6 +1159,17 @@ endGame( winner, endReasonText )
 			players[index] thread code\player::FSSave( players[ index ] getGuid() );
 		}
 	}
+	else if( level.dvar[ "fs_players" ] && !level.dvar[ "trueskill" ] )
+	{
+		players = level.players;
+		for ( index = 0; index < players.size; index++ )
+		{
+			players[index] thread code\player::FSSave( players[ index ] getGuid() );
+		}
+	}
+	
+	if ( level.dvar[ "trueskill" ] && ( hitRoundLimitOne() || hitScoreLimit() || getTimeRemaining() <= 0 ) )
+		thread code\trueskill::gameEnd( winner );
 	
 	thread code\common::clearNotify();
 	

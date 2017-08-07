@@ -15,14 +15,16 @@ init()
 		
 	if( isDefined( game[ "firstSpawnTime" ] ) )
 		game[ "firstSpawnTime" ] = getTime();
-	
-	level waittill( "game_ended" );
-	
+}
+
+// executed from _globallogic, function "endGame( winner, endReasonText )"
+gameEnd( winner )
+{
 	level.TSGameTimeEnd = getTime();
 	level.TSGameTime = getTime() - game[ "firstSpawnTime" ];
 	
 	if( level.players.size > 1 )
-		updateSkill();
+		updateSkill( winner );
 	
 	if( level.dvar[ "fs_players" ] )
 	{
@@ -50,12 +52,62 @@ init()
 	}
 }
 
-updateSkill()
+updateSkill( winner )
 {
 	players = addPlayers();
 	
-	// TS_Rate: players must be added via TS_AddPlayer, returns 2D array of players with updated ratings in same order as added, deletes all added players.
-	ratedPlayers = TS_Rate();
+	if( level.teambased )
+	{
+		if( winner == "axis" )
+			rank = "1 0";
+		else if( winner == "tie" )
+			rank = "0 0";
+		else
+			rank = "0 1";
+			
+		ratedPlayers = TS_Rate( 2, rank );
+	}
+	else
+	{
+		sorted = [];
+		for( i = 0; i < players.size; i++ )
+		{
+			sorted[ i ][ 0 ] = players[ i ];
+			sorted[ i ][ 1 ] = i;
+		}
+		
+		for( i = 0; i < sorted.size; i++ )
+		{
+			for( n = i + 1; n < sorted.size; n++ )
+			{
+				if( sorted[ i ][ 0 ].score < sorted[ n ][ 0 ].score )
+				{
+					tmp = sorted[ i ];
+					sorted[ i ] = sorted[ n ];
+					sorted[ n ] = tmp;
+				}
+			}
+		}
+
+		r_a = [];
+		n = 0;
+		for( i = 0; i < sorted.size; i++ )
+		{
+			r_a[ sorted[ i ][ 1 ] ] = n;
+			
+			if( i < sorted.size - 1 && sorted[ i ][ 0 ].score != sorted[ i + 1 ][ 0 ].score )
+			{
+				n++;
+			}
+		}
+		
+		ranks = "";
+		ranks += "" + r_a[ 0 ];
+		for( i = 1; i < r_a.size; i++ )
+			ranks += " " + r_a[ i ];
+		
+		ratedPlayers = TS_Rate( players.size, ranks );
+	}
 	
 	for( i = 0; i < players.size; i++ )
 	{
@@ -101,24 +153,6 @@ onCon()
 	}
 }
 
-// legacy
-floatNoDvar( string )
-{
-	nums = strTok( string, "." );
-	
-	num1 = int( nums[ 0 ] ) + 0.0;
-	
-	if( !isDefined( nums[ 1 ] ) )
-		return num1;
-		
-	by = "1";
-	for( i = 0; i < nums[ 1 ].size; i++ )
-		by += 0;
-	num2 = int( nums[ 1 ] ) / int( by );
-	
-	return num1 + num2;
-}
-
 saveRank( player )
 {
 	str = "" + player.pers[ "mu" ];
@@ -145,6 +179,7 @@ saveRank( player )
 addPlayers()
 {
 	players = level.players;
+	t = 0;
 	rGroup = [];
 	for( i = 0; i < players.size; i++ )
 	{
@@ -153,16 +188,46 @@ addPlayers()
 		if( player.team != "axis" && player.team != "allies" )
 			continue;
 			
-		weight = ( player.pers[ "firstSpawnTime" ] - level.TSGameTimeEnd ) / level.TSGameTime;
+		weight = ( level.TSGameTimeEnd - player.pers[ "firstSpawnTime" ] ) / level.TSGameTime;
 		if( weight > 0.95 )
 			weight = 1.0;
 		else if( weight < 0.05 )
 			weight = 0.0;
 		
-		// Usage: TS_AddPlayer( (INT)<player ID>, (FLOAT)<player mu>, (FLOAT)<player sigma>, (STRING)<player team>, (FLOAT)[<player weight>] )
-		TS_AddPlayer( int( player getGuid() ), player.pers[ "mu" ], player.pers[ "sigma" ], player.team, weight );
+		if( level.teambased )
+		{
+			if( player.team == "allies" )
+				team = 1;
+			else
+				team = 2;
+		}
+		else
+		{
+			t++;
+			team = t;
+		}
+
+		TS_AddPlayer( player getEntityNumber(), player.pers[ "mu" ], player.pers[ "sigma" ], team, weight );
 		rGroup[ rGroup.size ] = player;
 	}
 	
 	return rGroup;
+}
+
+// legacy
+floatNoDvar( string )
+{
+	nums = strTok( string, "." );
+	
+	num1 = int( nums[ 0 ] ) + 0.0;
+	
+	if( !isDefined( nums[ 1 ] ) )
+		return num1;
+		
+	by = "1";
+	for( i = 0; i < nums[ 1 ].size; i++ )
+		by += 0;
+	num2 = int( nums[ 1 ] ) / int( by );
+	
+	return num1 + num2;
 }
