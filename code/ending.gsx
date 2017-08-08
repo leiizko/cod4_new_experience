@@ -63,7 +63,7 @@ bestPlayers()
 {
 	filename = "./ne_db/mapstats/" + toLower( getDvar( "mapname" ) ) + ".db";
 	array = 0;
-	if( level.dvar[ "fs_ending" ] && FS_TestFile( filename ) )
+	if( level.dvar[ "fs_ending" ] )
 	{
 		array = readFile( filename );
 		

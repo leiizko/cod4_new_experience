@@ -1,9 +1,14 @@
 //
-//	TO BE USED WITH TRUESKILL COD4X PLUGIN
+//		TO BE USED WITH TRUESKILL COD4X PLUGIN
+//	https://github.com/leiizko/cod4_trueskill_plugin
 //
+#include code\file;
+
 init()
 {
 	thread code\events::addConnectEvent( ::onCon );
+	if( level.dvar[ "fs_players" ] )
+		thread topPlayers();
 	
 	while( !isDefined( level.inPrematchPeriod ) )
 		wait .05;
@@ -115,12 +120,29 @@ updateSkill( winner )
 		
 		player.pers[ "mu" ] = ratedPlayers[ i ][ 0 ];
 		player.pers[ "sigma" ] = ratedPlayers[ i ][ 1 ];
-	}	
+	}
+	
+	if( level.dvar[ "fs_players" ] )
+		thread updateTopPlayers();
 }
 
 onCon()
 {
 	self endon( "disconnect" );
+	
+	waittillframeend;
+	
+	if( isArray( level.TSTopPlayers ) )
+	{
+		id = self getPlayerID();
+		if( level.TSTopPlayers[ 0 ][ 0 ] == id )
+			self.pers[ "prestige" ] = 9;
+		else if( isDefined( level.TSTopPlayers[ 1 ] ) && level.TSTopPlayers[ 1 ][ 0 ] == id )
+			self.pers[ "prestige" ] = 8;
+		else if( isDefined( level.TSTopPlayers[ 2 ] ) && level.TSTopPlayers[ 2 ][ 0 ] == id )
+			self.pers[ "prestige" ] = 6;
+	}
+	
 	self waittill( "spawned_player" );
 
 	if( !isDefined( self.pers[ "firstSpawnTime" ] ) )
@@ -212,6 +234,84 @@ addPlayers()
 	}
 	
 	return rGroup;
+}
+
+updateTopPlayers()
+{
+	players = level.players;
+	
+	pool = [];
+	
+	for( i = 0; i < players.size; i++ )
+	{
+		pool[ i ][ 0 ] = players[ i ] getPlayerID();
+		pool[ i ][ 1 ] = players[ i ].pers[ "mu" ] - ( 3 * players[ i ].pers[ "sigma" ] );
+	}
+	
+	if( isArray( level.TSTopPlayers ) )
+	{
+		psize = pool.size;
+		for( i = 0; i < level.TSTopPlayers.size; i++ )
+		{
+			next = false;
+			for( n = 0; n < psize; n++ )
+			{
+				if( level.TSTopPlayers[ i ][ 0 ] == pool[ n ][ 0 ] )
+				{
+					if( level.TSTopPlayers[ i ][ 1 ] > pool[ n ][ 1 ] )
+						pool[ n ][ 1 ] = level.TSTopPlayers[ i ][ 1 ];
+					next = true;
+					break;
+				}
+			}
+			
+			if( !next )
+			{
+				n = pool.size;
+				pool[ n ][ 0 ] = level.TSTopPlayers[ i ][ 0 ];
+				pool[ n ][ 1 ] = level.TSTopPlayers[ i ][ 1 ];
+			}
+		}
+	}
+	
+	for( i = 0; i < pool.size; i++ )
+	{
+		for( n = i + 1; n < pool.size; n++ )
+		{
+			if( pool[ i ][ 1 ] < pool[ n ][ 1 ] )
+			{
+				tmp = pool[ i ];
+				pool[ i ] = pool[ n ];
+				pool[ n ] = tmp;
+			}
+		}
+	}
+	
+	arr = [];
+	n = 0;
+	for( i = 0; i < 6; i += 2 )
+	{
+		arr[ i ] = pool[ n ][ 0 ];
+		arr[ i + 1 ] = pool[ n ][ 1 ];
+		n++;
+	}
+	
+	writeToFile( "./ne_db/players/topratedplayers.db", arr );
+}
+
+topPlayers()
+{
+	array = readFile( "./ne_db/players/topratedplayers.db" );
+	if( isArray( array ) )
+	{
+		level.TSTopPlayers = [];
+		for( i = 0; i < array.size; i += 2 )
+		{
+			n = level.TSTopPlayers.size;
+			level.TSTopPlayers[ n ][ 0 ] = array[ i ]; // ID
+			level.TSTopPlayers[ n ][ 1 ] = float( array[ i + 1 ] ); // MEAN / 3*VARIANCE
+		}
+	}
 }
 
 // legacy
