@@ -699,7 +699,7 @@ onPlayerKilled( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHi
 {
 	waittillframeend;
 	
-	if( !isDefined( attacker ) || attacker == self )
+	if( !isDefined( attacker ) || attacker == self || !isPlayer( attacker ) )
 		return;
 	
 	if( sMeansOfDeath == "MOD_MELEE" )

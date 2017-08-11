@@ -109,6 +109,7 @@ init()
 	
 	addDvar( "realReload", "int", 1, 0, 1 ); // Drops all ammo left in clip when reloading ( 1-enable ; 0-disable )
 	addDvar( "reloadFix", "int", 1, 0, 1 ); // Prevents rapid fire and stop reload binds ( 1-enable ; 0-disable )
+	addDvar( "doubleHeli", "int", 1, 0, 1 ); // Allow two normal choppers at one time, manned heli can still only be alone ( 1-enable ; 0-disable )
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

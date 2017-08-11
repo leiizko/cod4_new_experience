@@ -28,6 +28,9 @@ updateDamageFeedback( hitBodyArmor, isHeadShot )
 	if ( !isPlayer( self ) )
 		return;
 		
+	if( !isDefined( isHeadshot ) )
+		isHeadShot = false;
+		
 	if( isHeadShot )
 	{	
 		self.hud_damagefeedback.color = ( 1, 0, 0 );
