@@ -106,6 +106,9 @@ init()
 	addDvar( "spec_keys_default", "int", 0, 0, 1 ); // Default cmd_spec_keys value, if == 0 then this is forced value ( 1-enable ; 0-disable )
 	
 	addDvar( "force_autoassign", "int", 1, 0, 1 ); // Force players to autoassign ( 1-enable ; 0-disable )
+	
+	addDvar( "realReload", "int", 1, 0, 1 ); // Drops all ammo left in clip when reloading ( 1-enable ; 0-disable )
+	addDvar( "reloadFix", "int", 1, 0, 1 ); // Prevents rapid fire and stop reload binds ( 1-enable ; 0-disable )
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

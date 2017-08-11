@@ -48,6 +48,9 @@ onConnect()
 	
 	self setClientDvar( "ui_ShowMenuOnly", "" ); // if admin rotates the map while in killcam
 	
+	if( level.dvar[ "reloadFix" ] )
+		thread watchReload();
+	
 	/////////////////////////////////////////////////
 	// Things we need to do on spawn but only once //
 	/////////////////////////////////////////////////
@@ -310,6 +313,12 @@ welcome()
 		exec( "say Welcome^5 " + self.name + " ^7from ^5" + self getGeoLocation( 2 ) );
 	else
 		iprintlnbold( "Welcome ^3VIP^5 " + self.name + " ^7from ^5" + self getGeoLocation( 2 ) );
+		
+	if( level.dvar[ "trueskill" ] )
+	{
+		self iprintlnbold( "This is a Trueskill enabled server," );
+		self iprintlnbold( "please do not leave the game until match is over!" );
+	}
 }
 
 isVIP()
@@ -327,6 +336,30 @@ isVIP()
 	}
 	
 	return false;
+}
+
+// http://www.cod4dev.co.uk/index.php/forum/misc-scripts-coding/218-preventing-rapid-fire-keybind-cheats
+watchReload()
+{
+	self endon( "disconnect" );
+
+	for( ;; )
+	{
+		self waittill( "reload_start" );
+		
+		weap = self GetCurrentWeapon();
+		if( WeaponIsBoltAction( weap ) )
+			continue;
+
+		AmmoClip = self GetWeaponAmmoClip( weap );
+		self SetWeaponAmmoClip( weap, 0 );
+
+		if( !level.dvar[ "realReload" ] )
+		{
+			AmmoStock = self GetWeaponAmmoStock( weap );
+			self setWeaponAmmoStock( weap,( AmmoStock + AmmoClip ) );
+		}
+	}
 }
 
 /#
