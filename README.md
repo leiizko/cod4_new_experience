@@ -44,6 +44,8 @@ Buy hardpoints by spending your hard earned credits and take control of the game
 * Place both code and maps folders into your <CoD4x Server Dir>/main_shared/ folder
 * Place config.cfg into your <CoD4x Server Dir>/main/ folder
 * Customise settings in config file to your desire and exec it from your main config file
+* Place trueskill plugin to your plugins directory
+* Load plugin in main config file or in server command line
 * Start the server
 
 ## Setting rcon commands with BigBrotherBot
