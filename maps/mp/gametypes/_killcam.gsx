@@ -335,17 +335,17 @@ hud( attacker, data )
 	self.kc_hud[ 8 ].fontscale = 1.4;
 	self.kc_hud[ 8 ].sort = 3;
 	
-	if( !isDefined( self.pers[ "vip" ] ) && self.pers[ "prestige" ] == 0 )
+	if( !isDefined( attacker.pers[ "vip" ] ) && attacker.pers[ "prestige" ] == 0 )
 		self.kc_hud[ 8 ] setText( "Rank" );
-	else if( self.pers[ "prestige" ] > 0 )
+	else if( attacker.pers[ "prestige" ] > 0 )
 	{
 		text = "";
-		if( isDefined( self.pers[ "vip" ] ) )
+		if( isDefined( attacker.pers[ "vip" ] ) )
 			text += "^3VIP ^7";
 		
-		if( self.pers[ "prestige" ] == 6 )
+		if( attacker.pers[ "prestige" ] == 6 )
 			text += "Rank #3";
-		else if( self.pers[ "prestige" ] == 8 )
+		else if( attacker.pers[ "prestige" ] == 8 )
 			text += "Rank #2";
 		else
 			text += "Rank #1";

@@ -245,6 +245,7 @@ commandHandler( cmd, arg )
 			
 			if( !isDefined( arg ) || arg == "" )
 			{
+				printClient( self, "Your current emblem: " + self.pers[ "killcamText" ] );
 				self iPrintlnBold( "Usage: $emblem <text>" );
 				return;
 			}
@@ -300,12 +301,18 @@ commandHandler( cmd, arg )
 	}
 }
 
+// Built in function is crap
 isInt( s )
 {
-	if( s == "0" || int( s ) )
-		return true;
+	for( i = 0; i < s.size; i++ )
+	{
+		if( s[ i ] != "0" && !int( s[ i ] ) )
+		{
+			return false;
+		}
+	}
 	
-	return false;
+	return true;
 }
 
 getEntByStr( s )

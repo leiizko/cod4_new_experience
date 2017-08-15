@@ -1172,7 +1172,15 @@ triggerHardPoint( hardpointType )
 	}
 	else if ( hardpointType == "helicopter_mp" )
 	{
-		if ( isDefined( level.chopper ) || isDefined( level.mannedchopper ) )
+		if( level.teambased && level.dvar[ "doubleHeli" ] )
+		{
+			if( isDefined( level.chopper ) && isDefined( level.chopper[ self.team ] ) || isDefined( level.mannedchopper ) )
+			{
+				self iPrintLnBold( level.hardpointHints[hardpointType+"_not_available"] );
+				return false;
+			}
+		}
+		else if ( isDefined( level.chopper ) || isDefined( level.mannedchopper ) )
 		{
 			self iPrintLnBold( level.hardpointHints[hardpointType+"_not_available"] );
 			return false;

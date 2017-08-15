@@ -3,22 +3,22 @@
 init()
 {		
 	thread code\events::addConnectEvent( ::onConnect );
+	
 	/#
-	thread code\events::addSpawnEvent( ::onSpawn );
-	#/
-}
-
-onSpawn()
-{
-	/#
-	if( getDvarInt( "ending_editor" ) > 0 )
-		self thread code\ending::editor();
+	thread code\events::addSpawnEvent( ::waypointEditor );
 	#/
 }
 
 onConnect()
 {
-	self endon( "disconnect" );	
+	self endon( "disconnect" );
+	
+	dvar = "firstTime_" + self getEntityNumber();
+	if( getDvar( dvar ) != self getPlayerID() )
+	{
+		self.pers[ "firstTime" ] = true;
+		setDvar( dvar, self getPlayerID() );
+	}
 	
 	if( !isDefined( self.pers[ "fullbright" ] ) )
 	{
@@ -48,12 +48,15 @@ onConnect()
 	
 	self setClientDvar( "ui_ShowMenuOnly", "" ); // if admin rotates the map while in killcam
 	
+	if( level.dvar[ "reloadFix" ] )
+		thread watchReload();
+	
 	/////////////////////////////////////////////////
 	// Things we need to do on spawn but only once //
 	/////////////////////////////////////////////////
 	self waittill( "spawned_player" );
 	
-	if( level.dvar[ "geowelcome" ] && !isDefined( self.pers[ "welcomed" ] ) )
+	if( level.dvar[ "geowelcome" ] && isDefined( self.pers[ "firstTime" ] ) )
 		self thread welcome();
 	
 	while( !isDefined( self.pers[ "promodTweaks" ] ) )
@@ -78,11 +81,10 @@ onConnect()
 							 "player_breath_gasp_scale", "0", 
 							 "cg_drawBreathHint", "0" );
 							 
+	wait .05;
+							 
 	if( level.dvar[ "fs_players" ] )
 	{
-		while( !isDefined( self.pers[ "sigma" ] ) )
-			wait .05;
-
 		guid = self getGuid();
 		level.FSCD[ guid ] = [];
 		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "fullbright;" + self.pers[ "fullbright" ];
@@ -136,7 +138,7 @@ FSLookup()
 	for( i = n; i < array.size; i++ )
 	{
 		tok = strTok( array[ i ], ";" );
-		self.pers[ tok[ 0 ] ] = code\trueskill::floatNoDvar( tok[ 1 ] );
+		self.pers[ tok[ 0 ] ] = float( tok[ 1 ] );
 	}
 	
 	if( !level.dvar["cmd_fps"] )
@@ -219,8 +221,14 @@ statLookup()
 	else
 		self.pers[ "spec_keys" ] = level.dvar[ "spec_keys_default" ];
 		
-	waittillframeend;
+	wait .05;
 		
+	if( isDefined( self.pers[ "firstTime" ] ) )
+		self thread statIntegrityCheck();
+}
+
+statIntegrityCheck()
+{
 	if( abs( self.pers[ "fov" ] > 2 ) )
 	{
 		self.pers[ "fov" ] = 0;
@@ -229,8 +237,6 @@ statLookup()
 		self setClientDvar( "cg_fov", 80 );
 		self iprintlnbold( "Error: illegal fov value, setting 3161 to 0" );
 	}
-	
-	waittillframeend;
 		
 	if( self.pers[ "fullbright" ] != 1 && self.pers[ "fullbright" ] != 0 )
 	{
@@ -238,8 +244,6 @@ statLookup()
 		self.pers[ "fullbright" ] = 0;
 		self iprintlnbold( "Error: illegal fullbright value, setting 3160 to 0" );
 	}
-	
-	waittillframeend;
 		
 	if( self.pers[ "promodTweaks" ] != 1 && self.pers[ "promodTweaks" ] != 0 )
 	{
@@ -247,8 +251,6 @@ statLookup()
 		self.pers[ "promodTweaks" ] = 0;
 		self iprintlnbold( "Error: illegal promod value, setting 3162 to 0" );
 	}
-	
-	waittillframeend;
 			
 	if( self.pers[ "hardpointSType" ] != 1 && self.pers[ "hardpointSType" ] != 0 )
 	{
@@ -256,8 +258,6 @@ statLookup()
 		self.pers[ "hardpointSType" ] = 0;
 		self iprintlnbold( "Error: illegal shop value, setting 3163 to 0" );
 	}
-	
-	waittillframeend;
 			
 	if( self.pers[ "spec_keys" ] != 1 && self.pers[ "spec_keys" ] != 0 )
 	{
@@ -280,15 +280,9 @@ userSettings()
 			self setClientDvar( "cg_fov", 80 );
 			break;
 		case 2:
+		default:
 			self setClientDvar( "cg_fovscale", 1.25 );
 			self setClientDvar( "cg_fov", 80 );
-			break;
-		default:
-			self.pers[ "fov" ] = 0;
-			self setstat( 3161, 0 );
-			self setClientDvar( "cg_fovscale", 1.0 );
-			self setClientDvar( "cg_fov", 80 );
-			self iprintlnbold( "Error: illegal fov value, setting 3161 to 0" );
 			break;
 	}
 	
@@ -315,22 +309,16 @@ userSettings()
 
 welcome()
 {
-	dvar = "welcome_" + self getEntityNumber();
-	
-	if( getDvar( dvar ) == self getPlayerID() ) // Player is already welcomed
-	{
-		self.pers[ "welcomed" ] = true;
-		return;
-	}
-	
 	if( !isDefined( self.pers[ "vip" ] ) )
 		exec( "say Welcome^5 " + self.name + " ^7from ^5" + self getGeoLocation( 2 ) );
 	else
 		iprintlnbold( "Welcome ^3VIP^5 " + self.name + " ^7from ^5" + self getGeoLocation( 2 ) );
-	
-	setDvar( dvar, self getPlayerID() );
-	
-	self.pers[ "welcomed" ] = true;
+		
+	if( level.dvar[ "trueskill" ] )
+	{
+		self iprintlnbold( "This is a Trueskill enabled server," );
+		self iprintlnbold( "please do not leave the game until match is over!" );
+	}
 }
 
 isVIP()
@@ -349,3 +337,35 @@ isVIP()
 	
 	return false;
 }
+
+// http://www.cod4dev.co.uk/index.php/forum/misc-scripts-coding/218-preventing-rapid-fire-keybind-cheats
+watchReload()
+{
+	self endon( "disconnect" );
+
+	for( ;; )
+	{
+		self waittill( "reload_start" );
+		
+		weap = self GetCurrentWeapon();
+		if( WeaponIsBoltAction( weap ) )
+			continue;
+
+		AmmoClip = self GetWeaponAmmoClip( weap );
+		self SetWeaponAmmoClip( weap, 0 );
+
+		if( !level.dvar[ "realReload" ] )
+		{
+			AmmoStock = self GetWeaponAmmoStock( weap );
+			self setWeaponAmmoStock( weap,( AmmoStock + AmmoClip ) );
+		}
+	}
+}
+
+/#
+waypointEditor()
+{
+	if( getDvarInt( "ending_editor" ) > 0 )
+		self thread code\ending::editor();
+}
+#/

@@ -3,16 +3,32 @@
 
 init()
 {
+	if( level.dvar[ "old_hardpoints" ] )
+		self thread drop();
+	
 	if( !isDefined( level.chopper ) && !isDefined( level.mannedchopper ) )
 	{
 		self iPrintLnBold( "ASF reports no enemy chopper" );
 		return false;
 	}
 	
-	if( isDefined( level.chopper ) && level.chopper.team == self.team && level.teambased )
+	if( isDefined( level.chopper ) )
 	{
-		self iPrintLnBold( "ASF reports no enemy chopper" );
-		return false;
+		if( level.teambased && level.dvar[ "doubleHeli" ] && !isDefined( level.chopper[ level.otherTeam[ self.team ] ] ) )
+		{
+			self iPrintLnBold( "ASF reports no enemy chopper" );
+			return false;
+		}
+		else if( level.teambased && !level.dvar[ "doubleHeli" ] && level.chopper.team == self.team )
+		{
+			self iPrintLnBold( "ASF reports no enemy chopper" );
+			return false;
+		}
+		else if( !level.teambased && level.chopper.owner != self )
+		{
+			self iPrintLnBold( "ASF reports no enemy chopper" );
+			return false;
+		}
 	}
 	
 	if( isDefined( level.mannedchopper ) && level.mannedchopper.team == self.team && level.teambased )
@@ -44,43 +60,48 @@ setup()
 	self thread onGameEnd( ::finish );
 	thread destroyPlane();
 	
-	if( isDefined( level.chopper ) )
+	if( !level.teamBased || !level.dvar[ "doubleHeli" ] )
 	{
-		self thread heliLeave();
-		pathStart = level.chopper.origin + vector_scale( anglesToForward( level.chopper.angles ), 50000 );
-		pathStart = ( pathStart[ 0 ], pathStart[ 1 ], level.chopper.origin[ 2 ] );
-		ent = level.chopper;
+		if( isDefined( level.chopper ) )
+			chopper = level.chopper;
+		else
+			chopper = level.mannedchopper;
 	}
 	else
 	{
-		self thread mannedHeliLeave();
-		pathStart = level.mannedchopper.origin + vector_scale( anglesToForward( level.mannedchopper.angles ), 50000 );
-		pathStart = ( pathStart[ 0 ], pathStart[ 1 ], level.mannedchopper.origin[ 2 ] );
-		ent = level.mannedchopper;
+		if( isDefined( level.mannedchopper ) )
+			chopper = level.mannedchopper;
+		else
+			chopper = level.chopper[ level.otherTeam[ self.team ] ];
 	}
+
+	self thread heliLeave( chopper );
+	pathStart = chopper.origin + vector_scale( anglesToForward( chopper.angles ), 50000 );
+	pathStart = ( pathStart[ 0 ], pathStart[ 1 ], chopper.origin[ 2 ] );
+
 	
 	level.plane[ "plane" ] = spawnplane( self, "script_model", pathStart );
 	level.plane[ "plane" ] setModel( "vehicle_mig29_desert" );
-	level.plane[ "plane" ].angles = VectorToAngles( ent.origin - level.plane[ "plane" ].origin );
+	level.plane[ "plane" ].angles = VectorToAngles( chopper.origin - level.plane[ "plane" ].origin );
 	level.plane[ "missile" ] = spawn( "script_model", level.plane[ "plane" ].origin );
 	level.plane[ "missile" ] setModel( "projectile_hellfire_missile" );
 	level.plane[ "missile" ] linkTo( level.plane[ "plane" ], "tag_left_wingtip" );
-	thread callStrike_planeSound_credit( level.plane[ "plane" ], ent.origin );
+	thread callStrike_planeSound_credit( level.plane[ "plane" ], chopper.origin );
 	
 	for( ;; )
 	{
-		level.plane[ "plane" ].angles = VectorToAngles( ent.origin - level.plane[ "plane" ].origin );
+		level.plane[ "plane" ].angles = VectorToAngles( chopper.origin - level.plane[ "plane" ].origin );
 		vector = anglesToForward( level.plane[ "plane" ].angles );
 		forward = level.plane[ "plane" ].origin + ( vector[ 0 ] * 1600, vector[ 1 ] * 1600, vector[ 2 ] * 1600 );
 		level.plane[ "plane" ] moveTo( forward, .25 );
 		
 		wait .25;
 		
-		if( distanceSquared( level.plane[ "plane" ].origin, ent.origin ) < 16000000 )
+		if( distanceSquared( level.plane[ "plane" ].origin, chopper.origin ) < 16000000 )
 		{
 			if( isDefined( level.mannedchopper ) )
 				level.mannedchopper.owner thread code\heli::warning();
-			self thread launchAA( ent );
+			self thread launchAA( chopper );
 			break;
 		}
 	}
@@ -109,24 +130,16 @@ setup()
 	thread finish();
 }
 
-heliLeave()
+heliLeave( chopper )
 {
 	self endon( "disconnect" );
 	level endon( "game_ended" );
 	level endon( "flyOver" );
 	
-	level.chopper common_scripts\utility::waittill_any( "death", "crashing", "leaving", "helicopter gone", "ASFsafetynet" );
-	level.plane[ "plane" ] notify("del");
-	self thread finish();
-}
-
-mannedHeliLeave()
-{
-	self endon( "disconnect" );
-	level endon( "game_ended" );
-	level endon( "flyOver" );
-	
-	level.mannedchopper common_scripts\utility::waittill_any( "ASFsafetynet", "heliEnd" );
+	if( isDefined( level.mannedchopper ) )
+		chopper common_scripts\utility::waittill_any( "ASFsafetynet", "heliEnd" );
+	else
+		chopper common_scripts\utility::waittill_any( "death", "crashing", "leaving", "helicopter gone", "ASFsafetynet" );
 	level.plane[ "plane" ] notify("del");
 	self thread finish();
 }
@@ -173,7 +186,7 @@ launchAA( ent )
 				PlayFX( level.chopper_fx["explode"]["large"], level.plane[ "missile" ].origin );
 				level.missileLaunched = undefined;
 				if( !isDefined( level.mannedchopper ) )
-					level.chopper.damageTaken = level.chopper.maxHealth + 1;
+					ent.damageTaken = ent.maxHealth + 1;
 				else
 				{
 					if( isDefined( level.mannedchopper.playerInside ) )
@@ -307,4 +320,39 @@ callStrike_planeSound_credit( plane, bombsite )
 	plane thread maps\mp\gametypes\_hardpoints::play_loop_sound_on_entity( "veh_mig29_dist_loop" );
 	plane waittill("del");
 	plane notify ( "stop sound" + "veh_mig29_dist_loop" );
+}
+
+drop()
+{
+	self endon( "disconnect" );
+	
+	waittillframeend;
+	
+	if( isDefined( level.flyingPlane ) )
+		return;
+	
+	self iPrintLnBold( "If you'd like to drop this hardpoint hold [{+activate}] for 2 seconds!" );
+	
+	time = 6 * 20;
+	hold = 0;
+	
+	while( time > 0 )
+	{
+		while( self useButtonPressed() )
+		{
+			hold++;
+			wait .1;
+			
+			if( hold >= 20 )
+			{
+				self takeWeapon( "radar_mp" );
+				self setActionSlot( 4, "" );
+				self.pers["hardPointItem"] = undefined;
+				time = 0;
+				break;
+			}
+		}
+		hold = 0;
+		wait .05;
+	}
 }

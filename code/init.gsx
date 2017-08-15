@@ -16,8 +16,10 @@ startGameType()
 	if( !level.dvar[ "old_hardpoints" ] )
 		thread code\hardpoints::init();
 	
-//	if( level.dvar[ "trueskill" ] )
-//		thread code\trueskill::init();
+	// REQUIRES TRUESKILL PLUGIN        //
+	if( level.dvar[ "trueskill" ] )     //
+		thread code\trueskill::init();  //
+	//                                  //
 		
 	thread code\player::init();
 	
@@ -88,8 +90,8 @@ serverDvars()
 		setDvar( "g_speed", 210 );
 	}
 	
-	setDvar( "_mod", "New Experience" );
-	setDvar( "_modVer", "1.0a" );
+	exec( "sets _mod New Experience" );
+	exec( "sets _modVer 1.0" );
 }
 
 prestigeIcons()

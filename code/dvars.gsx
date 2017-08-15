@@ -79,6 +79,8 @@ init()
 	addDvar( "mapvote_mapnum", "int", 5, 3, 8 ); // Number of maps in mapvote
 	addDvar( "mapvote_norepeat", "int", 3, 0, 10 ); // For how many rounds should map not reappear
 	addDvar( "mapvote_time", "int", 15, 5, 40 ); // Mapvote time
+	addDvar( "gametypeVote", "int", 0, 0, 1 ); // Enable gametype vote ( 1-enable ; 0-disable )
+	addDvar( "vote_gametypes", "string", "war dm sd sab koth dom" ); // gametype pool separated by space
 	
 	// Filesystem - Adds extra features but will make a lot of .db files, each file being less than 1kB in size.
 	// fs_ending will make atleast 1 and a maximum of 2 files per unique map, depending if custom waypoints are used
@@ -91,7 +93,7 @@ init()
 	addDvar( "shopbuttons_allowchange", "int", 1, 0, 1 ); // Allow the player do decide which buttons to use to navigate hardpoint shop ( 1-W/S ; 0-F/V )
 	addDvar( "shopbuttons_default", "int", 0, 0, 1 ); // If above is set to 0, the players will be forced to use this buttons ( 1-W/S ; 0-F/V )
 	
-	addDvar( "trueskill", "int", 0, 0, 1 ); // Trueskill ranking system ( 1-enable ; 0-disable )
+	addDvar( "trueskill", "int", 1, 0, 1 ); // Trueskill ranking system ( 1-enable ; 0-disable )
 	addDvar( "kct_default", "string", "Owned!" ); // Killcam default text
 	addDvar( "geowelcome", "int", 1, 0, 1 ); // Geowelcome on player first connect ( 1-enable ; 0-disable )
 	addDvar( "kcemblem", "int", 1, 0, 1 ); // Allow custom killcam emblem ( 1-enable ; 0-disable )
@@ -104,6 +106,10 @@ init()
 	addDvar( "spec_keys_default", "int", 0, 0, 1 ); // Default cmd_spec_keys value, if == 0 then this is forced value ( 1-enable ; 0-disable )
 	
 	addDvar( "force_autoassign", "int", 1, 0, 1 ); // Force players to autoassign ( 1-enable ; 0-disable )
+	
+	addDvar( "realReload", "int", 1, 0, 1 ); // Drops all ammo left in clip when reloading ( 1-enable ; 0-disable )
+	addDvar( "reloadFix", "int", 1, 0, 1 ); // Prevents rapid fire and stop reload binds ( 1-enable ; 0-disable )
+	addDvar( "doubleHeli", "int", 1, 0, 1 ); // Allow two normal choppers at one time, manned heli can still only be alone ( 1-enable ; 0-disable )
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

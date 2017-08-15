@@ -19,47 +19,33 @@ spectating()
 		
 		while( self.sessionstate == "spectator" )
 		{			
-			entity = self getSpectatorClient(); // Get the entity
-			
-			if( !isDefined( entity ) ) // Will be undefined if there is there is noone to spectate / free spec
+			if( self.spectatorClient < 0 ) // -1 ?
 			{
 				wait 1;
 				continue;
 			}
 			
-			fps = entity getCountedFps();
-			
-			showMoney = false;
-			if( isDefined( self.moneyHud ) && isDefined( entity.money ) )
-				showMoney = true;
-			
-			if( !isDefined( fps ) )
-				continue;
+			entity = getEntByNum( self.spectatorClient );
+			entityNum = self.spectatorClient;
 			
 			if( !isDefined( self.specFPS ) )
 				showFPS();
 			
-			if( !isDefined( self.specKeys ) && self.pers[ "spec_keys" ] )
+			if( self.pers[ "spec_keys" ] )
 			{
-				keys();
+				if( !isDefined( self.specKeys ) )
+					keys();
 				thread keysThink( entity );
 			}
-			else if( self.pers[ "spec_keys" ] )
-				thread keysThink( entity );
 			
 			self thread visionSettingsForEnt( entity );
 			
-			while( isDefined( self getSpectatorClient() ) && entity == self getSpectatorClient() )
+			while( entityNum == self.spectatorClient )
 			{
-				fps = entity getCountedFps();
-				
-				if( showMoney )
+				if( isDefined( self.moneyHud ) )
 					self.moneyhud setValue( int( entity.money ) );
-				
-				if( !isDefined( fps ) )
-					break;
 					
-				self.specFPS setValue( int( fps ) );
+				self.specFPS setValue( int( entity getCountedFps() ) );
 				wait 1;
 			}
 			self notify( "KillKeysThread" );

@@ -10,6 +10,8 @@ init()
 	time = 20;
 	if( level.dvar[ "mapvote" ] )
 		time += level.dvar[ "mapvote_time" ] + 4;
+	if( level.dvar[ "gametypeVote" ] )
+		time += level.dvar[ "mapvote_time" ];
 	
 	waittillframeend;
 	
@@ -61,7 +63,7 @@ bestPlayers()
 {
 	filename = "./ne_db/mapstats/" + toLower( getDvar( "mapname" ) ) + ".db";
 	array = 0;
-	if( level.dvar[ "fs_ending" ] && FS_TestFile( filename ) )
+	if( level.dvar[ "fs_ending" ] )
 	{
 		array = readFile( filename );
 		
@@ -229,7 +231,7 @@ setStuff()
 	
 	array = 0;
 	filename = "./ne_db/waypoints/" + toLower( getDvar( "mapname" ) ) + ".db";
-	if( level.dvar[ "fs_ending" ] && FS_TestFile( filename ) )
+	if( level.dvar[ "fs_ending" ] )
 	{
 		array = readFile( filename );
 		
@@ -238,7 +240,6 @@ setStuff()
 			for( i = 0; i < array.size; i++ )
 			{
 				array[ i ] = toVector( array[ i ] );
-				wait .05;
 			}
 		}
 	}
@@ -666,8 +667,6 @@ endingAngles()
 	}
 }
 
-
-// #OVERTHINK
 toVector( string )
 {
 	cleanedString = "";
@@ -676,10 +675,7 @@ toVector( string )
 	
 	vec3 = strTok( cleanedString, ", " );
 	
-	for( i = 0; i < 3; i++ )
-		setDvar( "toVec_" + i, vec3[ i ] );
-	
-	return ( getDvarFloat( "toVec_0" ), getDvarFloat( "toVec_1" ), getDvarFloat( "toVec_2" ) );
+	return ( float( vec3[ 0 ] ), float( vec3[ 1 ] ), float( vec3[ 2 ] ) );
 }
 
 createElem( horzAlign, vertAlign, alignX, alignY, x, y, scale, alpha )
@@ -703,7 +699,7 @@ onPlayerKilled( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHi
 {
 	waittillframeend;
 	
-	if( !isDefined( attacker ) || attacker == self )
+	if( !isDefined( attacker ) || attacker == self || !isPlayer( attacker ) )
 		return;
 	
 	if( sMeansOfDeath == "MOD_MELEE" )

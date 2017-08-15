@@ -251,7 +251,14 @@ heli_think( owner, startnode, heli_team, requiredDeathCount )
 	
 	//chopper thread heli_trig_interval( level.heli_trigger, level.heli_hardpoint_timer );
 	
-	level.chopper = chopper;
+	if( level.teambased && level.dvar[ "doubleHeli" ] )
+	{
+		level.chopper[ heli_team ] = chopper;
+	}
+	else
+	{
+		level.chopper = chopper;
+	}
 	
 	// TO DO: convert all helicopter attributes into dvars
 	chopper.reached_dest = false;						// has helicopter reached destination
@@ -779,7 +786,16 @@ heli_explode()
 	self playSound( level.heli_sound[self.team]["crash"] );
 	
 	self notify( "ASFsafetynet" );
-	level.chopper = undefined;
+	if( level.teamBased && level.dvar[ "doubleHeli" ] )
+	{
+		level.chopper[ self.team ] = undefined;
+		if( !isDefined( level.chopper[ level.otherTeam[ self.team ] ] ) )
+			level.chopper = undefined;
+	}
+	else
+		level.chopper = undefined;
+		
+		
 	if( isDefined( self ) )
 		self delete();
 }
@@ -801,8 +817,17 @@ heli_leave()
 	self notify( "death" );
 	
 	self notify( "ASFsafetynet" );
-	level.chopper = undefined;	
-	self delete();
+	if( level.teamBased && level.dvar[ "doubleHeli" ] )
+	{
+		level.chopper[ self.team ] = undefined;
+		if( !isDefined( level.chopper[ level.otherTeam[ self.team ] ] ) )
+			level.chopper = undefined;
+	}
+	else
+		level.chopper = undefined;
+		
+	if( isDefined( self ) )
+		self delete();
 }
 	
 // flys helicopter from given start node to a destination on its path

@@ -5,7 +5,7 @@ startVote()
 
 	level thread setHud();
 	
-	players = getEntarray( "player", "classname" );
+	players = level.players;
 	for( i = 0; i < players.size; i++ )
 	{
 		player = players[ i ];
@@ -17,15 +17,27 @@ startVote()
 	
 	level waittill( "endVote" );
 	
-	players = getEntarray( "player", "classname" );
-	for( i = 0; i < players.size; i++ )
-	{
-		if( isDefined( players[ i ].playerVoteHud ) )
-			players[ i ].playerVoteHud destroy();
-	}
+	clearHud();
 	
-	for( i = 0; i < level.mapVoteHud.size; i++ )
-		level.mapVoteHud[ i ] destroy();
+	// hacky
+	if( level.dvar[ "gametypeVote" ] )
+	{
+		level thread setHudGametype();
+		
+		players = level.players;
+		for( i = 0; i < players.size; i++ )
+		{
+			player = players[ i ];
+			player thread playerSpecificHud();
+			player thread voteThink();
+		}
+		
+		level thread voteLogic( players );
+	
+		level waittill( "endVote" );
+		
+		clearHud();
+	}
 		
 	notifyMap();
 }
@@ -87,6 +99,19 @@ init()
 	level.mapvoteMaps = votableMaps;
 }
 
+clearHud()
+{
+	players = level.players;
+	for( i = 0; i < players.size; i++ )
+	{
+		if( isDefined( players[ i ].playerVoteHud ) )
+			players[ i ].playerVoteHud destroy();
+	}
+	
+	for( i = 0; i < level.mapVoteHud.size; i++ )
+		level.mapVoteHud[ i ] destroy();
+}
+
 playerSpecificHud()
 {
 	self.playerVoteHud = newClientHudElem( self );
@@ -144,19 +169,53 @@ voteLogic( players )
 		}
 	}
 	
-	level.wonMap = level.mapvoteMaps[ helperArray[ "mapnum" ] ];
+	if( !isDefined( level.wonMap ) )
+		level.wonMap = level.mapvoteMaps[ helperArray[ "mapnum" ] ];
+	else
+		level.wonGametype = level.mapvoteMaps[ helperArray[ "mapnum" ] ];
 	
 	setDvar( "sv_mapRotationCurrent", "map " + level.wonMap );
 	
-	thread addIllegalMap();
+	if( isDefined( level.wonGametype ) )
+		setDvar( "g_gametype", level.wonGametype );
+	else
+		thread addIllegalMap();
 	
 	level notify( "endVote" );
 }
 
-mapNameCapitalised( string )
+nameCap( string )
 {
-	stringArray = strTok( string, "_" );
 	new = "";
+	
+	switch( string )
+	{
+		case "dm":
+			new = "Deathmatch";
+			break;
+		case "war":
+			new = "Team Deathmatch";
+			break;
+		case "sd":
+			new = "Search and Destroy";
+			break;
+		case "sab":
+			new = "Sabotage";
+			break;
+		case "koth":
+			new = "Capture and Hold";
+			break;
+		case "dom":
+			new = "Domination";
+			break;
+		default:
+			break;
+	}
+	
+	if( new != "" )
+		return new;
+	
+	stringArray = strTok( string, "_" );
 	
 	for( t = 1; t < stringArray.size; t++ )
 	{
@@ -168,7 +227,7 @@ mapNameCapitalised( string )
 			
 			new += " ";
 		}
-		else if( stringArray[ t ].size == 2 && stringArray[ t ][ 0 ] == "v" && int( stringArray[ t ][ 1 ] ) )
+		else if( stringArray[ t ].size == 2 && stringArray[ t ][ 0 ] == "v" && code\scriptcommands::isInt( stringArray[ t ][ 1 ] ) )
 		{
 			new += stringArray[ t ];
 			new += " ";
@@ -200,10 +259,15 @@ addIllegalMap()
 
 notifyMap()
 {
-	map = mapNameCapitalised( level.wonMap );
+	map = nameCap( level.wonMap );
+	if( isDefined( level.wonGametype ) )
+		gametype = nameCap( level.wonGametype );
 	
 	winningMap = createElem( "center", "middle", "center", "middle", 0, -40, 2.3, 1 );
-	winningMap setText( "Next map: " + map );
+	if( isDefined( level.wonGametype ) )
+		winningMap setText( "Next map: " + map + "(" + level.wonGametype + ")" );
+	else
+		winningMap setText( "Next map: " + map );
 	winningMap.color = ( 0, 102/255, 255/255 );
 	winningMap.glowAlpha = 1;
 	winningMap.glowColor = ( 1, 0, 0 );
@@ -248,6 +312,18 @@ voteThink()
 	}
 }
 
+setHudGametype()
+{
+	types = strTok( level.dvar[ "vote_gametypes" ], " " );
+	
+	for( i = 0; i < types.size; i++ )
+	{
+		level.mapvoteMaps[ i ] = types[ i ];
+	}
+	
+	setHud();
+}
+
 setHud()
 {
 	level.mapVoteHud = [];
@@ -287,7 +363,7 @@ setHud()
 	for( i = 0; i < level.mapvoteMaps.size; i++ )
 	{
 		level.mapVoteHud[ n ] = createElem( "left", "top", "left", "top", 343.5, 110 + ( i * 22.5 ), 1.5, 1 );
-		level.mapVoteHud[ n ] setText( mapNameCapitalised( level.mapvoteMaps[ i ] ) );
+		level.mapVoteHud[ n ] setText( nameCap( level.mapvoteMaps[ i ] ) );
 		level.mapVoteHud[ n ].color = ( 1, 1, 1 );
 		
 		level.mapVoteHud[ j ] = createElem( "right", "top", "right", "top", -343.5, 110 + ( i * 22.5 ), 1.5, 1 );
