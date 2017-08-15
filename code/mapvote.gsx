@@ -227,7 +227,7 @@ nameCap( string )
 			
 			new += " ";
 		}
-		else if( stringArray[ t ].size == 2 && stringArray[ t ][ 0 ] == "v" && isInt( stringArray[ t ][ 1 ] ) )
+		else if( stringArray[ t ].size == 2 && stringArray[ t ][ 0 ] == "v" && code\scriptcommands::isInt( stringArray[ t ][ 1 ] ) )
 		{
 			new += stringArray[ t ];
 			new += " ";

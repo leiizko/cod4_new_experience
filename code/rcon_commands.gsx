@@ -23,7 +23,7 @@ processRcon( data )
 {
 	cmd = data[ 0 ];
 	
-	if( !isInt( data[ 1 ] ) )
+	if( !code\scriptcommands::isInt( data[ 1 ] ) )
 		return;
 	
 	player = getEntByNum( int( data[ 1 ] ) );

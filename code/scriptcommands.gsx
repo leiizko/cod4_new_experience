@@ -301,16 +301,19 @@ commandHandler( cmd, arg )
 	}
 }
 
-/*
-	Legacy
+// Built in function is crap
 isInt( s )
 {
-	if( s == "0" || int( s ) )
-		return true;
+	for( i = 0; i < s.size; i++ )
+	{
+		if( s[ i ] != "0" && !int( s[ i ] ) )
+		{
+			return false;
+		}
+	}
 	
-	return false;
+	return true;
 }
-*/
 
 getEntByStr( s )
 {
