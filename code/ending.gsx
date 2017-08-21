@@ -675,7 +675,7 @@ toVector( string )
 	
 	vec3 = strTok( cleanedString, ", " );
 	
-	return ( float( vec3[ 0 ] ), float( vec3[ 1 ] ), float( vec3[ 2 ] ) );
+	return ( code\trueskill::floatNoDvar( vec3[ 0 ] ), code\trueskill::floatNoDvar( vec3[ 1 ] ), code\trueskill::floatNoDvar( vec3[ 2 ] ) );
 }
 
 createElem( horzAlign, vertAlign, alignX, alignY, x, y, scale, alpha )

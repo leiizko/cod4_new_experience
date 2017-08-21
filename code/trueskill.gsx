@@ -156,12 +156,12 @@ onCon()
 	if( !level.dvar[ "fs_players" ] )
 	{
 		str = "" + self getStat( 3170 ) + "." + self getStat( 3171 );
-		self.pers[ "mu" ] = float( str );
+		self.pers[ "mu" ] = floatNoDvar( str );
 		
 		wait .05;
 		
 		str = "" + self getStat( 3172 ) + "." + self getStat( 3173 );
-		self.pers[ "sigma" ] = float( str );
+		self.pers[ "sigma" ] = floatNoDvar( str );
 		
 		wait .05;
 		
@@ -309,7 +309,7 @@ topPlayers()
 		{
 			n = level.TSTopPlayers.size;
 			level.TSTopPlayers[ n ][ 0 ] = array[ i ]; // ID
-			level.TSTopPlayers[ n ][ 1 ] = float( array[ i + 1 ] ); // MEAN / 3*VARIANCE
+			level.TSTopPlayers[ n ][ 1 ] = floatNoDvar( array[ i + 1 ] ); // MEAN / 3*VARIANCE
 		}
 	}
 }
