@@ -265,7 +265,7 @@ notifyMap()
 	
 	winningMap = createElem( "center", "middle", "center", "middle", 0, -40, 2.3, 1 );
 	if( isDefined( level.wonGametype ) )
-		winningMap setText( "Next map: " + map + "(" + level.wonGametype + ")" );
+		winningMap setText( "Next map: " + map + "(" + nameCap( level.wonGametype ) + ")" );
 	else
 		winningMap setText( "Next map: " + map );
 	winningMap.color = ( 0, 102/255, 255/255 );
@@ -315,6 +315,8 @@ voteThink()
 setHudGametype()
 {
 	types = strTok( level.dvar[ "vote_gametypes" ], " " );
+	level.mapvoteMaps = undefined;
+	level.mapvoteMaps = [];
 	
 	for( i = 0; i < types.size; i++ )
 	{
