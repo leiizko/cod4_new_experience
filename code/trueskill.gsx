@@ -18,7 +18,7 @@ init()
 		
 	waittillframeend;
 		
-	if( isDefined( game[ "firstSpawnTime" ] ) )
+	if( !isDefined( game[ "firstSpawnTime" ] ) )
 		game[ "firstSpawnTime" ] = getTime();
 }
 
