@@ -4,19 +4,27 @@ init()
 {
 	if( isDefined( level.chopper ) || isDefined( level.mannedchopper ) )
 	{
-		self iPrintLnBold( "Manned helicopter not available!" );
+		self iPrintLnBold( "MANNED HELICOPTER not available!" );
 		return false;
 	}
 	
 	if( isDefined( level.tacticalNuke ) )
 	{
-		self iPrintLnBold( "Helicopter not available due to nuke interference!" );
+		self iPrintLnBold( "MANNED HELICOPTER not available due to radiation!" );
 		return false;
 	}
 	
 	if( self isProning() )
 	{
-		self iPrintLnBold( "You must stand to use this killstreak!" );
+		self iPrintLnBold( "You must stand to use this hardpoint!" );
+		return false;
+	}
+	
+	if( !isDefined( level.heliDistanceMax ) || level.heliDistanceMax == 0 )
+	{
+		self iPrintLnBold( "MANNED HELICOPTER not available this match!" );
+		print( "\n********** ERROR **********\n" );
+		print( "Heli map plot was not successful, possible unsuported map. Terminating hardpoint!\n\n" );
 		return false;
 	}
 	
@@ -402,6 +410,8 @@ miscStuff()
 					wait 1;
 					break;
 				}
+				else if( level.mannedchopper.timeLeft < 1 )
+					break;
 			}
 			
 			if( isDefined( self.countdown ) )
@@ -1075,8 +1085,19 @@ heli_leave()
 
 plotMap()
 {
+	count = 0;
 	while( !isDefined( level.script ) || !isDefined( level.mapcenter ) )
-		wait .5;
+	{
+		wait .25;
+		count++;
+		
+		if( count > 20 )
+		{
+			print( "\n********** ERROR **********\n" );
+			print( "Heli map plot was not successful, unsuported map!\n\n" );
+			return;
+		}
+	}
 		
 	longestDist = 0;
 	midpoint = level.mapcenter;
@@ -1095,8 +1116,6 @@ plotMap()
 			{
 				longestDist = dist;
 				midpoint = ( spawns[ i ].origin + spawns[ n ].origin ) / 2;
-				level.spawnI = spawns[ i ].origin;
-				level.spawnN = spawns[ n ].origin;
 			}
 		}
 	}

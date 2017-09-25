@@ -59,14 +59,14 @@ onPlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon,
 	}
 }
 
-onPlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime, deathAnimDuration)
+onPlayerKilled( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime, deathAnimDuration )
 {
 	if( level.events[ "PlayerKilled" ].size < 1 )
 		return;
 	
 	for( i = 0; i < level.events[ "PlayerKilled" ].size; i++ )
 	{
-		self thread [[level.events[ "PlayerKilled" ][ i ]]](eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime, deathAnimDuration);
+		self thread [[level.events[ "PlayerKilled" ][ i ]]]( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime, deathAnimDuration );
 	}
 }
 
@@ -77,7 +77,7 @@ onPlayerDisconnect()
 	
 	for( i = 0; i < level.events[ "PlayerDisconnect" ].size; i++ )
 	{
-		self thread [[level.events[ "PlayerDisconnect" ][ i ]]]();
+		level thread [[level.events[ "PlayerDisconnect" ][ i ]]]();
 	}
 }
 

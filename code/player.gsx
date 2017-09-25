@@ -120,6 +120,15 @@ FSLookup()
 		return;
 	}
 	
+	for( i = 0; i < 8; i++ )
+	{
+		if( !isDefined( array[ i ] ) || array[ i ] == "" )
+		{
+			FSDefault();
+			return;
+		}
+	}
+	
 	// Integer values
 	n = 0;
 	for( i = 0; i < 5; i++ )
@@ -170,16 +179,27 @@ FSDefault()
 	self.pers[ "sigma" ] = 25 / 3;
 }
 
-FSSave( guid )
+FSSave( guid, time )
 {
+	waittillframeend;
+	
 	if( !isDefined( level.FSCD[ guid ] ) )
 		return;
+		
+	for( i = 0; i < 8; i++ )
+	{
+		if( !isDefined( level.FSCD[ guid ][ i ] ) )
+			return;
+	}
+	
+	if( isDefined( time ) && level.dvar[ "trueskill_punish" ] )
+		code\trueskill::penality( guid, time );
 
 	path = "./ne_db/players/" + guid + ".db";
 	
 	writeToFile( path, level.FSCD[ guid ] );
 	
-	wait .05;
+	wait .5;
 	
 	level.FSCD[ guid ] = undefined;
 }
@@ -317,7 +337,8 @@ welcome()
 	if( level.dvar[ "trueskill" ] )
 	{
 		self iprintlnbold( "This is a Trueskill enabled server," );
-		self iprintlnbold( "please do not leave the game until match is over!" );
+		wait .25;
+		self iprintlnbold( "Leaving early will count as a loss!" );
 	}
 }
 
@@ -348,7 +369,7 @@ watchReload()
 		self waittill( "reload_start" );
 		
 		weap = self GetCurrentWeapon();
-		if( WeaponIsBoltAction( weap ) )
+		if( weap == "none" || WeaponIsBoltAction( weap ) )
 			continue;
 
 		AmmoClip = self GetWeaponAmmoClip( weap );

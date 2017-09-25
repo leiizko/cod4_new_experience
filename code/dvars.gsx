@@ -49,28 +49,28 @@ init()
 	addDvar( "shopXP", "int", 1, 0, 1 ); // Show shop $ gain instead of kill XP on kills
 	
 	// Hardpoints - old style, required kill streak
-	addDvar( "radar", "int", 3, 1, 100 );
-	addDvar( "airstrike", "int", 5, 1, 100 );
-	addDvar( "helicopter", "int", 15, 1, 100 );
-	addDvar( "artillery", "int", 7, 1, 100 ); 
-	addDvar( "asf", "int", 12, 1, 100 );
-	addDvar( "agm", "int", 10, 1, 100 );
-	addDvar( "predator", "int", 20, 1, 100 );
-	addDvar( "ac130", "int", 28, 1, 100 );
-	addDvar( "mannedheli", "int", 35, 1, 100 );
-	addDvar( "nuke", "int", 45, 1, 100 );
+	addDvar( "radar", "int", 3, 1 );
+	addDvar( "airstrike", "int", 5, 1 );
+	addDvar( "helicopter", "int", 13, 1 );
+	addDvar( "artillery", "int", 7, 1 ); 
+	addDvar( "asf", "int", 11, 1 );
+	addDvar( "agm", "int", 9, 1 );
+	addDvar( "predator", "int", 16, 1 );
+	addDvar( "ac130", "int", 19, 1 );
+	addDvar( "mannedheli", "int", 22, 1 );
+	addDvar( "nuke", "int", 28, 1 );
 	
 	// Hardpoints shop - required credits
-	addDvar( "radar_shop", "int", 20, 1, 9999 );
-	addDvar( "airstrike_shop", "int", 70, 1, 9999 );
-	addDvar( "helicopter_shop", "int", 180, 1, 9999 );
-	addDvar( "artillery_shop", "int", 70, 1, 9999 ); 
-	addDvar( "asf_shop", "int", 100, 1, 9999 );
-	addDvar( "agm_shop", "int", 100, 1, 9999 );
-	addDvar( "predator_shop", "int", 280, 1, 9999 );
-	addDvar( "ac130_shop", "int", 380, 1, 9999 );
-	addDvar( "mannedheli_shop", "int", 500, 1, 9999 );
-	addDvar( "nuke_shop", "int", 600, 1, 9999 );
+	addDvar( "radar_shop", "int", 20, 1 );
+	addDvar( "airstrike_shop", "int", 70, 1 );
+	addDvar( "helicopter_shop", "int", 180, 1 );
+	addDvar( "artillery_shop", "int", 70, 1 ); 
+	addDvar( "asf_shop", "int", 100, 1 );
+	addDvar( "agm_shop", "int", 100, 1 );
+	addDvar( "predator_shop", "int", 280, 1 );
+	addDvar( "ac130_shop", "int", 380, 1 );
+	addDvar( "mannedheli_shop", "int", 500, 1 );
+	addDvar( "nuke_shop", "int", 600, 1 );
 	
 	addDvar( "arty_shell_num", "int", 35, 10, 100 ); // Number of artillery shells
 	
@@ -94,6 +94,8 @@ init()
 	addDvar( "shopbuttons_default", "int", 0, 0, 1 ); // If above is set to 0, the players will be forced to use this buttons ( 1-W/S ; 0-F/V )
 	
 	addDvar( "trueskill", "int", 1, 0, 1 ); // Trueskill ranking system ( 1-enable ; 0-disable )
+	addDvar( "trueskill_punish", "int", 1, 0, 1 ); // Punish players who leave early by giving them a loss ( 1-enable ; 0-disable )
+	
 	addDvar( "kct_default", "string", "Owned!" ); // Killcam default text
 	addDvar( "geowelcome", "int", 1, 0, 1 ); // Geowelcome on player first connect ( 1-enable ; 0-disable )
 	addDvar( "kcemblem", "int", 1, 0, 1 ); // Allow custom killcam emblem ( 1-enable ; 0-disable )
@@ -110,6 +112,12 @@ init()
 	addDvar( "realReload", "int", 1, 0, 1 ); // Drops all ammo left in clip when reloading ( 1-enable ; 0-disable )
 	addDvar( "reloadFix", "int", 1, 0, 1 ); // Prevents rapid fire and stop reload binds ( 1-enable ; 0-disable )
 	addDvar( "doubleHeli", "int", 1, 0, 1 ); // Allow two normal choppers at one time, manned heli can still only be alone ( 1-enable ; 0-disable )
+	
+	addDvar( "vip_balance", "int", 1, 0, 1 ); // Can VIP be team balanced ( 1-yes ; 0-no )
+	addDvar( "vip_anyteam", "int", 0, 0, 1 ); // Allow VIP to join any team if force_autoassign is enabled ( 1-yes ; 0-no )
+	
+	addDvar( "end_scoreboard", "int", 0, 0, 1 ); // Enable scoreboard on game end ( 1-yes ; 0-no )
+	addDvar( "end_scoreboard_time", "int", 5, 1, 30 ); // How long should scoreboard stay on game end in seconds
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -18,8 +18,7 @@ init()
 		
 	waittillframeend;
 		
-	if( !isDefined( game[ "firstSpawnTime" ] ) )
-		game[ "firstSpawnTime" ] = getTime();
+	game[ "firstSpawnTime" ] = getTime();
 }
 
 // executed from _globallogic, function "endGame( winner, endReasonText )"
@@ -39,6 +38,9 @@ gameEnd( winner )
 			player = players[ index ];
 			guid = player getGuid();
 			
+			if( !isDefined( player.pers[ "mu" ] ) || !isDefined( player.pers[ "sigma" ] ) )
+				continue;
+			
 			level.FSCD[ guid ][ 6 ] = "mu;" + player.pers[ "mu" ];
 			level.FSCD[ guid ][ 7 ] = "sigma;" + player.pers[ "sigma" ];
 			
@@ -52,7 +54,7 @@ gameEnd( winner )
 		{
 			player = players[ index ];
 			
-			saveRank( player );
+			thread saveRank( player );
 		}
 	}
 }
@@ -60,6 +62,9 @@ gameEnd( winner )
 updateSkill( winner )
 {
 	players = addPlayers();
+	
+	if( !isArray( players ) || players.size < 2 )
+		return;
 	
 	if( level.teambased )
 	{
@@ -134,7 +139,7 @@ onCon()
 	
 	if( isArray( level.TSTopPlayers ) )
 	{
-		id = self getPlayerID();
+		id = self getGuid();
 		if( level.TSTopPlayers[ 0 ][ 0 ] == id )
 			self.pers[ "prestige" ] = 9;
 		else if( isDefined( level.TSTopPlayers[ 1 ] ) && level.TSTopPlayers[ 1 ][ 0 ] == id )
@@ -148,8 +153,11 @@ onCon()
 	if( !isDefined( self.pers[ "firstSpawnTime" ] ) )
 		self.pers[ "firstSpawnTime" ] = getTime();
 	
-	if( !isDefined( game[ "firstSpawnTime" ] ) )
+	if( !isDefined( game[ "firstPlayerSpawnTime" ] ) )
+	{
+		game[ "firstPlayerSpawnTime" ] = true;
 		game[ "firstSpawnTime" ] = self.pers[ "firstSpawnTime" ];
+	}
 	
 	wait .1;
 	
@@ -166,19 +174,21 @@ onCon()
 		wait .05;
 		
 		check = self getStat( 3174 );
+		check_init = self getStat( 3175 );
 		
-		if( check - 2 > self.pers[ "mu" ] - ( 3 * self.pers[ "sigma" ] ) )
+		if( check - 2 > self.pers[ "mu" ] - ( 3 * self.pers[ "sigma" ] ) || check_init != 100111 )
 		{
 			self.pers[ "mu" ] = 25;
 			self.pers[ "sigma" ] = 25 / 3;
+			self setStat( 3175, 100111 );
 		}
 	}
 }
 
 saveRank( player )
 {
-	str = "" + player.pers[ "mu" ];
-	strTok( str, "." );
+	str_f = "" + player.pers[ "mu" ];
+	str = strTok( str_f, "." );
 
 	player setStat( 3170, int( str[ 0 ] ) );
 	if( isDefined( str[ 1 ] ) )
@@ -186,8 +196,9 @@ saveRank( player )
 	else
 		player setStat( 3171, 0 );
 
-	str = "" + player.pers[ "sigma" ];
-	strTok( str, "." );
+	str = undefined;
+	str_f = "" + player.pers[ "sigma" ];
+	str = strTok( str_f, "." );
 
 	player setStat( 3172, int( str[ 0 ] ) );
 	if( isDefined( str[ 1 ] ) )
@@ -200,6 +211,8 @@ saveRank( player )
 
 addPlayers()
 {
+	waittillframeend;
+
 	players = level.players;
 	t = 0;
 	rGroup = [];
@@ -207,10 +220,14 @@ addPlayers()
 	{
 		player = players[ i ];
 		
-		if( player.team != "axis" && player.team != "allies" )
+		if( ( player.team != "axis" && player.team != "allies" ) || !isDefined( player.pers[ "firstSpawnTime" ] ) )
 			continue;
 			
 		weight = ( level.TSGameTimeEnd - player.pers[ "firstSpawnTime" ] ) / level.TSGameTime;
+		
+		if( !isDefined( weight ) )
+			weight = 0;
+		
 		if( weight > 0.95 )
 			weight = 1.0;
 		else if( weight < 0.05 )
@@ -238,13 +255,17 @@ addPlayers()
 
 updateTopPlayers()
 {
+	waittillframeend;
 	players = level.players;
 	
 	pool = [];
 	
 	for( i = 0; i < players.size; i++ )
 	{
-		pool[ i ][ 0 ] = players[ i ] getPlayerID();
+		if( !isDefined( players[ i ].pers[ "mu" ] ) || !isDefined( players[ i ].pers[ "sigma" ] ) )
+			continue;
+
+		pool[ i ][ 0 ] = players[ i ] getGuid();
 		pool[ i ][ 1 ] = players[ i ].pers[ "mu" ] - ( 3 * players[ i ].pers[ "sigma" ] );
 	}
 	
@@ -258,8 +279,7 @@ updateTopPlayers()
 			{
 				if( level.TSTopPlayers[ i ][ 0 ] == pool[ n ][ 0 ] )
 				{
-					if( level.TSTopPlayers[ i ][ 1 ] > pool[ n ][ 1 ] )
-						pool[ n ][ 1 ] = level.TSTopPlayers[ i ][ 1 ];
+					pool[ n ][ 1 ] = level.TSTopPlayers[ i ][ 1 ];
 					next = true;
 					break;
 				}
@@ -288,12 +308,13 @@ updateTopPlayers()
 	}
 	
 	arr = [];
-	n = 0;
-	for( i = 0; i < 6; i += 2 )
+	for( i = 0; i < 3; i++ )
 	{
-		arr[ i ] = pool[ n ][ 0 ];
-		arr[ i + 1 ] = pool[ n ][ 1 ];
-		n++;
+		if( !isArray( pool[ i ] ) )
+			break;
+
+		arr[ arr.size ] = pool[ i ][ 0 ];
+		arr[ arr.size ] = pool[ i ][ 1 ];
 	}
 	
 	writeToFile( "./ne_db/players/topratedplayers.db", arr );
@@ -307,11 +328,37 @@ topPlayers()
 		level.TSTopPlayers = [];
 		for( i = 0; i < array.size; i += 2 )
 		{
+			if( !isDefined( array[ i ] ) || !isDefined( array[ i + 1 ] ) )
+			{
+				FS_Remove( "./ne_db/players/topratedplayers.db" );
+				level.TSTopPlayers = undefined;
+				return;
+			}
+			
 			n = level.TSTopPlayers.size;
 			level.TSTopPlayers[ n ][ 0 ] = array[ i ]; // ID
 			level.TSTopPlayers[ n ][ 1 ] = floatNoDvar( array[ i + 1 ] ); // MEAN / 3*VARIANCE
 		}
 	}
+}
+
+penality( guid, time )
+{
+	if( getTime() - time < 120000 || level.players.size < 2 )
+		return;
+	
+	mu = strtok( level.FSCD[ guid ][ 6 ], ";" );
+	mu = floatNoDvar( mu[ 1 ] );
+	
+	sigma = strtok( level.FSCD[ guid ][ 7 ], ";" );
+	sigma = floatNoDvar( sigma[ 1 ] );
+	
+	TS_AddPlayer( 0, mu, sigma, 1, 1 );
+	TS_AddPlayer( 1, mu, sigma, 2, 1 );
+	p = TS_Rate( 2, "1 0" );
+	
+	level.FSCD[ guid ][ 6 ] = "mu;" + p[ 0 ][ 0 ];
+	level.FSCD[ guid ][ 7 ] = "sigma;" + p[ 0 ][ 1 ];
 }
 
 // legacy

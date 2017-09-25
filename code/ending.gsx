@@ -9,7 +9,7 @@ init()
 	
 	time = 20;
 	if( level.dvar[ "mapvote" ] )
-		time += level.dvar[ "mapvote_time" ] + 4;
+		time += level.dvar[ "mapvote_time" ] + 4.25;
 	if( level.dvar[ "gametypeVote" ] )
 		time += level.dvar[ "mapvote_time" ];
 	

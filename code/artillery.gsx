@@ -155,7 +155,15 @@ selectLocation()
 	
 	if ( isDefined( level.artilleryBarrage ) )
 	{
-		self iPrintLnBold( "ARTILLERY BARAGE not available" );
+		self iPrintLnBold( "ARTILLERY BARRAGE not available" );
+		return false;
+	}
+	
+	if( !isDefined( level.heliDistanceMax ) || level.heliDistanceMax == 0 )
+	{
+		self iPrintLnBold( "ARTILLERY BARRAGE not available this match!" );
+		print( "\n********** ERROR **********\n" );
+		print( "Heli map plot was not successful, possible unsuported map. Terminating hardpoint!\n\n" );
 		return false;
 	}
 
@@ -173,7 +181,7 @@ selectLocation()
 
 	if ( isDefined( level.artilleryBarrage ) )
 	{
-		self iPrintLnBold( "ARTILLERY BARAGE not available" );
+		self iPrintLnBold( "ARTILLERY BARRAGE not available" );
 		self thread maps\mp\gametypes\_hardpoints::stopAirstrikeLocationSelection( false );
 		return false;
 	}

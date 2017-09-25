@@ -1,12 +1,6 @@
 init()
 {
-	switch(game["allies"])
-	{
-	case "marines":
-		precacheShader("mpflag_american");
-		break;
-	}
-
+	precacheShader("mpflag_american");
 	precacheShader("mpflag_russian");
 	precacheShader("mpflag_spectator");
 
@@ -18,356 +12,168 @@ init()
 	setdvar("scr_teambalance", "1");
 	level.teamBalance = 1;
 	level.maxClients = getDvarInt( "sv_maxclients" );
+	level.teamLimit = level.maxclients / 2;
+	level.balanceTeamNum = [];
+	level.balanceTeamEnt = [];
 	
 	setPlayerModels();
-
-	level.freeplayers = [];
-
-	if( level.teamBased )
-	{
-		level thread onPlayerConnect();
-		level thread updateTeamBalance();
 	
-		wait .15;
-		level thread updatePlayerTimes();
-	}
-	else
+	if( level.teambased )
 	{
-		level thread onFreePlayerConnect();
-	
-		wait .15;
-		level thread updateFreePlayerTimes();
+		thread code\events::addConnectEvent( ::onPlayerConnect );
+		thread code\events::addDisconnectEvent( ::onPlayerDisconnect ); // LEVEL THREAD
+		thread code\events::addDeathEvent( ::onPlayerKilled );
 	}
 }
 
+onPlayerKilled( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime, deathAnimDuration )
+{
+	if( isDefined( level.balanceTeamNum[ self.team ] ) && isDefined( self.pers[ "teamTime" ] ) )
+	{
+		for( i = 0; i < level.balanceTeamNum[ self.team ]; i++ )
+		{
+			if( level.balanceTeamEnt[ self.team ][ i ] == self getEntityNumber() )
+			{
+				changeTeam( level.otherTeam[ self.team ] );
+				level thread getTeamBalance();
+				self iPrintLnBold( "You have been autobalanced." );
+				break;
+			}
+		}
+	}
+}
+
+onPlayerDisconnect()
+{
+	level thread getTeamBalance();
+}
 
 onPlayerConnect()
 {
-	for(;;)
-	{
-		level waittill("connecting", player);
-		
-		player thread onJoinedTeam();
-		player thread onJoinedSpectators();
-		
-		player thread trackPlayedTime();
-	}
+	self thread onJoinedTeam();
+	self thread onJoinedSpectators();
 }
-
-
-onFreePlayerConnect()
-{
-	for(;;)
-	{
-		level waittill("connecting", player);
-		
-		player thread trackFreePlayedTime();
-	}
-}
-
 
 onJoinedTeam()
 {
-	self endon("disconnect");
+	self endon( "disconnect" );
 	
-	for(;;)
+	for( ;; )
 	{
-		self waittill("joined_team");
-		self logString( "joined team: " + self.pers["team"] );
-		self updateTeamTime();
+		self waittill( "joined_team" );
+		
+		self logString( "joined team: " + self.pers[ "team" ] );
+		
+		if( !level.dvar[ "vip_balance" ] && isDefined( self.pers[ "vip" ] ) )
+			self.pers[ "teamTime" ] = undefined;
+		else
+			self.pers[ "teamTime" ] = getTime();
+			
+		level thread getTeamBalance();
 	}
 }
-
 
 onJoinedSpectators()
 {
-	self endon("disconnect");
-	
-	for(;;)
-	{
-		self waittill("joined_spectators");
-		self.pers["teamTime"] = undefined;
-	}
-}
-
-
-trackPlayedTime()
-{
 	self endon( "disconnect" );
-
-	self.timePlayed["allies"] = 0;
-	self.timePlayed["axis"] = 0;
-	self.timePlayed["free"] = 0;
-	self.timePlayed["other"] = 0;
-	self.timePlayed["total"] = 0;
 	
-	while ( level.inPrematchPeriod )
-		wait ( 0.05 );
-
-	for ( ;; )
+	for( ;; )
 	{
-		if ( game["state"] == "playing" )
-		{
-			if ( self.sessionteam == "allies" )
-			{
-				self.timePlayed["allies"]++;
-				self.timePlayed["total"]++;
-			}
-			else if ( self.sessionteam == "axis" )
-			{
-				self.timePlayed["axis"]++;
-				self.timePlayed["total"]++;
-			}
-			else if ( self.sessionteam == "spectator" )
-			{
-				self.timePlayed["other"]++;
-			}
-				
-		}
-		
-		wait ( 1.0 );
+		self waittill( "joined_spectators" );
+		self.pers[ "teamTime" ] = undefined;
+		level thread getTeamBalance();
 	}
 }
-
-
-updatePlayerTimes()
-{
-	nextToUpdate = 0;
-	for ( ;; )
-	{
-		nextToUpdate++;
-		if ( nextToUpdate >= level.players.size )
-			nextToUpdate = 0;
-
-		if ( isDefined( level.players[nextToUpdate] ) )
-			level.players[nextToUpdate] updatePlayedTime();
-
-		wait ( 4.0 );
-	}
-}
-
-
-updatePlayedTime()
-{
-	if ( self.timePlayed["allies"] )
-	{
-		self maps\mp\gametypes\_persistence::statAdd( "time_played_allies", self.timePlayed["allies"] );
-		self maps\mp\gametypes\_persistence::statAdd( "time_played_total", self.timePlayed["allies"] );
-	}
-	
-	if ( self.timePlayed["axis"] )
-	{
-		self maps\mp\gametypes\_persistence::statAdd( "time_played_opfor", self.timePlayed["axis"] );
-		self maps\mp\gametypes\_persistence::statAdd( "time_played_total", self.timePlayed["axis"] );
-	}
-		
-	if ( self.timePlayed["other"] )
-	{
-		self maps\mp\gametypes\_persistence::statAdd( "time_played_other", self.timePlayed["other"] );			
-		self maps\mp\gametypes\_persistence::statAdd( "time_played_total", self.timePlayed["other"] );
-	}
-	
-	if ( game["state"] == "postgame" )
-		return;
-
-	self.timePlayed["allies"] = 0;
-	self.timePlayed["axis"] = 0;
-	self.timePlayed["other"] = 0;
-}
-
-
-updateTeamTime()
-{
-	if ( game["state"] != "playing" )
-		return;
-		
-	self.pers["teamTime"] = getTime();
-}
-
-updateTeamBalance()
-{
-	level.teamLimit = level.maxclients / 2;
-
-	wait .15;
-
-	if ( level.teamBalance && (level.roundLimit > 1 || (!level.roundLimit && level.scoreLimit != 1)) )
-	{
-    	if( isDefined( game["BalanceTeamsNextRound"] ) )
-    		iPrintLnbold( &"MP_AUTOBALANCE_NEXT_ROUND" );
-
-		// TODO: add or change
-		level waittill( "restarting" );
-
-		if( isDefined( game["BalanceTeamsNextRound"] ) )
-		{
-			level balanceTeams();
-			game["BalanceTeamsNextRound"] = undefined;
-		}
-		else if( !getTeamBalance() )
-		{
-			game["BalanceTeamsNextRound"] = true;
-		}
-	}
-	else
-	{
-		level endon ( "game_ended" );
-		for( ;; )
-		{
-			if( level.teamBalance )
-			{
-				if( !getTeamBalance() )
-				{
-					iPrintLnBold( &"MP_AUTOBALANCE_SECONDS", 15 );
-				    wait 15.0;
-
-					if( !getTeamBalance() )
-						level balanceTeams();
-				}
-				
-				wait 59.0;
-			}
-			
-			wait 1.0;
-		}
-	}
-
-}
-
 
 getTeamBalance()
 {
+	level notify( "getTeamBalance_one" );
+	level endon( "getTeamBalance_one" );
+	
 	level.team["allies"] = 0;
 	level.team["axis"] = 0;
 
 	players = level.players;
 	for(i = 0; i < players.size; i++)
 	{
-		if((isdefined(players[i].pers["team"])) && (players[i].pers["team"] == "allies"))
+		if( !isDefined( players[ i ].pers[ "team" ] ) )
+			continue;
+			
+		if( players[i].pers["team"] == "allies" )
 			level.team["allies"]++;
-		else if((isdefined(players[i].pers["team"])) && (players[i].pers["team"] == "axis"))
+		else if( players[i].pers["team"] == "axis" )
 			level.team["axis"]++;
 	}
 	
-	if((level.team["allies"] > (level.team["axis"] + level.teamBalance)) || (level.team["axis"] > (level.team["allies"] + level.teamBalance)))
-		return false;
-	else
-		return true;
+	if( abs( level.team["allies"] - level.team["axis"] ) > 1 )
+		thread balanceTeams();
 }
-
 
 balanceTeams()
 {
-	iPrintLnBold( game["strings"]["autobalance"] );
-	//Create/Clear the team arrays
-	AlliedPlayers = [];
-	AxisPlayers = [];
+	diff = level.team[ "allies" ] - level.team[ "axis" ];
 	
-	// Populate the team arrays
-	players = level.players;
-	for(i = 0; i < players.size; i++)
+	if( diff > 0 )
 	{
-		if(!isdefined(players[i].pers["teamTime"]))
+		team = "allies";
+		num = int( ( diff / 2 ) );
+	}
+	else
+	{
+		team = "axis";
+		num = int( ( abs( diff ) / 2 ) );
+	}
+		
+	level.balanceTeamNum[ team ] = num;
+	level.balanceTeamNum[ level.otherTeam[ team ] ] = undefined;
+	
+	players = level.players;
+	teamArr = [];
+	
+	for( i = 0; i < players.size; i++ )
+	{
+		p = players[ i ];
+		
+		if( !isDefined( p.team ) || !isDefined( p.pers[ "teamTime" ] ) )
 			continue;
 			
-		if((isdefined(players[i].pers["team"])) && (players[i].pers["team"] == "allies"))
-			AlliedPlayers[AlliedPlayers.size] = players[i];
-		else if((isdefined(players[i].pers["team"])) && (players[i].pers["team"] == "axis"))
-			AxisPlayers[AxisPlayers.size] = players[i];
+		if( p.team == team )
+			teamArr[ teamArr.size ] = p;
 	}
 	
-	MostRecent = undefined;
-	
-	while((AlliedPlayers.size > (AxisPlayers.size + 1)) || (AxisPlayers.size > (AlliedPlayers.size + 1)))
-	{	
-		if(AlliedPlayers.size > (AxisPlayers.size + 1))
+	for( i = 0; i < teamArr.size; i++ )
+	{
+		for( n = i + 1; n < teamArr.size; n++ )
 		{
-			// Move the player that's been on the team the shortest ammount of time (highest teamTime value)
-			for(j = 0; j < AlliedPlayers.size; j++)
+			if( teamArr[ i ].pers[ "teamTime" ] < teamArr[ n ].pers[ "teamTime" ] )
 			{
-				if(isdefined(AlliedPlayers[j].dont_auto_balance) || !isDefined( AlliedPlayers[j].pers["teamTime"] ) )
-					continue;
-				
-				if(!isdefined(MostRecent))
-					MostRecent = AlliedPlayers[j];
-				else if(AlliedPlayers[j].pers["teamTime"] > MostRecent.pers["teamTime"])
-					MostRecent = AlliedPlayers[j];
+				tmp = teamArr[ i ];
+				teamArr[ i ] = teamArr[ n ];
+				teamArr[ n ] = tmp;
 			}
-			
-			MostRecent changeTeam("axis");
-		}
-		else if(AxisPlayers.size > (AlliedPlayers.size + 1))
-		{
-			// Move the player that's been on the team the shortest ammount of time (highest teamTime value)
-			for(j = 0; j < AxisPlayers.size; j++)
-			{
-				if(isdefined(AxisPlayers[j].dont_auto_balance)|| !isDefined( AxisPlayers[j].pers["teamTime"] ) )
-					continue;
-
-				if(!isdefined(MostRecent))
-					MostRecent = AxisPlayers[j];
-				else if(AxisPlayers[j].pers["teamTime"] > MostRecent.pers["teamTime"])
-					MostRecent = AxisPlayers[j];
-			}
-
-			MostRecent changeTeam("allies");
-		}
-
-		MostRecent = undefined;
-		AlliedPlayers = [];
-		AxisPlayers = [];
-		
-		players = level.players;
-		for(i = 0; i < players.size; i++)
-		{
-			if((isdefined(players[i].pers["team"])) && (players[i].pers["team"] == "allies"))
-				AlliedPlayers[AlliedPlayers.size] = players[i];
-			else if((isdefined(players[i].pers["team"])) &&(players[i].pers["team"] == "axis"))
-				AxisPlayers[AxisPlayers.size] = players[i];
 		}
 	}
+	
+	for( i = 0; i < teamArr.size; i++ )
+	{
+		num = teamArr[ i ] getEntityNumber();
+		teamArr[ i ] = num;
+	}
+	
+	level.balanceTeamEnt[ team ] = teamArr;
+	level.balanceTeamEnt[ level.otherTeam[ team ] ] = undefined;
 }
 
 changeTeam( team )
 {
-	alive = isAlive( self );
-	if (self.sessionstate != "dead")
-	{
-		// Set a flag on the player to they aren't robbed points for dying - the callback will remove the flag
-		self.switching_teams = true;
-		self.joining_team = team;
-		self.leaving_team = self.pers["team"];
-		
-		// Suicide the player so they can't hit escape and fail the team balance
-		self suicide();
-	}
-
 	self.pers["team"] = team;
 	self.team = team;
-	self.pers["teamTime"] = undefined;
-	self.sessionteam = self.pers["team"];
-	self maps\mp\gametypes\_globallogic::updateObjectiveText();
+	self.sessionteam = team;
 	
-	// update spectator permissions immediately on change of team
+	self maps\mp\gametypes\_globallogic::updateObjectiveText();
 	self maps\mp\gametypes\_spectating::setSpectatePermissions();
 	
-	if( alive )
-		self maps\mp\gametypes\_globallogic::spawnPlayer();
-	
-	if( !alive )
-	{
-		if ( self.pers["team"] == "allies" )
-		{
-			self setclientdvar("g_scriptMainMenu", game["menu_class_allies"]);
-			self openMenu( game[ "menu_changeclass_allies" ] );
-		}
-		else
-		{
-			self setclientdvar("g_scriptMainMenu", game["menu_class_axis"]);
-			self openMenu( game[ "menu_changeclass_axis" ] );
-		}
-		
-		self notify( "end_respawn" );
-	}
+	self.pers["teamTime"] = getTime();
 }
 
 
@@ -543,7 +349,6 @@ setPlayerModels()
 	}
 }
 
-
 playerModelForWeapon( weapon )
 {
 	self detachAll();
@@ -573,7 +378,6 @@ playerModelForWeapon( weapon )
 	}
 }	
 
-
 CountPlayers()
 {
 	//chad
@@ -582,99 +386,18 @@ CountPlayers()
 	axis = 0;
 	for(i = 0; i < players.size; i++)
 	{
-		if ( players[i] == self )
+		if ( players[i] == self || !isdefined( players[i].pers["team"] ) )
 			continue;
 			
-		if((isdefined(players[i].pers["team"])) && (players[i].pers["team"] == "allies"))
+		if( players[i].pers["team"] == "allies" )
 			allies++;
-		else if((isdefined(players[i].pers["team"])) && (players[i].pers["team"] == "axis"))
+		else if( players[i].pers["team"] == "axis" )
 			axis++;
 	}
 	players["allies"] = allies;
 	players["axis"] = axis;
 	return players;
 }
-
-
-trackFreePlayedTime()
-{
-	self endon( "disconnect" );
-
-	self.timePlayed["allies"] = 0;
-	self.timePlayed["axis"] = 0;
-	self.timePlayed["other"] = 0;
-	self.timePlayed["total"] = 0;
-
-	for ( ;; )
-	{
-		if ( game["state"] == "playing" )
-		{
-			if ( isDefined( self.pers["team"] ) && self.pers["team"] == "allies" && self.sessionteam != "spectator" )
-			{
-				self.timePlayed["allies"]++;
-				self.timePlayed["total"]++;
-			}
-			else if ( isDefined( self.pers["team"] ) && self.pers["team"] == "axis" && self.sessionteam != "spectator" )
-			{
-				self.timePlayed["axis"]++;
-				self.timePlayed["total"]++;
-			}
-			else
-			{
-				self.timePlayed["other"]++;
-			}
-		}
-		
-		wait ( 1.0 );
-	}
-}
-
-
-updateFreePlayerTimes()
-{
-	nextToUpdate = 0;
-	for ( ;; )
-	{
-		nextToUpdate++;
-		if ( nextToUpdate >= level.players.size )
-			nextToUpdate = 0;
-
-		if ( isDefined( level.players[nextToUpdate] ) )
-			level.players[nextToUpdate] updateFreePlayedTime();
-
-		wait ( 1.0 );
-	}
-}
-
-
-updateFreePlayedTime()
-{
-	if ( self.timePlayed["allies"] )
-	{
-		self maps\mp\gametypes\_persistence::statAdd( "time_played_allies", self.timePlayed["allies"] );
-		self maps\mp\gametypes\_persistence::statAdd( "time_played_total", self.timePlayed["allies"] );
-	}
-	
-	if ( self.timePlayed["axis"] )
-	{
-		self maps\mp\gametypes\_persistence::statAdd( "time_played_opfor", self.timePlayed["axis"] );
-		self maps\mp\gametypes\_persistence::statAdd( "time_played_total", self.timePlayed["axis"] );
-	}
-		
-	if ( self.timePlayed["other"] )
-	{
-		self maps\mp\gametypes\_persistence::statAdd( "time_played_other", self.timePlayed["other"] );			
-		self maps\mp\gametypes\_persistence::statAdd( "time_played_total", self.timePlayed["other"] );
-	}
-	
-	if ( game["state"] == "postgame" )
-		return;
-
-	self.timePlayed["allies"] = 0;
-	self.timePlayed["axis"] = 0;
-	self.timePlayed["other"] = 0;
-}
-
 
 getJoinTeamPermissions( team )
 {

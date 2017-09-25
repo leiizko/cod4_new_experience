@@ -568,7 +568,7 @@ spawnPlayer()
 	self endon("joined_spectators");
 	self notify("spawned");
 	self notify("end_respawn");
-
+		
 	self setSpawnVariables();
 
 	if ( level.teamBased )
@@ -1588,6 +1588,28 @@ endGame( winner, endReasonText )
 	if( level.dvar[ "mapvote" ] )
 		code\mapvote::startVote();
 	
+	if( level.dvar[ "end_scoreboard" ] )
+	{
+		players = level.players;
+		for ( index = 0; index < players.size; index++ )
+		{
+			player = players[index];
+			
+			player setSpawnVariables();
+			
+			player.sessionstate = "intermission";
+			player.spectatorclient = -1;
+			player.killcamentity = -1;
+			player.archivetime = 0;
+			player.psoffsettime = 0;
+			
+			player setclientdvar( "g_scriptMainMenu", game["menu_eog_main"] );
+		}
+		
+		thread timeLimitClock_Intermission( level.dvar[ "end_scoreboard_time" ] );
+		wait level.dvar[ "end_scoreboard_time" ];
+	}
+	
 	exitLevel( false );
 }
 
@@ -1670,6 +1692,17 @@ updateMatchBonusScores( winner )
 	else
 	{
 		gameLength = level.timeLimit * 60;
+	}
+	
+	players = level.players;
+	for( i = 0; i < players.size; i++ )
+	{
+		player = players[ i ];
+		
+		if( isDefined( player.pers[ "firstSpawnTime" ] ) && isDefined( level.TSGameTimeEnd ) )
+			player.timePlayed[ "total" ] = ( level.TSGameTimeEnd - player.pers[ "firstSpawnTime" ] ) / 1000;
+		else
+			player.timePlayed[ "total" ] = 0;
 	}
 		
 	if ( level.teamBased )
@@ -2111,6 +2144,11 @@ updateGameTypeDvars()
 
 menuAutoAssign()
 {
+	vipright = ( level.dvar[ "vip_anyteam" ] && isDefined( self.pers[ "vip" ] ) );
+	
+	if( ( self.team == "axis" || self.team == "allies" ) && !vipright )
+		return;
+	
 	teams[0] = "allies";
 	teams[1] = "axis";
 	assignment = teams[randomInt(2)];
@@ -2278,7 +2316,12 @@ showMainMenuForTeam()
 
 menuAllies()
 {
-	if( level.dvar[ "force_autoassign" ] )
+	vipright = ( level.dvar[ "vip_anyteam" ] && isDefined( self.pers[ "vip" ] ) );
+	
+	if( ( self.team == "axis" || self.team == "allies" ) && !vipright )
+		return;
+
+	if( level.dvar[ "force_autoassign" ] && !vipright )
 	{
 		self thread menuAutoAssign();
 		return;
@@ -2333,7 +2376,12 @@ menuAllies()
 
 menuAxis()
 {
-	if( level.dvar[ "force_autoassign" ] )
+	vipright = ( level.dvar[ "vip_anyteam" ] && isDefined( self.pers[ "vip" ] ) );
+	
+	if( ( self.team == "axis" || self.team == "allies" ) && !vipright )
+		return;
+
+	if( level.dvar[ "force_autoassign" ] && !vipright )
 	{
 		self thread menuAutoAssign();
 		return;
@@ -4383,7 +4431,7 @@ Callback_PlayerDisconnect()
 	{
 		self logXPGains();
 		if( level.dvar[ "fs_players" ] )
-			self thread code\player::FSSave( guid );
+			self thread code\player::FSSave( guid, self.pers[ "firstSpawnTime" ] );
 	}
 
 	if ( isDefined( self.score ) && isDefined( self.pers["team"] ) )
@@ -4394,6 +4442,8 @@ Callback_PlayerDisconnect()
 	}
 	
 	[[level.onPlayerDisconnect]]();
+	
+	level thread code\events::onPlayerDisconnect();
 	
 	logPrint("Q;" + guid + ";" + self getEntityNumber() + ";" + self.name + "\n");
 	
