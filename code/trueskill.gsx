@@ -265,8 +265,9 @@ updateTopPlayers()
 		if( !isDefined( players[ i ].pers[ "mu" ] ) || !isDefined( players[ i ].pers[ "sigma" ] ) )
 			continue;
 
-		pool[ i ][ 0 ] = players[ i ] getGuid();
-		pool[ i ][ 1 ] = players[ i ].pers[ "mu" ] - ( 3 * players[ i ].pers[ "sigma" ] );
+		n = pool.size;
+		pool[ n ][ 0 ] = players[ i ] getGuid();
+		pool[ n ][ 1 ] = players[ i ].pers[ "mu" ] - ( 3 * players[ i ].pers[ "sigma" ] );
 	}
 	
 	if( isArray( level.TSTopPlayers ) )
