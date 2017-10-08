@@ -9,17 +9,34 @@ GloballogicInit()
 }
 
 startGameType()
-{
+{	
+#if isSyscallDefined TS_Rate
+	if( level.dvar[ "trueskill" ] )
+		thread code\trueskill::init();
+#else
+	setDvar( "trueskill", 0 );
+	level.dvar[ "trueskill" ] = 0;
+#endif
+
+#if isSyscallDefined mysql_close
+	if( level.dvar[ "mysql" ] )
+		thread code\mysql::init();
+#else
+	setDvar( "mysql", 0 );
+	level.dvar[ "mysql" ] = 0;
+#endif
+
+	if( level.dvar[ "mysql" ] )
+		level.dvar[ "fs_players" ] = 0;
+		
+	if( !level.dvar[ "trueskill" ] )
+		level.dvar[ "trueskill_punish" ] = 0;
+
 	thread code\scriptcommands::init();
 	thread code\heli::plotMap();
 
 	if( !level.dvar[ "old_hardpoints" ] )
 		thread code\hardpoints::init();
-	
-	// REQUIRES TRUESKILL PLUGIN        //
-	if( level.dvar[ "trueskill" ] )     //
-		thread code\trueskill::init();  //
-	//                                  //
 		
 	thread code\player::init();
 	
@@ -46,8 +63,10 @@ startGameType()
 		thread code\strat::init();
 		
 	// Dev only
+	/*
 	if( getDvarInt( "developer" ) > 0 )
 		thread code\_dBots::init();
+	*/
 }
 
 fx_cache()
@@ -91,7 +110,7 @@ serverDvars()
 	}
 	
 	exec( "sets _mod New Experience" );
-	exec( "sets _modVer 1.1" );
+	exec( "sets _modVer 1.2" );
 }
 
 prestigeIcons()

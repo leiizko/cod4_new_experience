@@ -1141,6 +1141,9 @@ endGame( winner, endReasonText )
 	// return if already ending via host quit or victory
 	if ( game["state"] == "postgame" || level.gameEnded )
 		return;
+		
+	level.GameTimeEnd = getTime();
+	level.GameTime = getTime() - game[ "firstSpawnTime" ];
 
 	if ( isDefined( level.onEndGame ) )
 		[[level.onEndGame]]( winner );
@@ -1168,8 +1171,10 @@ endGame( winner, endReasonText )
 		}
 	}
 	
+#if isSyscallDefined TS_Rate
 	if ( level.dvar[ "trueskill" ] && ( hitRoundLimitOne() || hitScoreLimit() ) )
 		thread code\trueskill::gameEnd( winner );
+#endif
 	
 	thread code\common::clearNotify();
 	
@@ -1610,6 +1615,11 @@ endGame( winner, endReasonText )
 		wait level.dvar[ "end_scoreboard_time" ];
 	}
 	
+#if isSyscallDefined mysql_close
+	if( isDefined( game[ "mysql" ] ) )
+		mysql_close( game[ "mysql" ] );
+#endif
+	
 	exitLevel( false );
 }
 
@@ -1699,8 +1709,8 @@ updateMatchBonusScores( winner )
 	{
 		player = players[ i ];
 		
-		if( isDefined( player.pers[ "firstSpawnTime" ] ) && isDefined( level.TSGameTimeEnd ) )
-			player.timePlayed[ "total" ] = ( level.TSGameTimeEnd - player.pers[ "firstSpawnTime" ] ) / 1000;
+		if( isDefined( player.pers[ "firstSpawnTime" ] ) && isDefined( level.GameTimeEnd ) )
+			player.timePlayed[ "total" ] = ( level.GameTimeEnd - player.pers[ "firstSpawnTime" ] ) / 1000;
 		else
 			player.timePlayed[ "total" ] = 0;
 	}
@@ -3211,6 +3221,9 @@ prematchPeriod()
 	
 	level.inPrematchPeriod = false;
 	
+	if( !isDefined( game[ "firstPlayerSpawnTime" ] ) )
+		game[ "firstSpawnTime" ] = getTime();
+	
 	for ( index = 0; index < level.players.size; index++ )
 	{
 		level.players[index] freezeControls( false );
@@ -4430,7 +4443,13 @@ Callback_PlayerDisconnect()
 	if ( !level.gameEnded )
 	{
 		self logXPGains();
-		if( level.dvar[ "fs_players" ] )
+		if( level.dvar[ "trueskill_punish" ] && level.dvar[ "mysql" ] )
+		{
+#if isSyscallDefined mysql_close
+			thread code\mysql::punishTS( guid, self.pers[ "firstSpawnTime" ] );
+#endif
+		}			
+		else if( level.dvar[ "fs_players" ] )
 			self thread code\player::FSSave( guid, self.pers[ "firstSpawnTime" ] );
 	}
 
@@ -4523,6 +4542,9 @@ Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, s
 		return;
 	
 	if ( isDefined( eAttacker ) && isPlayer( eAttacker ) && isDefined( eAttacker.canDoCombat ) && !eAttacker.canDoCombat )
+		return;
+		
+	if( !level.dvar[ "wallbang" ] && ( iDFlags & level.iDFLAGS_PENETRATION ) )
 		return;
 	
 	prof_begin( "Callback_PlayerDamage flags/tweaks" );

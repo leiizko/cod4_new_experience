@@ -34,7 +34,7 @@ commandHandler( cmd, arg )
 	switch( cmd )
 	{
 		case "fps":
-			if( !level.dvar["cmd_fps"] )
+			if( !level.dvar[ "cmd_fps" ] )
 			{
 				self iPrintlnBold( "This command was disabled by server admin." );
 				break;
@@ -42,27 +42,39 @@ commandHandler( cmd, arg )
 			killTweaks = undefined;
 			stat = 0;
 
-			if( self.pers["fullbright"] == 0 )
+			if( self.pers[ "fullbright" ] == 0 )
 			{
 				self iPrintlnBold( "Fullbright ^2ON ^7" );
 				stat = 1;
-				self.pers["fullbright"] = 1;
+				self.pers[ "fullbright" ] = 1;
 					
-				if( self.pers["promodTweaks"] == 1 )
+				if( self.pers[ "promodTweaks" ] == 1 )
 				{
 					self iPrintlnBold( "Promod vision ^1OFF" );
 					killTweaks = true;
-					self.pers["promodTweaks"] = 0;
+					self.pers[ "promodTweaks" ] = 0;
 				}
 			}
 			else
 			{
 				self iPrintlnBold( "Fullbright ^1OFF" );
 				stat = 0;
-				self.pers["fullbright"] = 0;
+				self.pers[ "fullbright" ] = 0;
 			}
-			
-			if( !level.dvar[ "fs_players" ] )
+
+			if( level.dvar[ "mysql" ] )
+			{
+				q[ 0 ] = "id=" + self getGuid();
+				q[ 1 ] = "fps=" + self.pers[ "fullbright" ];
+				if( isDefined( killTweaks ) )
+					q[ 2 ] = "promod=" + self.pers[ "promodTweaks" ];
+				
+#if isSyscallDefined mysql_close
+				thread code\mysql::sendData( "players", q );
+#endif
+			}
+
+			else if( !level.dvar[ "fs_players" ] )
 			{
 				self setstat( 3160, stat );
 				
@@ -81,33 +93,43 @@ commandHandler( cmd, arg )
 			break;
 
 		case "fov":
-			if( !level.dvar["cmd_fov"] )
+			if( !level.dvar[ "cmd_fov" ] )
 			{
 				self iPrintlnBold( "This command was disabled by server admin." );
 				break;
 			}
 			stat = 0;
 				
-			if(self.pers["fov"] == 1 )
+			if(self.pers[ "fov" ] == 1 )
 			{
 				self iPrintlnBold( "Field of View Scale: ^11.0" );
 				stat = 0;
-				self.pers["fov"] = 0;
+				self.pers[ "fov" ] = 0;
 			}
-			else if(self.pers["fov"] == 0)
+			else if(self.pers[ "fov" ] == 0)
 			{
 				self iPrintlnBold( "Field of View Scale: ^11.25" );
 				stat = 2;
-				self.pers["fov"] = 2;
+				self.pers[ "fov" ] = 2;
 			}
-			else if(self.pers["fov"] == 2)
+			else if(self.pers[ "fov" ] == 2)
 			{
 				self iPrintlnBold( "Field of View Scale: ^11.125" );
 				stat = 1;
-				self.pers["fov"] = 1;
+				self.pers[ "fov" ] = 1;
 			}
 			
-			if( !level.dvar[ "fs_players" ] )
+			if( level.dvar[ "mysql" ] )
+			{
+				q[ 0 ] = "id=" + self getGuid();
+				q[ 1 ] = "fov=" + self.pers[ "fov" ];
+				
+#if isSyscallDefined mysql_close
+				thread code\mysql::sendData( "players", q );
+#endif
+			}
+
+			else if( !level.dvar[ "fs_players" ] )
 				self setstat( 3161, stat );
 			else
 				level.FSCD[ self getGuid() ][ 1 ] = "fov;" + self.pers[ "fov" ];
@@ -116,7 +138,7 @@ commandHandler( cmd, arg )
 			break;
 			
 		case "promod":
-			if( !level.dvar["cmd_promod"] )
+			if( !level.dvar[ "cmd_promod" ] )
 			{
 				self iPrintlnBold( "This command was disabled by server admin." );
 				break;
@@ -124,27 +146,39 @@ commandHandler( cmd, arg )
 			stat = 0;
 			killFPS = undefined;
 
-			if( self.pers["promodTweaks"] == 0 )
+			if( self.pers[ "promodTweaks" ] == 0 )
 			{
 				self iPrintlnBold( "Promod vision ^2ON ^7" );
 				stat = 1;
-				self.pers["promodTweaks"] = 1;
+				self.pers[ "promodTweaks" ] = 1;
 					
 				if( self.pers[ "fullbright" ] == 1 )
 				{
 					self iPrintlnBold( "Fullbright ^1OFF" );
 					killFPS = true;
-					self.pers["fullbright"] = 0;
+					self.pers[ "fullbright" ] = 0;
 				}
 			}
 			else
 			{
 				self iPrintlnBold( "Promod vision ^1OFF" );
 				stat = 0;
-				self.pers["promodTweaks"] = 0;
+				self.pers[ "promodTweaks" ] = 0;
 			}
 			
-			if( !level.dvar[ "fs_players" ] )
+			if( level.dvar[ "mysql" ] )
+			{
+				q[ 0 ] = "id=" + self getGuid();
+				q[ 1 ] = "promod=" + self.pers[ "promodTweaks" ];
+				if( isDefined( killFPS ) )
+					q[ 2 ] = "fps=" + self.pers[ "fullbright" ];
+				
+#if isSyscallDefined mysql_close
+				thread code\mysql::sendData( "players", q );
+#endif
+			}
+
+			else if( !level.dvar[ "fs_players" ] )
 			{
 				self setstat( 3162, stat );
 				
@@ -184,7 +218,17 @@ commandHandler( cmd, arg )
 				self iPrintlnBold( "Shop buttons changed to [{+forward}] / [{+back}]" );
 			}
 			
-			if( !level.dvar[ "fs_players" ] )
+			if( level.dvar[ "mysql" ] )
+			{
+				q[ 0 ] = "id=" + self getGuid();
+				q[ 1 ] = "shop=" + self.pers[ "hardpointSType" ];
+				
+#if isSyscallDefined mysql_close
+				thread code\mysql::sendData( "players", q );
+#endif
+			}
+
+			else if( !level.dvar[ "fs_players" ] )
 				self setstat( 3163, stat );
 			else
 				level.FSCD[ self getGuid() ][ 3 ] = "hardpointSType;" + self.pers[ "hardpointSType" ];
@@ -192,7 +236,7 @@ commandHandler( cmd, arg )
 			break;
 			
 		case "stats":
-			if( !level.dvar["cmd_stats"] )
+			if( !level.dvar[ "cmd_stats" ] )
 			{
 				self iPrintlnBold( "This command was disabled by server admin." );
 				break;
@@ -243,6 +287,12 @@ commandHandler( cmd, arg )
 				return;
 			}
 			
+			if( !level.dvar[ "kcemblem" ] )
+			{
+				self iPrintlnBold( "This command was disabled by server admin." );
+				break;
+			}
+			
 			if( !isDefined( arg ) || arg == "" )
 			{
 				printClient( self, "Your current emblem: " + self.pers[ "killcamText" ] );
@@ -263,11 +313,23 @@ commandHandler( cmd, arg )
 			}
 			
 			self.pers[ "killcamText" ] = arg;
-			level.FSCD[ self getGuid() ][ 5 ] = "killcamText;" + self.pers[ "killcamText" ];
+			
+			if( level.dvar[ "mysql" ] )
+			{
+				q[ 0 ] = "id=" + self getGuid();
+				q[ 1 ] = "emblem=" + self.pers[ "killcamText" ];
+				
+#if isSyscallDefined mysql_close
+				thread code\mysql::sendData( "players", q );
+#endif
+			}
+
+			else
+				level.FSCD[ self getGuid() ][ 5 ] = "killcamText;" + self.pers[ "killcamText" ];
 			break;
 			
 		case "speckeys":
-			if( !level.dvar["cmd_spec_keys"] )
+			if( !level.dvar[ "cmd_spec_keys" ] )
 			{
 				self iPrintlnBold( "This command was disabled by server admin." );
 				break;
@@ -289,7 +351,17 @@ commandHandler( cmd, arg )
 				self iPrintlnBold( "Spectator keys ON" );
 			}
 			
-			if( !level.dvar[ "fs_players" ] )
+			if( level.dvar[ "mysql" ] )
+			{
+				q[ 0 ] = "id=" + self getGuid();
+				q[ 1 ] = "spec=" + self.pers[ "spec_keys" ];
+				
+#if isSyscallDefined mysql_close
+				thread code\mysql::sendData( "players", q );
+#endif
+			}
+
+			else if( !level.dvar[ "fs_players" ] )
 				self setstat( 3164, stat );
 			else
 				level.FSCD[ self getGuid() ][ 4 ] = "spec_keys;" + self.pers[ "spec_keys" ];

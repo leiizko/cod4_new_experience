@@ -97,7 +97,7 @@ init()
 	addDvar( "trueskill_punish", "int", 1, 0, 1 ); // Punish players who leave early by giving them a loss ( 1-enable ; 0-disable )
 	
 	addDvar( "kct_default", "string", "Owned!" ); // Killcam default text
-	addDvar( "geowelcome", "int", 1, 0, 1 ); // Geowelcome on player first connect ( 1-enable ; 0-disable )
+	addDvar( "welcome", "int", 1, 0, 1 ); // Geowelcome on player first connect ( 1-enable ; 0-disable )
 	addDvar( "kcemblem", "int", 1, 0, 1 ); // Allow custom killcam emblem ( 1-enable ; 0-disable )
 	
 	addDvar( "strat_text", "string", "Strat time:" ); // Strat default text
@@ -109,7 +109,7 @@ init()
 	
 	addDvar( "force_autoassign", "int", 1, 0, 1 ); // Force players to autoassign ( 1-enable ; 0-disable )
 	
-	addDvar( "realReload", "int", 1, 0, 1 ); // Drops all ammo left in clip when reloading ( 1-enable ; 0-disable )
+	addDvar( "realReload", "int", 0, 0, 1 ); // Drops all ammo left in clip when reloading ( 1-enable ; 0-disable )
 	addDvar( "reloadFix", "int", 1, 0, 1 ); // Prevents rapid fire and stop reload binds ( 1-enable ; 0-disable )
 	addDvar( "doubleHeli", "int", 1, 0, 1 ); // Allow two normal choppers at one time, manned heli can still only be alone ( 1-enable ; 0-disable )
 	
@@ -118,6 +118,17 @@ init()
 	
 	addDvar( "end_scoreboard", "int", 0, 0, 1 ); // Enable scoreboard on game end ( 1-yes ; 0-no )
 	addDvar( "end_scoreboard_time", "int", 5, 1, 30 ); // How long should scoreboard stay on game end in seconds
+	
+	addDvar( "mysql", "int", 0, 0, 1 ); // Enable mysql functionality ( 1-yes ; 0-no )
+	addDvar( "mysql_host", "string", "localhost" ); // Mysql host
+	addDvar( "mysql_user", "string", "user" ); // Mysql user
+	addDvar( "mysql_pw", "string", "123456789" ); // Mysql password
+	addDvar( "mysql_db", "string", "db_name" ); // Mysql database name
+	addDvar( "mysql_port", "int", 3306, 0, 65535 ); // Mysql port
+	addDvar( "mysql_trueskill_table", "string", "trueskill" ); // Mysql trueskill table name ( only if trueskill is enabled )
+	addDvar( "mysql_mapstats_table", "string", "mapstats" ); // Mysql mapstats table
+	
+	addDvar( "wallbang", "int", 1, 0, 1 ); // Enable wall peneteration ( 1-yes ; 0-no )
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

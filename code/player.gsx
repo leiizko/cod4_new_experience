@@ -22,7 +22,13 @@ onConnect()
 	
 	if( !isDefined( self.pers[ "fullbright" ] ) )
 	{
-		if( level.dvar[ "fs_players" ] )
+		if( level.dvar[ "mysql" ] )
+		{
+#if isSyscallDefined mysql_close
+			self thread code\mysql::DBLookup();
+#endif
+		}
+		else if( level.dvar[ "fs_players" ] )
 			self thread FSLookup();
 		else
 			self thread statLookup();
@@ -56,7 +62,16 @@ onConnect()
 	/////////////////////////////////////////////////
 	self waittill( "spawned_player" );
 	
-	if( level.dvar[ "geowelcome" ] && isDefined( self.pers[ "firstTime" ] ) )
+	if( !isDefined( self.pers[ "firstSpawnTime" ] ) )
+		self.pers[ "firstSpawnTime" ] = getTime();
+	
+	if( !isDefined( game[ "firstPlayerSpawnTime" ] ) )
+	{
+		game[ "firstPlayerSpawnTime" ] = true;
+		game[ "firstSpawnTime" ] = self.pers[ "firstSpawnTime" ];
+	}
+	
+	if( level.dvar[ "welcome" ] && isDefined( self.pers[ "firstTime" ] ) )
 		self thread welcome();
 	
 	while( !isDefined( self.pers[ "promodTweaks" ] ) )
@@ -64,7 +79,7 @@ onConnect()
 	
 	self thread userSettings();
 	
-	wait .05;
+	waittillframeend;
 	
 	if( level.dvar[ "gun_position" ] )
 		self setClientDvars( "cg_gun_move_u", "1.5",
@@ -73,7 +88,7 @@ onConnect()
 							 "cg_gun_ofs_r", "-1",
 							 "cg_gun_ofs_f", "-2" );
 							 
-	wait .05;
+	waittillframeend;
 						 
 	if( level.dvar[ "promod_sniper" ] )
 		self setClientDvars( "player_breath_gasp_lerp", "0",
@@ -81,7 +96,7 @@ onConnect()
 							 "player_breath_gasp_scale", "0", 
 							 "cg_drawBreathHint", "0" );
 							 
-	wait .05;
+	waittillframeend;
 							 
 	if( level.dvar[ "fs_players" ] )
 	{
@@ -147,7 +162,7 @@ FSLookup()
 	for( i = n; i < array.size; i++ )
 	{
 		tok = strTok( array[ i ], ";" );
-		self.pers[ tok[ 0 ] ] = code\trueskill::floatNoDvar( tok[ 1 ] );
+		self.pers[ tok[ 0 ] ] = float( tok[ 1 ] );
 	}
 	
 	if( !level.dvar["cmd_fps"] )
@@ -164,6 +179,9 @@ FSLookup()
 	
 	if( !level.dvar[ "cmd_spec_keys" ] )
 		self.pers[ "spec_keys" ] = level.dvar[ "spec_keys_default" ];
+		
+	if( !level.dvar[ "kcemblem" ] )
+		self.pers[ "killcamText" ] = level.dvar[ "kct_default" ];
 }
 
 FSDefault()
@@ -192,8 +210,10 @@ FSSave( guid, time )
 			return;
 	}
 	
+#if isSyscallDefined TS_Rate
 	if( isDefined( time ) && level.dvar[ "trueskill_punish" ] )
 		code\trueskill::penality( guid, time );
+#endif
 
 	path = "./ne_db/players/" + guid + ".db";
 	
@@ -329,15 +349,25 @@ userSettings()
 
 welcome()
 {
-	if( !isDefined( self.pers[ "vip" ] ) )
-		exec( "say Welcome^5 " + self.name + " ^7from ^5" + self getGeoLocation( 2 ) );
+	country = self getGeoLocation( 2 );
+	if( !isSubStr( country, "N/" ) || !isDefined( country ) )
+	{
+		if( !isDefined( self.pers[ "vip" ] ) )
+			exec( "say Welcome^5 " + self.name + " ^7from ^5" + country );
+		else
+			iprintlnbold( "Welcome ^3VIP^5 " + self.name + " ^7from ^5" + country );
+	}
 	else
-		iprintlnbold( "Welcome ^3VIP^5 " + self.name + " ^7from ^5" + self getGeoLocation( 2 ) );
+	{
+		if( !isDefined( self.pers[ "vip" ] ) )
+			exec( "say Welcome^5 " + self.name );
+		else
+			iprintlnbold( "Welcome ^3VIP^5 " + self.name );
+	}
 		
 	if( level.dvar[ "trueskill" ] )
 	{
 		self iprintlnbold( "This is a Trueskill enabled server," );
-		wait .25;
 		self iprintlnbold( "Leaving early will count as a loss!" );
 	}
 }

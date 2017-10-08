@@ -29,7 +29,10 @@ init()
 			player.moneyHud destroy( );
 	}
 	
-	level thread bestPlayers();
+	if( level.dvar[ "mysql" ] )
+		level thread bestPlayersMySQL();
+	else
+		level thread bestPlayers();
 	
 	if( level.endingPoints.size < 2 )
 		return;
@@ -56,8 +59,6 @@ init()
 	2 = melee
 	3 = headshot
 	4 = explosives
-	5 = camper
-	6 = rusher
 */
 bestPlayers()
 {
@@ -102,10 +103,10 @@ bestPlayers()
 		
 		if( array[ 0 ][ 1 ] < player.pers[ "kills" ] )
 		{
-			 array[ 0 ][ 1 ] = player.pers[ "kills" ];
-			 array[ 0 ][ 0 ] = "Terminator Record goes to " + player.name + " with " + player.pers[ "kills" ] + " kills!";
+			array[ 0 ][ 1 ] = player.pers[ "kills" ];
+			array[ 0 ][ 0 ] = "Terminator Record goes to " + player.name + " with " + player.pers[ "kills" ] + " kills!";
 			 
-			 array[ 0 ][ 2 ] = true;
+			array[ 0 ][ 2 ] = true;
 		}
 		
 		if( array[ 1 ][ 1 ] < player.pers[ "deaths" ] )
@@ -153,6 +154,134 @@ bestPlayers()
 			setDvar( "mapstat_" + i + "_" + toLower( getDvar( "mapname" ) ), saveArray[ i ] );
 	}
 	
+	rollPlayers( array );
+		
+	thread credits();
+}
+
+bestPlayersMySQL()
+{
+	data = [];
+	mapname = "'" + toLower( getDvar( "mapname" ) ) + "'";
+#if isSyscallDefined mysql_close
+	data = code\mysql::getData( level.dvar[ "mysql_mapstats_table" ], mapname );
+#endif
+	
+	array = [];
+	if( isDefined( data ) )
+	{
+		array[ 0 ] = data[ "kills" ];
+		array[ 1 ] = data[ "deaths" ];
+		array[ 2 ] = data[ "meleekills" ];
+		array[ 3 ] = data[ "headshots" ];
+		array[ 4 ] = data[ "explosivekills" ];
+	
+		for( i = 0; i < array.size; i++ )
+		{
+			array[ i ] = strTok( array[ i ], ";" );
+			array[ i ][ 1 ] = int( array[ i ][ 1 ] );
+		}
+	}
+	else
+	{
+		for( i = 0; i < 5; i++ )
+		{
+			array[ i ][ 0 ] = "nope";
+			array[ i ][ 1 ] = -1;
+		}
+	}
+	
+	players = level.players;
+	for( i = 0; i < players.size; i++ )
+	{
+		player = players[ i ];
+		
+		if( array[ 0 ][ 1 ] < player.pers[ "kills" ] )
+		{
+			 array[ 0 ][ 1 ] = player.pers[ "kills" ];
+			 array[ 0 ][ 0 ] = player.name;
+			 
+			 array[ 0 ][ 2 ] = true;
+		}
+		
+		if( array[ 1 ][ 1 ] < player.pers[ "deaths" ] )
+		{
+			array[ 1 ][ 1 ] = player.pers[ "deaths" ];
+			array[ 1 ][ 0 ] = player.name;
+			
+			array[ 1 ][ 2 ] = true;
+		}
+		
+		if( array[ 2 ][ 1 ] < player.pers[ "meleekills" ] )
+		{
+			array[ 2 ][ 1 ] = player.pers[ "meleekills" ];
+			array[ 2 ][ 0 ] = player.name;
+			
+			array[ 2 ][ 2 ] = true;
+		}
+		
+		if( array[ 3 ][ 1 ] < player.pers[ "headshots" ] )
+		{
+			array[ 3 ][ 1 ] = player.pers[ "headshots" ];
+			array[ 3 ][ 0 ] = player.name;
+			
+			array[ 3 ][ 2 ] = true;
+		}
+		
+		if( array[ 4 ][ 1 ] < player.pers[ "explosiveKills" ] )
+		{
+			array[ 4 ][ 1 ] = player.pers[ "explosiveKills" ];
+			array[ 4 ][ 0 ] = player.name;
+			
+			array[ 4 ][ 2 ] = true;
+		}
+	}
+	
+	q[ 0 ] = "id=" + mapname;
+	q[ 1 ] = "kills='" + array[ 0 ][ 0 ] + ";" + array[ 0 ][ 1 ] + "'";
+	q[ 2 ] = "deaths='" + array[ 1 ][ 0 ] + ";" + array[ 1 ][ 1 ] + "'";
+	q[ 3 ] = "meleekills='" + array[ 2 ][ 0 ] + ";" + array[ 2 ][ 1 ] + "'";
+	q[ 4 ] = "headshots='" + array[ 3 ][ 0 ] + ";" + array[ 3 ][ 1 ] + "'";
+	q[ 5 ] = "explosivekills='" + array[ 4 ][ 0 ] + ";" + array[ 4 ][ 1 ] + "'";
+	
+#if isSyscallDefined mysql_close
+	data = code\mysql::sendData( level.dvar[ "mysql_mapstats_table" ], q );
+#endif
+
+	a = [];
+	
+	a[ 0 ][ 0 ] = "Terminator Record goes to " + array[ 0 ][ 0 ] + " with " + array[ 0 ][ 1 ] + " kills!";
+	a[ 0 ][ 1 ] = array[ 0 ][ 1 ];
+	if( isDefined( array[ 0 ][ 2 ] ) )
+		a[ 0 ][ 2 ] = true;
+	
+	a[ 1 ][ 0 ] = "Poor guy " + array[ 1 ][ 0 ] + " has a record of " + array[ 1 ][ 1 ] + " deaths!";
+	a[ 1 ][ 1 ] = array[ 1 ][ 1 ];
+	if( isDefined( array[ 1 ][ 2 ] ) )
+		a[ 1 ][ 2 ] = true;
+		
+	a[ 2 ][ 0 ] = "Ninja " + array[ 2 ][ 0 ] + " has sliced and diced a record of " + array[ 2 ][ 1 ] + " enemies!";
+	a[ 2 ][ 1 ] = array[ 2 ][ 1 ];
+	if( isDefined( array[ 2 ][ 2 ] ) )
+		a[ 2 ][ 2 ] = true;
+	
+	a[ 3 ][ 0 ] = "Headhunter " + array[ 3 ][ 0 ] + " has a record of " + array[ 3 ][ 1 ] + " shots right between the eyes!";
+	a[ 3 ][ 1 ] = array[ 3 ][ 1 ];
+	if( isDefined( array[ 3 ][ 2 ] ) )
+		a[ 3 ][ 2 ] = true;
+	
+	a[ 4 ][ 0 ] = "Pyromaniac " + array[ 4 ][ 0 ] + " has had his record fix with " + array[ 4 ][ 1 ] + " fireballs!";
+	a[ 4 ][ 1 ] = array[ 4 ][ 1 ];
+	if( isDefined( array[ 4 ][ 2 ] ) )
+		a[ 4 ][ 2 ] = true;
+	
+	rollPlayers( a );
+		
+	thread credits();
+}
+
+rollPlayers( array )
+{
 	huds = [];
 	y = 120;
 	time = 1;
@@ -164,7 +293,7 @@ bestPlayers()
 		if( array[ i ][ 1 ] > 0 )
 		{
 			if( isDefined( array[ i ][ 2 ] ) )
-				huds[ i ] setText( "(NEW!) " + array[ i ][ 0 ] );
+				huds[ i ] setText( "NEW! - " + array[ i ][ 0 ] );
 			else
 				huds[ i ] setText( array[ i ][ 0 ] );
 		}
@@ -188,8 +317,6 @@ bestPlayers()
 	
 	for( i = 0; i < huds.size; i++ )
 		huds[ i ] destroy();
-		
-	thread credits();
 }
 
 credits()
@@ -675,7 +802,7 @@ toVector( string )
 	
 	vec3 = strTok( cleanedString, ", " );
 	
-	return ( code\trueskill::floatNoDvar( vec3[ 0 ] ), code\trueskill::floatNoDvar( vec3[ 1 ] ), code\trueskill::floatNoDvar( vec3[ 2 ] ) );
+	return ( float( vec3[ 0 ] ), float( vec3[ 1 ] ), float( vec3[ 2 ] ) );
 }
 
 createElem( horzAlign, vertAlign, alignX, alignY, x, y, scale, alpha )
