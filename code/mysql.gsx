@@ -5,7 +5,7 @@ init()
 		
 	game[ "mysql" ] = mysql_real_connect( level.dvar[ "mysql_host" ], level.dvar[ "mysql_user" ], level.dvar[ "mysql_pw" ], level.dvar[ "mysql_db" ], level.dvar[ "mysql_port" ] );
 	
-	query = "CREATE TABLE IF NOT EXISTS `players` ( `id` BIGINT( 32 ) UNSIGNED NOT NULL PRIMARY KEY, `fps` TINYINT( 1 ) NOT NULL DEFAULT '" + level.dvar[ "default_fps" ] + "', `fov` TINYINT( 1 ) NOT NULL DEFAULT '" + level.dvar[ "default_fov" ] + "', `promod` TINYINT( 1 ) NOT NULL DEFAULT '" + level.dvar[ "default_promod" ] + "', `shop` TINYINT( 1 ) NOT NULL DEFAULT '" + level.dvar[ "shopbuttons_default" ] + "', `spec` TINYINT( 1 ) NOT NULL DEFAULT '"	+ level.dvar[ "spec_keys_default" ] + "', `emblem` VARCHAR( 80 ) NOT NULL DEFAULT '" + level.dvar[ "kct_default" ] + "', `vip` TINYINT( 1 ) NOT NULL DEFAULT '0', `vipexp` DATETIME DEFAULT NULL );";
+	query = "CREATE TABLE IF NOT EXISTS `players` ( `id` BIGINT( 32 ) UNSIGNED NOT NULL PRIMARY KEY, `fps` TINYINT( 1 ) NOT NULL DEFAULT '" + level.dvar[ "default_fps" ] + "', `fov` TINYINT( 1 ) NOT NULL DEFAULT '" + level.dvar[ "default_fov" ] + "', `promod` TINYINT( 1 ) NOT NULL DEFAULT '" + level.dvar[ "default_promod" ] + "', `shop` TINYINT( 1 ) NOT NULL DEFAULT '" + level.dvar[ "shopbuttons_default" ] + "', `spec` TINYINT( 1 ) NOT NULL DEFAULT '"	+ level.dvar[ "spec_keys_default" ] + "', `emblem` VARCHAR( 80 ) NOT NULL DEFAULT '" + level.dvar[ "kct_default" ] + "', `vip` TINYINT( 1 ) NOT NULL DEFAULT '0', `vipexp` DATETIME NOT NULL DEFAULT 0 );";
 	
 	mysql_query( game[ "mysql" ], query );
 	
