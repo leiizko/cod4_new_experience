@@ -3,6 +3,7 @@ startBarrage( endPos, startPos )
 	self endon( "disconnect" );
 	level endon( "endBarage" );
 	
+	level thread playerDC( self );
 	self thread code\common::notifyTeamLn( "Friendly artillery called by^1 " + self.name );
 	
 	players = code\common::getPlayers();
@@ -74,8 +75,8 @@ endBarage()
 
 playerDC( player )
 {
-	player endon( "endBarage" );
-	self endon("game_ended");
+	level endon( "endBarage" );
+	level endon( "game_ended" );
 	
 	player waittill( "disconnect" );
 	
