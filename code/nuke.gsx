@@ -58,8 +58,8 @@ setup( endPos )
 	trace = bullettrace( pos, pos - ( 0, 0, 10000 ), false, undefined );
 	endPos = trace[ "position" ];
 	
-	thread playerDC( self );
-	thread gameEnd();
+	level thread playerDC( self );
+	level thread gameEnd();
 	
 	angles = ( randomFloatRange( 0, 1 ), randomFloatRange( 0, 1 ), randomFloatRange( 0, 1 ) ); // So random, much wow...
 	endPosAir = endPos + ( 0, 0, 1500 );
