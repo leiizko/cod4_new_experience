@@ -7,6 +7,12 @@ init()
 		self iPrintLnBold( "AC130 not available" );
 		return false;
 	}
+	else if( isDefined( self.pers[ "lastACUse" ] ) && getTime() - self.pers[ "lastACUse" ] < 25000 )
+	{
+		time = int( 25 - ( getTime() - self.pers[ "lastACUse" ] ) / 1000 );
+		self iPrintLnBold( "AC130 REARMING - ETA " + time + " SECONDS" );
+		return false;
+	}
 	
 	if( self isProning() )
 	{
@@ -105,7 +111,7 @@ infoHUD()
 	self.info[ 2 ].alignY = "bottom";
 	self.info[ 2 ].horzAlign = "center";
 	self.info[ 2 ].vertAlign = "bottom";
-	self.info[ 2 ] setTimer( 45 );
+	self.info[ 2 ] setTimer( 30 );
 	self.info[ 2 ].color = ( 1.0, 0.0, 0.0 );
 	self.info[ 2 ].fontscale = 1.4;
 	self.info[ 2 ].archived = 0;
@@ -117,7 +123,7 @@ planeTimer()
 	level endon( "game_ended" );
 	level endon( "flyOver" );
 	
-	wait 45;
+	wait 30;
 	
 	thread endHardpoint();
 }
@@ -375,6 +381,8 @@ endHardpoint()
 	self setOrigin( self.oldPosition );
 	
 	waittillframeend;
+	
+	self.pers[ "lastACUse" ] = getTime();
 	
 	self.oldPosition = undefined;
 	if( !level.dvar[ "old_hardpoints" ] )

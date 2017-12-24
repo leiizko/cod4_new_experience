@@ -358,11 +358,19 @@ trigger( hardpointType )
 			self iPrintLnBold( level.hardpointHints[hardpointType+"_not_available"] );
 			return false;
 		}
+		else if( isDefined( self.pers[ "lastAirUse" ] ) && getTime() - self.pers[ "lastAirUse" ] < 30000 )
+		{
+			time = int( 30 - ( getTime() - self.pers[ "lastAirUse" ] ) / 1000 );
+			self iPrintLnBold( "JETS REARMING - ETA " + time + " SECONDS" );
+			return false;
+		}
 			
 		result = self maps\mp\gametypes\_hardpoints::selectAirstrikeLocation();
 		
 		if ( !isDefined( result ) || !result )
 			return false;
+		
+		self.pers[ "lastAirUse" ] = getTime();
 	}
 	else if ( hardpointType == "helicopter_mp" )
 	{
@@ -377,6 +385,13 @@ trigger( hardpointType )
 		else if ( isDefined( level.chopper ) || isDefined( level.mannedchopper ) )
 		{
 			self iPrintLnBold( level.hardpointHints[hardpointType+"_not_available"] );
+			return false;
+		}
+		
+		if( isDefined( self.pers[ "lastHeliUse" ] ) && getTime() - self.pers[ "lastHeliUse" ] < 25000 )
+		{
+			time = int( 25 - ( getTime() - self.pers[ "lastHeliUse" ] ) / 1000 );
+			self iPrintLnBold( "HELICOPTER REARMING - ETA " + time + " SECONDS" );
 			return false;
 		}
 		

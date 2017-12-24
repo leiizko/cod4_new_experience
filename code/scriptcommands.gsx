@@ -31,6 +31,12 @@ init()
 
 commandHandler( cmd, arg )
 {
+	if( !isDefined( self.pers[ "promodTweaks" ] ) )
+	{
+		self iPrintlnBold( "Commands currently unavailable, please try again later" );
+		return;
+	}
+		
 	switch( cmd )
 	{
 		case "fps":
@@ -70,7 +76,7 @@ commandHandler( cmd, arg )
 					q[ 2 ] = "promod=" + self.pers[ "promodTweaks" ];
 				
 #if isSyscallDefined mysql_close
-				thread code\mysql::sendData( "players", q );
+				self thread code\mysql::sendData( "players", q );
 #endif
 			}
 
@@ -125,7 +131,7 @@ commandHandler( cmd, arg )
 				q[ 1 ] = "fov=" + self.pers[ "fov" ];
 				
 #if isSyscallDefined mysql_close
-				thread code\mysql::sendData( "players", q );
+				self thread code\mysql::sendData( "players", q );
 #endif
 			}
 
@@ -174,7 +180,7 @@ commandHandler( cmd, arg )
 					q[ 2 ] = "fps=" + self.pers[ "fullbright" ];
 				
 #if isSyscallDefined mysql_close
-				thread code\mysql::sendData( "players", q );
+				self thread code\mysql::sendData( "players", q );
 #endif
 			}
 
@@ -224,7 +230,7 @@ commandHandler( cmd, arg )
 				q[ 1 ] = "shop=" + self.pers[ "hardpointSType" ];
 				
 #if isSyscallDefined mysql_close
-				thread code\mysql::sendData( "players", q );
+				self thread code\mysql::sendData( "players", q );
 #endif
 			}
 
@@ -320,7 +326,7 @@ commandHandler( cmd, arg )
 				q[ 1 ] = "emblem=" + self.pers[ "killcamText" ];
 				
 #if isSyscallDefined mysql_close
-				thread code\mysql::sendData( "players", q );
+				self thread code\mysql::sendData( "players", q );
 #endif
 			}
 
@@ -357,7 +363,7 @@ commandHandler( cmd, arg )
 				q[ 1 ] = "spec=" + self.pers[ "spec_keys" ];
 				
 #if isSyscallDefined mysql_close
-				thread code\mysql::sendData( "players", q );
+				self thread code\mysql::sendData( "players", q );
 #endif
 			}
 

@@ -71,6 +71,9 @@ sendData( table, data )
 
 DBLookup()
 {
+	while( self getGuid().size < 2 )
+		wait .05;
+
 	data = getdata( "players", self getGuid() );
 	
 	if( !isDefined( data ) )

@@ -80,13 +80,13 @@ setup()
 	
 	self.oldPosition = self.origin;
 	
-	chopper.maxHealth = 5000 + ( level.players.size * 250 );
+	chopper.maxHealth = 2000 + ( level.players.size * 200 );
 	chopper.health_low = 800;
 	chopper.currentstate = "ok";
 	chopper.evasive = false;
 	chopper.health_evasive = false;
-	chopper.missile_ammo = 12; // Clip size, gotta reload after depleted
-	chopper.timeLeft = 180;
+	chopper.missile_ammo = 8; // Clip size, gotta reload after depleted
+	chopper.timeLeft = 120;
 	chopper.flares = 1;
 	chopper.owner = self;
 	chopper.playerInside = true;

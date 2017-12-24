@@ -107,6 +107,13 @@ getTeamBalance()
 	
 	if( abs( level.team["allies"] - level.team["axis"] ) > 1 )
 		thread balanceTeams();
+	else
+	{
+		level.balanceTeamNum[ "allies" ] = undefined;
+		level.balanceTeamNum[ "axis" ] = undefined;
+		level.balanceTeamEnt[ "allies" ] = undefined;
+		level.balanceTeamEnt[ "axis" ] = undefined;
+	}
 }
 
 balanceTeams()

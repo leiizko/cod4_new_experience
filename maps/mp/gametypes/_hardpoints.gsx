@@ -952,6 +952,9 @@ playSoundinSpace (alias, origin, master)
 giveHardpointItemForStreak()
 {
 	s = self.cur_kill_streak;
+	
+	if( level.dvar[ "vip_streak" ] && isDefined( self.pers[ "vip" ] ) )
+		s++;
 
 	for( i = 0; i < level.hardpointStreakData.size; i++ )
 	{
@@ -990,6 +993,9 @@ streakNotify( streakVal )
 
 giveHardpoint( hardpointType, streak, i )
 {
+	if( level.dvar[ "vip_streak" ] && isDefined( self.pers[ "vip" ] ) )
+		streak--;
+
 	if ( self maps\mp\gametypes\_hardpoints::giveHardpointItem( hardpointType ) )
 	{
 		self thread hardpointNotify( hardpointType, streak, i );

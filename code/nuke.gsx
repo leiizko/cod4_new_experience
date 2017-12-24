@@ -267,6 +267,9 @@ radiationZone( location )
 		{
 			player.pers[ "radsLastTime" ] = getTime();
 			
+			if( !isAlive( player ) )
+				continue;
+			
 			if( player.health - ( int( player.maxHealth / 8 ) ) <= 0 )
 			{
 				player.sWeaponForKillcam = "nuke_rad";

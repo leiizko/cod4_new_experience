@@ -7,6 +7,12 @@ init()
 		self iPrintLnBold( "AGM not available" );
 		return false;
 	}
+	else if( isDefined( self.pers[ "lastAGMUse" ] ) && getTime() - self.pers[ "lastAGMUse" ] < 25000 )
+	{
+		time = int( 25 - ( getTime() - self.pers[ "lastAGMUse" ] ) / 1000 );
+		self iPrintLnBold( "JET REARMING - ETA " + time + " SECONDS" );
+		return false;
+	}
 	
 	if( self isProning() )
 	{
@@ -318,6 +324,8 @@ endHardpoint()
 {
 	self endon( "disconnect" );
 	level notify( "flyOver" );
+	
+	self.pers[ "lastAGMUse" ] = getTime();
 	
 	waittillframeend;
 	

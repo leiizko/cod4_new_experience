@@ -9,7 +9,7 @@ GloballogicInit()
 }
 
 startGameType()
-{	
+{
 #if isSyscallDefined TS_Rate
 	if( level.dvar[ "trueskill" ] )
 		thread code\trueskill::init();
@@ -62,11 +62,21 @@ startGameType()
 	if( level.dvar[ "strat" ] )
 		thread code\strat::init();
 		
+	if( getDvarInt( "remove_turrets" ) )
+	{
+		turrets = getEntArray( "misc_turret", "classname" );
+		for( i = 0; i < turrets.size; i++ )
+		{
+			turrets[ i ] delete();
+		}
+	}
+		
 	// Dev only
-	/*
 	if( getDvarInt( "developer" ) > 0 )
 		thread code\_dBots::init();
-	*/
+		
+	if( level.dvar[ "dynamic_rotation_enable" ] )
+		thread code\dynamic_rotation::init();
 }
 
 fx_cache()
@@ -107,10 +117,12 @@ serverDvars()
 		setDvar( "player_sprinttime", 8 );
 		setDvar( "g_gravity", 600 );
 		setDvar( "g_speed", 210 );
+		setDvar( "jump_height", 45 );
+		setDvar( "player_sprintspeedscale", 1.6 );
 	}
 	
 	exec( "sets _mod New Experience" );
-	exec( "sets _modVer 1.2" );
+	exec( "sets _modVer 1.2.3" );
 }
 
 prestigeIcons()

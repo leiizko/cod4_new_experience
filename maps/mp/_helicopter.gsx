@@ -786,6 +786,10 @@ heli_explode()
 	self playSound( level.heli_sound[self.team]["crash"] );
 	
 	self notify( "ASFsafetynet" );
+	
+	if( isDefined( self.owner ) )
+		self.owner.pers[ "lastHeliUse" ] = getTime();
+	
 	if( level.teamBased && level.dvar[ "doubleHeli" ] )
 	{
 		level.chopper[ self.team ] = undefined;
@@ -817,6 +821,10 @@ heli_leave()
 	self notify( "death" );
 	
 	self notify( "ASFsafetynet" );
+	
+	if( isDefined( self.owner ) )
+		self.owner.pers[ "lastHeliUse" ] = getTime();
+	
 	if( level.teamBased && level.dvar[ "doubleHeli" ] )
 	{
 		level.chopper[ self.team ] = undefined;

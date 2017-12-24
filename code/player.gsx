@@ -50,8 +50,6 @@ onConnect()
 	if( self isVIP() )
 		self.pers[ "vip" ] = true;
 	
-	self.pers[ "rads" ] = 0;
-	
 	self setClientDvar( "ui_ShowMenuOnly", "" ); // if admin rotates the map while in killcam
 	
 	if( level.dvar[ "reloadFix" ] )
@@ -76,6 +74,8 @@ onConnect()
 	
 	while( !isDefined( self.pers[ "promodTweaks" ] ) )
 		wait .05;
+		
+	waittillframeend;
 	
 	self thread userSettings();
 	
@@ -309,6 +309,9 @@ statIntegrityCheck()
 
 userSettings()
 {
+	if( !isDefined( self.pers[ "fov" ] ) )
+		return;
+
 	switch( self.pers[ "fov" ] )
 	{
 		case 0:
@@ -325,6 +328,11 @@ userSettings()
 			self setClientDvar( "cg_fov", 80 );
 			break;
 	}
+
+	waittillframeend;
+
+	if( !isDefined( self.pers[ "fullbright" ] ) )
+		return;
 	
 	if( self.pers[ "fullbright" ] == 1 )
 		self setClientDvar( "r_fullbright", 1 );
@@ -332,6 +340,9 @@ userSettings()
 		self setClientDvar( "r_fullbright", 0 );
 		
 	waittillframeend;
+
+	if( !isDefined( self.pers[ "promodTweaks" ] ) )
+		return;
 	
 	if( self.pers[ "promodTweaks" ] == 1 )
 		self SetClientDvars( "r_filmTweakInvert", "0",

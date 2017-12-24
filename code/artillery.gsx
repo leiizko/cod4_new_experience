@@ -3,10 +3,10 @@ startBarrage( endPos, startPos )
 	self endon( "disconnect" );
 	level endon( "endBarage" );
 	
-	level thread playerDC( self );
 	self thread code\common::notifyTeamLn( "Friendly artillery called by^1 " + self.name );
+	level thread playerDC( self );
 	
-	players = code\common::getPlayers();
+	players = level.players;
 	for( i = 0; i < players.size; i++ )
 	{
 		player = players[ i ];
@@ -16,7 +16,7 @@ startBarrage( endPos, startPos )
 	
 	wait 1.5;
 
-	players = code\common::getPlayers();
+	players = level.players;
 	for( i = 0; i < players.size; i++ )
 	{
 		player = players[ i ];
@@ -159,6 +159,12 @@ selectLocation()
 		self iPrintLnBold( "ARTILLERY BARRAGE not available" );
 		return false;
 	}
+	else if( isDefined( self.pers[ "lastArtyUse" ] ) && getTime() - self.pers[ "lastArtyUse" ] < 45000 )
+	{
+		time = int( 45 - ( getTime() - self.pers[ "lastArtyUse" ] ) / 1000 );
+		self iPrintLnBold( "ARTILLERY REARMING - ETA " + time + " SECONDS" );
+		return false;
+	}
 	
 	if( !isDefined( level.heliDistanceMax ) || level.heliDistanceMax == 0 )
 	{
@@ -189,6 +195,7 @@ selectLocation()
 
 	self thread finishUsage( location );
 	level.artilleryBarrage = true;
+	self.pers[ "lastArtyUse" ] = getTime();
 	return true;
 }
 

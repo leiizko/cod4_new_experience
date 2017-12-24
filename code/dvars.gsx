@@ -115,6 +115,7 @@ init()
 	
 	addDvar( "vip_balance", "int", 1, 0, 1 ); // Can VIP be team balanced ( 1-yes ; 0-no )
 	addDvar( "vip_anyteam", "int", 0, 0, 1 ); // Allow VIP to join any team if force_autoassign is enabled ( 1-yes ; 0-no )
+	addDvar( "vip_streak", "int", 1, 0, 1 ); // VIP needs 1 kill less to trigger killstreak ( 1-yes ; 0-no )
 	
 	addDvar( "end_scoreboard", "int", 0, 0, 1 ); // Enable scoreboard on game end ( 1-yes ; 0-no )
 	addDvar( "end_scoreboard_time", "int", 5, 1, 30 ); // How long should scoreboard stay on game end in seconds
@@ -129,6 +130,13 @@ init()
 	addDvar( "mysql_mapstats_table", "string", "mapstats" ); // Mysql mapstats table
 	
 	addDvar( "wallbang", "int", 1, 0, 1 ); // Enable wall peneteration ( 1-yes ; 0-no )
+	
+	addDvar( "dynamic_rotation_enable", "int", 0, 0, 1 );
+	addDvar( "dynamic_med", "int", 6, 1, 64 ); // Enable mysql functionality ( 1-yes ; 0-no )
+	addDvar( "dynamic_high", "int", 14, 1, 64 ); // Enable mysql functionality ( 1-yes ; 0-no )
+	addDvar( "dynamic_low_maps", "string", "map mp_shipment map mp_killhouse map mp_strike" );
+	addDvar( "dynamic_med_maps", "string", "map mp_backlot map mp_crash map mp_crash_snow" );
+	addDvar( "dynamic_high_maps", "string", "map mp_pipeline map mp_convoy map mp_broadcast" );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

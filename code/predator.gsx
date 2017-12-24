@@ -7,6 +7,12 @@ init()
 		self iPrintLnBold( "PREDATOR DRONE not available" );
 		return false;
 	}
+	else if( isDefined( self.pers[ "lastPredatorUse" ] ) && getTime() - self.pers[ "lastPredatorUse" ] < 25000 )
+	{
+		time = int( 25 - ( getTime() - self.pers[ "lastPredatorUse" ] ) / 1000 );
+		self iPrintLnBold( "DRONE REARMING - ETA " + time + " SECONDS" );
+		return false;
+	}
 	
 	if( self isProning() )
 	{
@@ -358,6 +364,8 @@ endHardpoint()
 {
 	self endon( "disconnect" );
 	level notify( "flyOver" );
+	
+	self.pers[ "lastPredatorUse" ] = getTime();
 	
 	waittillframeend;
 
