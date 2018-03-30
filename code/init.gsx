@@ -122,7 +122,7 @@ serverDvars()
 	}
 	
 	exec( "sets _mod New Experience" );
-	exec( "sets _modVer 1.2.3" );
+	exec( "sets _modVer 1.2.5" );
 }
 
 prestigeIcons()

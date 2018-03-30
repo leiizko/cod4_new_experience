@@ -20,12 +20,13 @@ spectating()
 		
 		while( self.sessionstate == "spectator" )
 		{	
-			entity = self getSpectatorClient(); // Get the entity
-			if( !isDefined( entity ) ) // -1 ?
+			if( self.spectatorClient < 0 )
 			{
 				wait 1;
 				continue;
 			}
+			entity = getEntByNum( self.spectatorClient );
+			oldC = self.spectatorClient;
 			
 			if( !isDefined( self.specFPS ) )
 				showFPS();
@@ -39,7 +40,7 @@ spectating()
 			
 			self thread visionSettingsForEnt( entity );
 			
-			while( isDefined( self getSpectatorClient() ) && entity == self getSpectatorClient() )
+			while( isDefined( entity ) && self.spectatorClient == oldC )
 			{
 				if( isDefined( self.moneyHud ) )
 					self.moneyhud setValue( int( entity.money ) );

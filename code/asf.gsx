@@ -24,7 +24,7 @@ init()
 			self iPrintLnBold( "ASF reports no enemy chopper" );
 			return false;
 		}
-		else if( !level.teambased && level.chopper.owner != self )
+		else if( !level.teambased && level.chopper.owner == self )
 		{
 			self iPrintLnBold( "ASF reports no enemy chopper" );
 			return false;

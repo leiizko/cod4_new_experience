@@ -300,7 +300,8 @@ hud( attacker, data )
 	self.kc_hud[ 5 ].horzAlign = "center";
 	self.kc_hud[ 5 ].archived = false;
 	self.kc_hud[ 5 ].fontscale = 1.4;
-	self.kc_hud[ 5 ] setText( "^0ME  ^7" + self.pers[ "youVSfoe" ][ "killed" ][ attID ] + " - " + self.pers[ "youVSfoe" ][ "killedBy" ][ attID ] + "  ^0FOE" );
+	if( isDefined( self.pers[ "youVSfoe" ][ "killed" ][ attID ] ) && isDefined( self.pers[ "youVSfoe" ][ "killedBy" ][ attID ] ) )
+		self.kc_hud[ 5 ] setText( "^0ME  ^7" + self.pers[ "youVSfoe" ][ "killed" ][ attID ] + " - " + self.pers[ "youVSfoe" ][ "killedBy" ][ attID ] + "  ^0FOE" );
 	self.kc_hud[ 5 ].sort = 3;
 	
 	self.kc_hud[ 6 ] = newClientHudElem( self );

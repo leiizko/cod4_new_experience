@@ -37,7 +37,7 @@ commandHandler( cmd, arg )
 		return;
 	}
 		
-	switch( cmd )
+	switch( toLower( cmd ) )
 	{
 		case "fps":
 			if( !level.dvar[ "cmd_fps" ] )

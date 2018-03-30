@@ -2225,7 +2225,6 @@ menuAutoAssign()
 	if ( assignment != self.pers["team"] && (self.sessionstate == "playing" || self.sessionstate == "dead") )
 	{
 		self.switching_teams = true;
-		self.switching_teams_time = getTime();
 		self.joining_team = assignment;
 		self.leaving_team = self.pers["team"];
 		self suicide();
@@ -2360,7 +2359,6 @@ menuAllies()
 		if(self.sessionstate == "playing")
 		{
 			self.switching_teams = true;
-			self.switching_teams_time = getTime();
 			self.joining_team = "allies";
 			self.leaving_team = self.pers["team"];
 			self suicide();
@@ -2420,7 +2418,6 @@ menuAxis()
 		if(self.sessionstate == "playing")
 		{
 			self.switching_teams = true;
-			self.switching_teams_time = getTime();
 			self.joining_team = "axis";
 			self.leaving_team = self.pers["team"];
 			self suicide();
@@ -4530,9 +4527,8 @@ isHeadShot( sWeapon, sHitLoc, sMeansOfDeath )
 
 Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime )
 {
-	if( sWeapon == "frag_grenade_mp" && isDefined( eAttacker.switching_teams ) )
-		if( isDefined( eAttacker.switching_teams_time ) && getTime() - eAttacker.switching_teams_time < 4000 )
-			return;
+	if( sWeapon == "frag_grenade_mp" && isDefined( eAttacker.pers[ "teamTime" ] ) && getTime() - eAttacker.pers[ "teamTime" ] < 4000 )
+		return;
 
 	// create a class specialty checks; CAC:bulletdamage, CAC:armorvest
 	iDamage = maps\mp\gametypes\_class::cac_modified_damage( self, eAttacker, iDamage, sMeansOfDeath );

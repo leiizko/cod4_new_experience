@@ -140,15 +140,15 @@ setup( endPos )
 				continue;
 			
 			if( isPlayer( ents[ i ].entity ) )
-				{
-					ents[ i ].entity.sWeaponForKillcam = "nuke_main";
-					ents[ i ].entity thread restoreHP();
-				}
+			{
+				ents[ i ].entity.sWeaponForKillcam = "nuke_main";
+				ents[ i ].entity restoreHP();
+			}
 
 			ents[ i ] maps\mp\gametypes\_weapons::damageEnt(
 				level.tacticalNuke, 
 				self, 
-				999999999,
+				64000,
 				"MOD_PROJECTILE_SPLASH", 
 				"artillery_mp", 
 				endPos, 
@@ -257,7 +257,7 @@ radiationZone( location )
 	{
 		level.radiationZone waittill( "trigger", player );
 		
-		if( isDefined( player.spawnprotected ) || !isDefined( player ) )
+		if( isDefined( player.spawnprotected ) || !isDefined( player ) || player == level.tacticalNuke.owner )
 			continue;
 		
 		if( !isDefined( player.pers[ "radsLastTime" ] ) )
@@ -271,26 +271,23 @@ radiationZone( location )
 				continue;
 			
 			if( player.health - ( int( player.maxHealth / 8 ) ) <= 0 )
-			{
 				player.sWeaponForKillcam = "nuke_rad";
 			
-				player thread [[level.callbackPlayerDamage]](
-															level.tacticalNuke,
-															level.tacticalNuke.owner, 
-															100,
-															0,
-															"MOD_PROJECTILE_SPLASH", 
-															"artillery_mp", 
-															level.tacticalNuke.origin,
-															vectornormalize( level.tacticalNuke.origin - player.origin ),
-															"none",
-															0 
-															);
-			}
-			else
+			player thread [[level.callbackPlayerDamage]](
+														level.tacticalNuke,
+														level.tacticalNuke.owner, 
+														int( player.maxHealth / 8 ),
+														0,
+														"MOD_PROJECTILE_SPLASH", 
+														"artillery_mp", 
+														level.tacticalNuke.origin,
+														vectornormalize( level.tacticalNuke.origin - player.origin ),
+														"none",
+														0 
+														);
+														
+			if( isAlive( player ) )
 			{
-				player.health -= int( player.maxHealth / 8 );
-			
 				if( player.health < player.maxHealth / 2.2 )
 					player shellshock( "radiation_high", 4 );
 				
