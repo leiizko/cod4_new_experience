@@ -28,6 +28,9 @@ processRcon( data )
 	
 	player = getEntByNum( int( data[ 1 ] ) );
 	
+	if( !isPlayer( player ) )
+		return;
+	
 	if( isDefined( data[ 2 ] ) )
 		args = data[ 2 ];
 	else

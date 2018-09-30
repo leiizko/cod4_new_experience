@@ -537,7 +537,7 @@ playSoundinSpace( alias, origin )
 
 godMod()
 {
-	self.maxHealth = 9999999999;
+	self.maxHealth = 120000;
 	self.health = self.maxHealth;
 }
 

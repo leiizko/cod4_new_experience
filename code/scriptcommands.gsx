@@ -263,7 +263,7 @@ commandHandler( cmd, arg )
 				if( isInt( arg ) )
 				{
 					player = getEntByNum( int( arg ) );
-					if( !isDefined( player ) )
+					if( !isDefined( player ) || !isPlayer( player ) )
 					{
 						printClient( self, "No players found matching #" + arg );
 						break;
@@ -272,7 +272,7 @@ commandHandler( cmd, arg )
 				else
 				{
 					player = self getEntByStr( arg );
-					if( !isDefined( player ) )
+					if( !isDefined( player ) || !isPlayer( player ) )
 						break;
 				}
 				

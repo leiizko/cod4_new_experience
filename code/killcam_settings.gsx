@@ -18,8 +18,6 @@ onPlayerKilled( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHi
 {
 	if( sMeansOfDeath == "MOD_FALLING" || sMeansOfDeath == "MOD_SUICIDE" )
 		return;
-
-	waittillframeend;
 	
 	if( isDefined( attacker ) && self != attacker )
 	{
