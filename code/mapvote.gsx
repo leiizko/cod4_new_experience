@@ -73,12 +73,12 @@ init()
 			{
 				level.dvar[ "mapvote_mapnum" ] = maps.size;
 				level.mapvoteMaps = maps;
-				logPrint( "Mapvote ERROR: Not enough maps in map rotation for current mapnumber settings.\n" );
+				//logPrint( "Mapvote ERROR: Not enough maps in map rotation for current mapnumber settings.\n" );
 				return;
 			}
 			else
 			{
-				logPrint( "Mapvote CRITICAL: Not enough maps in map rotation to vote, mapvote failed.\n" );
+				//logPrint( "Mapvote CRITICAL: Not enough maps in map rotation to vote, mapvote failed.\n" );
 				return;
 			}
 		}
@@ -89,7 +89,7 @@ init()
 		if( num < 0 )
 		{
 			level.dvar[ "mapvote_norepeat" ] += num;
-			logPrint( "\nMapvote ERROR: Not enough maps in map rotation for current no-repeat setting.\n" );
+			//logPrint( "\nMapvote ERROR: Not enough maps in map rotation for current no-repeat setting.\n" );
 		}
 		
 		legalMaps = getLegalMaps( maps );
@@ -157,17 +157,25 @@ voteLogic( players )
 	}
 	
 	helperArray = [];
-	helperArray[ "num" ] = 0;
+	helperArray[ "num" ] = -1;
 	helperArray[ "mapnum" ] = 0;
+	addArr = [];
 	
 	for( i = 0; i < level.mapvoteMaps.size; i++ )
 	{
 		if( helperArray[ "num" ] < level.countedVotes[ i ] )
 		{
 			helperArray[ "num" ] = level.countedVotes[ i ];
-			helperArray[ "mapnum" ] = i;
+			addArr = [];	
+			addArr[ 0 ] = i;
+		}
+		else if( helperArray[ "num" ] == level.countedVotes[ i ] )
+		{
+			addArr[ addArr.size ] = i;
 		}
 	}
+	
+	helperArray[ "mapnum" ] = addArr[ randomInt( addArr.size ) ];
 	
 	if( !isDefined( level.wonMap ) )
 		level.wonMap = level.mapvoteMaps[ helperArray[ "mapnum" ] ];
@@ -184,7 +192,7 @@ voteLogic( players )
 	level notify( "endVote" );
 }
 
-nameCap( string )
+nameCapG( string )
 {
 	new = "";
 	
@@ -212,6 +220,16 @@ nameCap( string )
 			break;
 	}
 	
+	return new;
+}
+
+nameCap( string )
+{
+	new = "";
+	
+	if( string.size <= 4 )
+		new = nameCapG( string );
+	
 	if( new != "" )
 		return new;
 	
@@ -221,17 +239,39 @@ nameCap( string )
 	{
 		if( stringArray[ t ].size > 2 )
 		{
+			if( new != "" )
+				new += " ";
+
 			new += code\common::toUpper( stringArray[ t ][ 0 ] );
 			for( i = 1; i < stringArray[ t ].size; i++ )
 				new += stringArray[ t ][ i ];
+		}
+	}
+	
+	switch( toLower( new ) )
+	{
+		case "cargoship":
+			new = "Wet Work";
+			break;
+		
+		case "convoy":
+			new = "Ambush";
+			break;
 			
-			new += " ";
-		}
-		else if( stringArray[ t ].size == 2 && stringArray[ t ][ 0 ] == "v" && code\scriptcommands::isInt( stringArray[ t ][ 1 ] ) )
-		{
-			new += stringArray[ t ];
-			new += " ";
-		}
+		case "farm":
+			new = "Downpour";
+			break;
+			
+		case "carentan":
+			new = "Chinatown";
+			break;
+			
+		case "citystreets":
+			new = "District";
+			break;
+		
+		default:
+			break;
 	}
 		
 	return new;
@@ -291,24 +331,37 @@ voteThink()
 	
 	self.votePick = -1;
 	
-	while( !self attackButtonPressed() )
+	while( !self attackButtonPressed() && !self aimButtonPressed() )
 		wait .05;
 	
 	self.playerVoteHud.alpha = 0.5;
 	
-	while( 1 )
+	for( ;; )
 	{
-		self.votePick++;
-		
-		if( self.votePick >= level.mapvoteMaps.size )
-			self.votePick = 0;
-		
-		self thread updatePlayerSpecificHud();
-		
-		wait .3;
-		
-		while( !self attackButtonPressed() )
-			wait .05;
+		if( self attackButtonPressed() )
+		{
+			self.votePick++;
+			
+			if( self.votePick >= level.mapvoteMaps.size )
+				self.votePick = 0;
+			
+			self thread updatePlayerSpecificHud();
+			
+			wait .25;
+		}
+		else if( self aimButtonPressed() )
+		{
+			self.votePick--;
+			
+			if( self.votePick < 0 )
+				self.votePick = level.mapvoteMaps.size - 1;
+			
+			self thread updatePlayerSpecificHud();
+			
+			wait .25;
+		}
+			
+		wait .05;
 	}
 }
 
@@ -355,7 +408,7 @@ setHud()
 	level.mapVoteHud[ 4 ].color = ( 1, 1, 1 );
 	
 	level.mapVoteHud[ 5 ] = createElem( "center", "top", "center", "top", 0, 40, 1.5, 1 );
-	level.mapVoteHud[ 5 ] setText( "Press [{+attack}] to vote." );
+	level.mapVoteHud[ 5 ] setText( "Press [{+attack}]/[{+toggleads_throw}] to vote." );
 	level.mapVoteHud[ 5 ].color = ( 0, 102/255, 255/255 );
 	level.mapVoteHud[ 5 ].glowAlpha = 1;
 	level.mapVoteHud[ 5 ].glowColor = ( 0, 102/255, 255/255 );
