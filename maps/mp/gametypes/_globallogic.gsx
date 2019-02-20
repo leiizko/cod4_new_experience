@@ -238,10 +238,12 @@ default_onForfeit( team )
 	//exit game, last round, no matter if round limit reached or not
 	level.forcedEnd = true;
 	
+	/*
 	if ( isPlayer( winner ) )
 		logString( "forfeit, win: " + winner getXuid() + "(" + winner.name + ")" );
 	else
 		logString( "forfeit, win: " + winner + ", allies: " + game["teamScores"]["allies"] + ", opfor: " + game["teamScores"]["axis"] );
+	*/
 	thread endGame( winner, endReason );
 }
 
