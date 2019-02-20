@@ -53,10 +53,13 @@ startGameType()
 	thread code\ending::setstuff();
 	thread code\spectating::init();
 	
+	if( level.dvar[ "dynamic_rotation_enable" ] )
+		thread code\dynamic_rotation::init();
+	
 	if( level.dvar[ "rcon_interface" ] )
 		thread code\rcon_commands::rconSupport();
 	
-	if( level.dvar[ "mapvote" ] )
+	if( level.dvar[ "mapvote" ] && !level.dvar[ "dynamic_rotation_enable" ] )
 		thread code\mapvote::init();
 		
 	if( level.dvar[ "strat" ] )
@@ -74,9 +77,6 @@ startGameType()
 	// Dev only
 	if( getDvarInt( "developer" ) > 0 )
 		thread code\_dBots::init();
-		
-	if( level.dvar[ "dynamic_rotation_enable" ] )
-		thread code\dynamic_rotation::init();
 }
 
 fx_cache()
@@ -122,7 +122,7 @@ serverDvars()
 	}
 	
 	exec( "sets _mod New Experience" );
-	exec( "sets _modVer 1.2.5" );
+	exec( "sets _modVer 1.2.6" );
 }
 
 prestigeIcons()
