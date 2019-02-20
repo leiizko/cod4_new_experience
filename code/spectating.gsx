@@ -25,7 +25,14 @@ spectating()
 				wait 1;
 				continue;
 			}
+			
 			entity = getEntByNum( self.spectatorClient );
+			if( !isDefined( entity ) || !isPlayer( entity ) )
+			{
+				wait 1;
+				continue;
+			}
+			
 			oldC = self.spectatorClient;
 			
 			if( !isDefined( self.specFPS ) )

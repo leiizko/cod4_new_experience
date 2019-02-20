@@ -375,7 +375,7 @@ commandHandler( cmd, arg )
 			break;
 				
 		default:
-			print( "If you see me you fucked something up :(\n" );
+			break;
 	}
 }
 

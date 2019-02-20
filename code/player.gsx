@@ -309,30 +309,34 @@ statIntegrityCheck()
 
 userSettings()
 {
-	if( !isDefined( self.pers[ "fov" ] ) )
+	// Late joiners might not have these set
+	if( !isDefined( self.pers[ "fov" ] ) || !isDefined( self.pers[ "promodTweaks" ] ) || !isDefined( self.pers[ "fullbright" ] ) )
 		return;
 
 	switch( self.pers[ "fov" ] )
 	{
 		case 0:
-			self setClientDvar( "cg_fovscale", 1.0 );
-			self setClientDvar( "cg_fov", 80 );
+			self setClientDvars( 
+								"cg_fovscale", 1.0,
+								"cg_fov", 80
+								);
 			break;
 		case 1:
-			self setClientDvar( "cg_fovscale", 1.125 );
-			self setClientDvar( "cg_fov", 80 );
+			self setClientDvars( 
+								"cg_fovscale", 1.125,
+								"cg_fov", 80
+								);
 			break;
 		case 2:
 		default:
-			self setClientDvar( "cg_fovscale", 1.25 );
-			self setClientDvar( "cg_fov", 80 );
+			self setClientDvars( 
+								"cg_fovscale", 1.25,
+								"cg_fov", 80
+								);
 			break;
 	}
 
 	waittillframeend;
-
-	if( !isDefined( self.pers[ "fullbright" ] ) )
-		return;
 	
 	if( self.pers[ "fullbright" ] == 1 )
 		self setClientDvar( "r_fullbright", 1 );
@@ -340,9 +344,6 @@ userSettings()
 		self setClientDvar( "r_fullbright", 0 );
 		
 	waittillframeend;
-
-	if( !isDefined( self.pers[ "promodTweaks" ] ) )
-		return;
 	
 	if( self.pers[ "promodTweaks" ] == 1 )
 		self SetClientDvars( "r_filmTweakInvert", "0",

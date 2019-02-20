@@ -238,10 +238,12 @@ default_onForfeit( team )
 	//exit game, last round, no matter if round limit reached or not
 	level.forcedEnd = true;
 	
+	/*
 	if ( isPlayer( winner ) )
 		logString( "forfeit, win: " + winner getXuid() + "(" + winner.name + ")" );
 	else
 		logString( "forfeit, win: " + winner + ", allies: " + game["teamScores"]["allies"] + ", opfor: " + game["teamScores"]["axis"] );
+	*/
 	thread endGame( winner, endReason );
 }
 
@@ -1588,7 +1590,19 @@ endGame( winner, endReasonText )
 	
 	thread code\ending::init();
 	
-	wait 20;
+	wait ( 20 - 2 * ( level.dvar[ "dynamic_rotation_enable" ] & level.dvar[ "mapvote" ] ) );
+
+	if( level.dvar[ "dynamic_rotation_enable" ] )
+	{
+		thread code\dynamic_rotation::checkTier();
+
+		if( level.dvar[ "mapvote" ] )
+		{
+			wait 1;
+			thread code\mapvote::init();
+			wait 1;
+		}
+	}
 	
 	if( level.dvar[ "mapvote" ] )
 		code\mapvote::startVote();
@@ -1619,12 +1633,6 @@ endGame( winner, endReasonText )
 	if( isDefined( game[ "mysql" ] ) )
 		mysql_close( game[ "mysql" ] );
 #endif
-	
-	if( level.dvar[ "dynamic_rotation_enable" ] )
-	{
-		code\dynamic_rotation::checkTier();
-		waittillframeend;
-	}
 	
 	exitLevel( false );
 }
