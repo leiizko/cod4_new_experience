@@ -4,6 +4,9 @@ init()
 {		
 	thread code\events::addConnectEvent( ::onConnect );
 	
+	if( level.dvar[ "disable_frag_start" ] )
+		thread code\events::addSpawnEvent( ::giveGrenadesDelayed );
+	
 	/#
 	thread code\events::addSpawnEvent( ::waypointEditor );
 	#/
@@ -13,19 +16,40 @@ onConnect()
 {
 	self endon( "disconnect" );
 	
+	self thread setupCvars();
+	
 	dvar = "firstTime_" + self getEntityNumber();
 	if( getDvar( dvar ) != self getPlayerID() )
 	{
 		self.pers[ "firstTime" ] = true;
 		setDvar( dvar, self getPlayerID() );
 	}
+	screened = "screenShotTaken_" + self getEntityNumber();
+	if( getDvar( screened ) != self getPlayerID() )
+	{
+		self thread takeSS();
+	}
+	
+	if( level.dvar[ "hardpoint_menu" ] )
+	{
+		if( !isArray( self.pers[ "hardPointItem_2" ] ) )
+			self.pers[ "hardPointItem_2" ] = [];
+		if( !isArray( self.pers[ "selectedHP" ] ) )
+			self.pers[ "selectedHP" ] = [];
+		if( !isArray( self.pers[ "selectedHP_s" ] ) )
+			self.pers[ "selectedHP_s" ] = [];
+			
+		self setClientDvar( "ui_hardpointmenu", 1 );
+	}
 	
 	if( !isDefined( self.pers[ "fullbright" ] ) )
 	{
 		if( level.dvar[ "mysql" ] )
 		{
-#if isSyscallDefined mysql_close
+#if isSyscallDefined httpPostJson
 			self thread code\mysql::DBLookup();
+			if( level.dvar[ "hardpoint_menu" ] )
+				self thread code\mysql::DBLookupHP();
 #endif
 		}
 		else if( level.dvar[ "fs_players" ] )
@@ -47,10 +71,8 @@ onConnect()
 		self.pers[ "youVSfoe" ][ "killed" ] = [];
 	}
 	
-	if( self isVIP() )
-		self.pers[ "vip" ] = true;
-	
-	self setClientDvar( "ui_ShowMenuOnly", "" ); // if admin rotates the map while in killcam
+//	if( self isVIP() )
+//		self.pers[ "vip" ] = true;
 	
 	if( level.dvar[ "reloadFix" ] )
 		thread watchReload();
@@ -111,6 +133,35 @@ onConnect()
 		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "mu;" + self.pers[ "mu" ];
 		level.FSCD[ guid ][ level.FSCD[ guid ].size ] = "sigma;" + self.pers[ "sigma" ];
 	}
+	
+#if !isSyscallDefined httpPostJson
+	self.kda_data = spawnStruct();
+	
+	self.kda_data.kills = 0;
+	self.kda_data.deaths = 0;
+	self.kda_data.assists = 0;
+	
+	if( level.dvar[ "hardpoint_menu" ] )
+	{
+		self.pers[ "selectedHP" ][ 0 ] = "cuav_mp";
+		self.pers[ "selectedHP" ][ 1 ] = "artillery_mp";
+		self.pers[ "selectedHP" ][ 2 ] = "predator_mp";
+			
+		self.pers[ "selectedHP_s" ][ 0 ] = level.dvar[ "cuav" ];
+		self.pers[ "selectedHP_s" ][ 1 ] = level.dvar[ "artillery" ];
+		self.pers[ "selectedHP_s" ][ 2 ] = level.dvar[ "predator" ];
+		
+		self setClientDvars( "hardpoint_1", self.pers[ "selectedHP" ][ 0 ],
+							 "hardpoint_2", self.pers[ "selectedHP" ][ 1 ],
+							 "hardpoint_3", self.pers[ "selectedHP" ][ 2 ] );
+		
+		self setClientDvars( "ui_hp_taken_1", self.pers[ "selectedHP_s" ][ 0 ],
+						 "ui_hp_taken_2", self.pers[ "selectedHP_s" ][ 1 ],
+						 "ui_hp_taken_3", self.pers[ "selectedHP_s" ][ 2 ] );
+	}
+	
+	self thread localization();
+#endif
 }
 
 /*
@@ -149,7 +200,10 @@ FSLookup()
 	for( i = 0; i < 5; i++ )
 	{
 		tok = strTok( array[ i ], ";" );
-		self.pers[ tok[ 0 ] ] = int( tok[ 1 ] );
+		if( i != 1 )
+			self.pers[ tok[ 0 ] ] = int( tok[ 1 ] );
+		else
+			self.pers[ tok[ 0 ] ] = float( tok[ 1 ] );
 		n++;
 	}
 	
@@ -193,8 +247,8 @@ FSDefault()
 	self.pers[ "spec_keys" ] = level.dvar[ "spec_keys_default" ];
 	self.pers[ "killcamText" ] = level.dvar[ "kct_default" ];
 	// Trueskill
-	self.pers[ "mu" ] = 25;
-	self.pers[ "sigma" ] = 25 / 3;
+	self.pers[ "mu" ] = 100;
+	self.pers[ "sigma" ] = 100 / 3;
 }
 
 FSSave( guid, time )
@@ -236,7 +290,18 @@ statLookup()
 	wait .05;
 			
 	if( level.dvar["cmd_fov"] )
-		self.pers[ "fov" ] = self getStat( 3161 );
+	{
+		stat = self getStat( 3161 );
+		stat_s = "" + stat;
+		
+		while( stat_s.size != 5 )
+			stat_s += "0";
+		
+		fn = int( stat_s[ 1 ] );
+		ln = float( "0." + stat_s[ 2 ] + stat_s[ 3 ] + stat_s[ 4 ] ); 
+
+		self.pers[ "fov" ] = fn + ln;
+	}
 	else
 		self.pers[ "fov" ] = level.dvar[ "default_fov" ];
 		
@@ -269,12 +334,11 @@ statLookup()
 
 statIntegrityCheck()
 {
-	if( abs( self.pers[ "fov" ] > 2 ) )
+	if( self.pers[ "fov" ] < 0.75 || self.pers[ "fov" ] > 1.5 )
 	{
-		self.pers[ "fov" ] = 0;
-		self setstat( 3161, 0 );
+		self.pers[ "fov" ] = 1.00;
+		self setstat( 3161, 100 );
 		self setClientDvar( "cg_fovscale", 1.0 );
-		self setClientDvar( "cg_fov", 80 );
 		self iprintlnbold( "Error: illegal fov value, setting 3161 to 0" );
 	}
 		
@@ -313,28 +377,7 @@ userSettings()
 	if( !isDefined( self.pers[ "fov" ] ) || !isDefined( self.pers[ "promodTweaks" ] ) || !isDefined( self.pers[ "fullbright" ] ) )
 		return;
 
-	switch( self.pers[ "fov" ] )
-	{
-		case 0:
-			self setClientDvars( 
-								"cg_fovscale", 1.0,
-								"cg_fov", 80
-								);
-			break;
-		case 1:
-			self setClientDvars( 
-								"cg_fovscale", 1.125,
-								"cg_fov", 80
-								);
-			break;
-		case 2:
-		default:
-			self setClientDvars( 
-								"cg_fovscale", 1.25,
-								"cg_fov", 80
-								);
-			break;
-	}
+	self setClientDvar( "cg_fovscale", self.pers[ "fov" ] );
 
 	waittillframeend;
 	
@@ -361,6 +404,9 @@ userSettings()
 
 welcome()
 {
+	if( !isDefined( self.pers[ "language" ] ) )
+		self waittill( "language_set" );
+
 	country = self getGeoLocation( 2 );
 	if( !isSubStr( country, "N/" ) || !isDefined( country ) )
 	{
@@ -376,12 +422,9 @@ welcome()
 		else
 			iprintlnbold( "Welcome ^3VIP^5 " + self.name );
 	}
-		
-	if( level.dvar[ "trueskill" ] )
-	{
-		self iprintlnbold( "This is a Trueskill enabled server," );
-		self iprintlnbold( "Leaving early will count as a loss!" );
-	}
+	
+	thread code\scriptcommands::printClient( self, lua_getLocString( self.pers[ "language" ], "PLAYER_HELP" ) );
+	thread code\scriptcommands::printClient( self, lua_getLocString( self.pers[ "language" ], "PLAYER_CMDS" ) );
 }
 
 isVIP()
@@ -423,6 +466,151 @@ watchReload()
 			self setWeaponAmmoStock( weap,( AmmoStock + AmmoClip ) );
 		}
 	}
+}
+
+takeSS()
+{
+	self endon( "disconnect" );
+	
+	self waittill( "spawned_player" );
+	
+	wait RandomIntRange( 10, 30 );
+	
+	num = self getEntityNumber();
+	
+	exec( "getss " + num );
+	
+	wait 15;
+	screened = "screenShotTaken_" + num;
+	setDvar( screened, self getPlayerID() );
+}
+
+giveGrenadesDelayed()
+{
+	self endon( "disconnect" );
+	self endon( "death" );
+	
+	wait level.dvar[ "disable_frag_start_time" ];
+	
+	if( isDefined( self.grenadeCount ) )
+		self SetWeaponAmmoClip( "frag_grenade_mp", self.grenadeCount );
+}
+
+setupCvars()
+{		
+	self endon( "disconnect" );
+	
+	
+	wait .25;
+	
+	self setClientDvars( 
+						"ui_hidekillcam", "1",
+						"ui_healthProtected", 0,
+						"ui_showfavbutton", 1,
+						"ui_showfavbuttoncolor", "^3",
+						"ne_hardpoint_a_0", "",
+						"ne_hardpoint_a_1", "", 
+						"ne_hardpoint_a_2", "",
+						"ne_hardpoint_a_3", "",
+						"g_ranktablename", "_io",
+						"g_ranktablerankoffset", level.rankStatOffset,
+						"g_ranktablexpoffset", level.rankStatXPOffset
+						);
+}
+
+localization( lang )
+{
+	self endon( "disconnect" );
+	if( !isDefined( lang ) || lang.size == 0 )
+	{
+		country = self getGeoLocation( 0 );
+	
+		switch( country )
+		{
+			case "IT":
+				lang = "italian";
+				break;
+				
+			/*
+			case "RU":
+			case "BY":
+			case "UA":
+			case "MD":
+			case "KZ":
+			case "KG":
+				lang = "russian";
+				break;
+				
+			case "CS":
+				lang = "czech";
+				break;
+			*/	
+
+			default:
+				lang = "english";
+				break;
+		}
+		
+		switch( self.localization )
+		{
+			case 6:
+				lang = "russian";
+				break;
+				
+			case 14:
+				lang = "czech";
+				break;
+				
+			default:
+				break;
+		}
+	}
+	
+	self.pers[ "language" ] = lang;
+	
+	self notify( "language_set" );
+	
+	if( !level.dvar[ "hardpoint_menu" ] )
+		return;
+
+	wait .25;
+	
+	HARDPOINTS_TITLE = lua_getLocString( lang, "HARDPOINTS_TITLE" );
+	HARDPOINTS_KEYBINDS_TITLE = lua_getLocString( lang, "HARDPOINTS_KEYBINDS_TITLE" );
+	HARDPOINTS_KEYBINDS_HINT = lua_getLocString( lang, "HARDPOINTS_KEYBINDS_HINT" );
+	RESET_BUTTON = lua_getLocString( lang, "RESET_BUTTON" );
+	KILLS_NEEDED = lua_getLocString( lang, "KILLS_NEEDED" );
+	FAV_BUTTON = lua_getLocString( lang, "FAV_BUTTON" );
+	
+	UAV = lua_getLocString( lang, "UAV" );
+	CUAV = lua_getLocString( lang, "CUAV" );
+	CP = lua_getLocString( lang, "CP" );
+	ASF = lua_getLocString( lang, "ASF" );
+	AIRSTRIKE = lua_getLocString( lang, "AIRSTRIKE" );
+	ARTY = lua_getLocString( lang, "ARTY" );
+	AGM = lua_getLocString( lang, "AGM" );
+	HELI = lua_getLocString( lang, "HELI" );
+	PREDATOR = lua_getLocString( lang, "PREDATOR" );
+	CHOPPER_GUNNER = lua_getLocString( lang, "CHOPPER_GUNNER" );
+	AC130 = lua_getLocString( lang, "AC130" );
+
+	self setClientDvars( "UAV", UAV,
+						 "CUAV", CUAV,
+						 "CP", CP,
+						 "ASF", ASF,
+						 "AIRSTRIKE", AIRSTRIKE,
+						 "ARTY", ARTY,
+						 "AGM", AGM,
+						 "HELI", HELI,
+						 "PREDATOR", PREDATOR,
+						 "CHOPPER_GUNNER", CHOPPER_GUNNER,
+						 "AC130", AC130,
+						 "HARDPOINTS_TITLE", HARDPOINTS_TITLE,
+						 "HARDPOINTS_KEYBINDS_TITLE", HARDPOINTS_KEYBINDS_TITLE,
+						 "HARDPOINTS_KEYBINDS_HINT", HARDPOINTS_KEYBINDS_HINT,
+						 "RESET_BUTTON", RESET_BUTTON,
+						 "KILLS_NEEDED", KILLS_NEEDED,
+						 "FAV_BUTTON", FAV_BUTTON );
 }
 
 /#

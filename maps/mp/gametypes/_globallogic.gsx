@@ -562,12 +562,40 @@ matchStartTimerSkip()
 }
 
 
+debugWaitRankXP()
+{
+	self endon( "disconnect" );
+	self endon( "getRankXP_cb" );
+	
+	print( strReplace( "HTTP ERROR: Player &&1 has not yet received HTTP RESPONSE! GUID: &&2\n", self.name, self getGuid() ) );
+	
+	time = 0;
+	
+	while( time < 10 )
+	{
+		time += 0.25;
+		wait .25;
+	}
+	
+	print( strReplace( "HTTP ERROR: Dropping player &&1, Guid: &&2\n", self.name, self getGuid() ) );
+	exec( "kick " + self getEntityNumber() + " Please reconnect!" );
+}
+
 spawnPlayer()
 {
 	prof_begin( "spawnPlayer_preUTS" );
 
 	self endon("disconnect");
 	self endon("joined_spectators");
+	
+	/*if( !isDefined( self.pers[ "rankxp" ] ) )
+	{
+		debugWaitRankXP();
+		wait .05;
+		
+		print( strReplace( "HTTP ERROR: Player &&1 has recovered! GUID: &&2\n", self.name, self getGuid() ) );
+	}*/
+	
 	self notify("spawned");
 	self notify("end_respawn");
 		
@@ -590,7 +618,7 @@ spawnPlayer()
 	else
 		self.statusicon = "";
 	if ( level.hardcoreMode )
-		self.maxhealth = 30;
+		self.maxhealth = level.dvar[ "max_health_hc" ];
 	else if ( level.oldschool )
 		self.maxhealth = 200;
 	else
@@ -617,7 +645,7 @@ spawnPlayer()
 	
 	[[level.onSpawnPlayer]]();
 	
-	self maps\mp\gametypes\_missions::playerSpawned();
+//	self maps\mp\gametypes\_missions::playerSpawned();
 	
 	prof_end( "spawnPlayer_preUTS" );
 
@@ -682,7 +710,7 @@ spawnPlayer()
 	// Spawn player event
 	self thread code\events::onSpawnPlayer();
 
-	self logstring( "S " + self.origin[0] + " " + self.origin[1] + " " + self.origin[2] );
+	//self logstring( "S " + self.origin[0] + " " + self.origin[1] + " " + self.origin[2] );
 
 	if( level.dvar[ "old_hardpoints" ] )
 		self thread maps\mp\gametypes\_hardpoints::hardpointItemWaiter();
@@ -1149,6 +1177,15 @@ endGame( winner, endReasonText )
 
 	if ( isDefined( level.onEndGame ) )
 		[[level.onEndGame]]( winner );
+		
+#if isSyscallDefined httpPostJson
+	for( i = 0; i < level.players.size; i++ )
+	{
+		player = level.players[ i ];
+		if( isDefined( player.pers[ "rankxp" ] ) )
+			player thread code\mysql::UpdateRankXP( player.pers[ "rankxp" ] );
+	}
+#endif
 	
 	game["state"] = "postgame";
 	level.gameEndTime = getTime();
@@ -1438,7 +1475,7 @@ endGame( winner, endReasonText )
 			endReasonText = game["strings"]["time_limit_reached"];
 	}
 	
-	thread maps\mp\gametypes\_missions::roundEnd( winner );
+//	thread maps\mp\gametypes\_missions::roundEnd( winner );
 	
 	// catching gametype, since DM forceEnd sends winner as player entity, instead of string
 	players = level.players;
@@ -1582,6 +1619,7 @@ endGame( winner, endReasonText )
 		player allowSpectateTeam( "freelook", false );
 		player allowSpectateTeam( "none", true );
 		player setClientDvar( "ui_hud_hardcore", 0 );
+		player setclientdvar( "g_scriptMainMenu", game["menu_eog_main"] );
 		player closeMenu();
 		player closeInGameMenu();
 	}
@@ -1591,11 +1629,11 @@ endGame( winner, endReasonText )
 	thread code\ending::init();
 	
 	wait ( 20 - 2 * ( level.dvar[ "dynamic_rotation_enable" ] & level.dvar[ "mapvote" ] ) );
-
+	
 	if( level.dvar[ "dynamic_rotation_enable" ] )
 	{
 		thread code\dynamic_rotation::checkTier();
-
+		
 		if( level.dvar[ "mapvote" ] )
 		{
 			wait 1;
@@ -1628,11 +1666,6 @@ endGame( winner, endReasonText )
 		thread timeLimitClock_Intermission( level.dvar[ "end_scoreboard_time" ] );
 		wait level.dvar[ "end_scoreboard_time" ];
 	}
-	
-#if isSyscallDefined mysql_close
-	if( isDefined( game[ "mysql" ] ) )
-		mysql_close( game[ "mysql" ] );
-#endif
 	
 	exitLevel( false );
 }
@@ -3129,7 +3162,7 @@ startGame()
 	thread gracePeriod();
 
 	thread musicController();
-	thread maps\mp\gametypes\_missions::roundBegin();	
+//	thread maps\mp\gametypes\_missions::roundBegin();	
 }
 
 
@@ -4450,30 +4483,29 @@ Callback_PlayerDisconnect()
 	self removePlayerOnDisconnect();
 	
 	guid = self getGuid();
+	cid = self.clientid;
+	kda_data = self.kda_data;
+	entnum = self getEntityNumber();
 	
 	if ( !level.gameEnded )
 	{
-		self logXPGains();
-		if( level.dvar[ "trueskill_punish" ] && level.dvar[ "mysql" ] )
-		{
-#if isSyscallDefined mysql_close
-			thread code\mysql::punishTS( guid, self.pers[ "firstSpawnTime" ] );
+		//self logXPGains(); //????
+#if isSyscallDefined httpPostJson
+			thread code\mysql::saveKDA( guid, kda_data );
+			thread code\mysql::UpdateRankXP_DC( entnum );
 #endif
-		}			
-		else if( level.dvar[ "fs_players" ] )
-			self thread code\player::FSSave( guid, self.pers[ "firstSpawnTime" ] );
 	}
 
 	if ( isDefined( self.score ) && isDefined( self.pers["team"] ) )
 	{
 		setPlayerTeamRank( self, level.dropTeam, self.score - 5 * self.deaths );
-		self logString( "team: score " + self.pers["team"] + ":" + self.score );
+		//self logString( "team: score " + self.pers["team"] + ":" + self.score );
 		level.dropTeam += 1;
 	}
 	
 	[[level.onPlayerDisconnect]]();
 	
-	logPrint("Q;" + guid + ";" + self getEntityNumber() + ";" + self.name + "\n");
+	//logPrint("Q;" + guid + ";" + self getEntityNumber() + ";" + self.name + "\n");
 	
 	for ( entry = 0; entry < level.players.size; entry++ )
 	{
@@ -4488,8 +4520,8 @@ Callback_PlayerDisconnect()
 			break;
 		}
 	}
-	cid = self.clientid;
-	if( isDefined( cid ) )
+	
+	if( isDefined( cid ) ) // Possible leak
 	{
 		for ( entry = 0; entry < level.players.size; entry++ )
 		{
@@ -4503,7 +4535,6 @@ Callback_PlayerDisconnect()
 				level.players[entry].killedBy[""+cid] = undefined;
 		}
 	}
-
 	if ( level.gameEnded )
 		self removeDisconnectedPlayerFromPlacement();
 	
@@ -4540,9 +4571,10 @@ Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, s
 {
 	if( sWeapon == "frag_grenade_mp" && isDefined( eAttacker.pers[ "teamTime" ] ) && getTime() - eAttacker.pers[ "teamTime" ] < 4000 )
 		return;
+		
+	if( isDefined( self.HealthProtected ) )
+		return;
 
-	// create a class specialty checks; CAC:bulletdamage, CAC:armorvest
-	iDamage = maps\mp\gametypes\_class::cac_modified_damage( self, eAttacker, iDamage, sMeansOfDeath );
 	self.iDFlags = iDFlags;
 	self.iDFlagsTime = getTime();
 	
@@ -4560,6 +4592,18 @@ Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, s
 		
 	if( !level.dvar[ "wallbang" ] && ( iDFlags & level.iDFLAGS_PENETRATION ) )
 		return;
+		
+	if( isDefined( eAttacker ) && isPlayer( eAttacker ) && sMeansOfDeath != "MOD_MELEE" )
+	{
+		if( ( iDFlags & level.iDFLAGS_PENETRATION ) && !eAttacker hasPerk( "specialty_bulletpenetration" ) )
+			iDamage *= level.dvar[ "wb_damage" ];
+		
+		if( isDefined( eAttacker.antiCampMod ) )
+			iDamage *= eAttacker.antiCampMod;
+			
+		//iDamage = lua_weaponDamage( sWeapon, int( iDamage ), sHitLoc, int( distance( eAttacker.origin, self.origin ) ) );
+		iDamage = int( iDamage );
+	}
 	
 	prof_begin( "Callback_PlayerDamage flags/tweaks" );
 	
@@ -4747,7 +4791,7 @@ Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, s
 			
 			self finishPlayerDamageWrapper(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime);
 
-			self thread maps\mp\gametypes\_missions::playerDamaged(eInflictor, eAttacker, iDamage, sMeansOfDeath, sWeapon, sHitLoc );
+//			self thread maps\mp\gametypes\_missions::playerDamaged(eInflictor, eAttacker, iDamage, sMeansOfDeath, sWeapon, sHitLoc );
 
 			prof_end( "Callback_PlayerDamage world" );
 		}
@@ -4770,6 +4814,9 @@ Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, s
 					else if( !( iDFlags & level.iDFLAGS_PENETRATION ) )
 							eAttacker thread maps\mp\gametypes\_damagefeedback::updateDamageFeedback( hasBodyArmor, headShotMark );
 				}
+				
+				if( isDefined( eAttacker ) && isPlayer( eAttacker ) && eAttacker hasPerk( "specialty_bulletdamage" ) )
+					self.doSlowDown = true;
 			}
 		}
 		
@@ -4778,40 +4825,6 @@ Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, s
 
 	if ( isdefined( eAttacker ) && eAttacker != self && !friendly )
 		level.useStartSpawns = false;
-
-	prof_begin( "Callback_PlayerDamage log" );
-
-	// Do debug print if it's enabled
-	if(getDvarInt("g_debugDamage"))
-		println("client:" + self getEntityNumber() + " health:" + self.health + " attacker:" + eAttacker.clientid + " inflictor is player:" + isPlayer(eInflictor) + " damage:" + iDamage + " hitLoc:" + sHitLoc);
-
-	if(self.sessionstate != "dead")
-	{
-		lpselfnum = self getEntityNumber();
-		lpselfname = self.name;
-		lpselfteam = self.pers["team"];
-		lpselfGuid = self getGuid();
-		lpattackerteam = "";
-
-		if(isPlayer(eAttacker))
-		{
-			lpattacknum = eAttacker getEntityNumber();
-			lpattackGuid = eAttacker getGuid();
-			lpattackname = eAttacker.name;
-			lpattackerteam = eAttacker.pers["team"];
-		}
-		else
-		{
-			lpattacknum = -1;
-			lpattackGuid = "";
-			lpattackname = "";
-			lpattackerteam = "world";
-		}
-
-		logPrint("D;" + lpselfGuid + ";" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattackGuid + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
-	}
-	
-	prof_end( "Callback_PlayerDamage log" );
 }
 
 finishPlayerDamageWrapper( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime )
@@ -4819,6 +4832,8 @@ finishPlayerDamageWrapper( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeat
 	self finishPlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime );
 	
 	self damageShellshockAndRumble( eInflictor, sWeapon, sMeansOfDeath, iDamage );
+	
+	self notify( "damage_done" );
 }
 
 damageShellshockAndRumble( eInflictor, sWeapon, sMeansOfDeath, iDamage )
@@ -4918,7 +4933,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 			}
 		}
 	}
-	
+
 	lpselfnum = self getEntityNumber();
 	lpselfname = self.name;
 	lpattackGuid = "";
@@ -5051,7 +5066,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 
 				if ( isAlive( attacker ) )
 				{
-					checkW = ( sWeapon == "artillery_mp" || isSubStr( sWeapon, "cobra" ) || isSubStr( sWeapon, "hind" ) );
+					checkW = ( sWeapon == "artillery_mp" || isSubStr( sWeapon, "cobra" ) || isSubStr( sWeapon, "hind" ) || sWeapon == "mi28_mp" );
 					if( !checkW )
 					{
 						attacker.cur_kill_streak++;
@@ -5156,18 +5171,13 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	}			
 			
 	prof_begin( "PlayerKilled post constants" );
-
-	if ( isDefined( attacker ) && isPlayer( attacker ) && attacker != self && (!level.teambased || attacker.pers["team"] != self.pers["team"]) )
-		self thread maps\mp\gametypes\_missions::playerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, sHitLoc );
-	else
-		self notify("playerKilledChallengesProcessed");
 	
-	logPrint( "K;" + lpselfguid + ";" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattackguid + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n" );
+/*	logPrint( "K;" + lpselfguid + ";" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattackguid + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n" );
 	attackerString = "none";
 	if ( isPlayer( attacker ) ) // attacker can be the worldspawn if it's not a player
 		attackerString = attacker getXuid() + "(" + lpattackname + ")";
 	self logstring( "d " + sMeansOfDeath + "(" + sWeapon + ") a:" + attackerString + " d:" + iDamage + " l:" + sHitLoc + " @ " + int( self.origin[0] ) + " " + int( self.origin[1] ) + " " + int( self.origin[2] ) );
-
+*/
 	level thread updateTeamStatus();
 
 	self maps\mp\gametypes\_gameobjects::detachUseModels(); // want them detached before we create our corpse
@@ -5238,8 +5248,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	if ( game["state"] != "playing" )
 		return;
 	
-	respawnTimerStartTime = gettime();
-	
+	respawnTimerStartTime = gettime();	
 	
 	/#
 	if ( getDvarInt( "scr_forcekillcam" ) != 0 )
@@ -5412,7 +5421,7 @@ processAssist( killedplayer )
 	
 	givePlayerScore( "assist", self, killedplayer );
 	
-	self thread maps\mp\gametypes\_missions::playerAssist();
+//	self thread maps\mp\gametypes\_missions::playerAssist();
 }
 
 Callback_PlayerLastStand( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime, deathAnimDuration )
@@ -5594,6 +5603,7 @@ setSpawnVariables()
 	// Stop shellshock and rumble
 	self StopShellshock();
 	self StopRumble( "damage_heavy" );
+	self.doingHardpointResponse = undefined;
 }
 
 notifyConnecting()

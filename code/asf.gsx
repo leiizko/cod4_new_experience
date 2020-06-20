@@ -3,12 +3,12 @@
 
 init()
 {
-	if( level.dvar[ "old_hardpoints" ] )
+	if( level.dvar[ "old_hardpoints" ] && !level.dvar[ "hardpoint_menu" ] )
 		self thread drop();
 	
 	if( !isDefined( level.chopper ) && !isDefined( level.mannedchopper ) )
 	{
-		self iPrintLnBold( "ASF reports no enemy chopper" );
+		self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "ASF_NO_ENEMY_CHOPPER" ) );
 		return false;
 	}
 	
@@ -16,30 +16,30 @@ init()
 	{
 		if( level.teambased && level.dvar[ "doubleHeli" ] && !isDefined( level.chopper[ level.otherTeam[ self.team ] ] ) )
 		{
-			self iPrintLnBold( "ASF reports no enemy chopper" );
+			self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "ASF_NO_ENEMY_CHOPPER" ) );
 			return false;
 		}
 		else if( level.teambased && !level.dvar[ "doubleHeli" ] && level.chopper.team == self.team )
 		{
-			self iPrintLnBold( "ASF reports no enemy chopper" );
+			self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "ASF_NO_ENEMY_CHOPPER" ) );
 			return false;
 		}
 		else if( !level.teambased && level.chopper.owner == self )
 		{
-			self iPrintLnBold( "ASF reports no enemy chopper" );
+			self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "ASF_NO_ENEMY_CHOPPER" ) );
 			return false;
 		}
 	}
 	
 	if( isDefined( level.mannedchopper ) && level.mannedchopper.team == self.team && level.teambased )
 	{
-		self iPrintLnBold( "ASF reports no enemy chopper" );
+		self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "ASF_NO_ENEMY_CHOPPER" ) );
 		return false;
 	}
 	
 	if( isDefined( level.flyingplane ) )
 	{
-		self iPrintLnBold( "Air Superiority Fighter not available" );
+		self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "HARDPOINT_NOT_AVAILABLE" ), lua_getLocString( self.pers[ "language" ], "ASF" ) );
 		return false;
 	}
 	
@@ -84,9 +84,10 @@ setup()
 	level.plane[ "plane" ] setModel( "vehicle_mig29_desert" );
 	level.plane[ "plane" ].angles = VectorToAngles( chopper.origin - level.plane[ "plane" ].origin );
 	level.plane[ "missile" ] = spawn( "script_model", level.plane[ "plane" ].origin );
-	level.plane[ "missile" ] setModel( "projectile_hellfire_missile" );
+	level.plane[ "missile" ] setModel( "projectile_sidewinder_missile" );
 	level.plane[ "missile" ] linkTo( level.plane[ "plane" ], "tag_left_wingtip" );
 	thread callStrike_planeSound_credit( level.plane[ "plane" ], chopper.origin );
+	level.plane[ "plane" ] thread playPlaneFx();
 	
 	for( ;; )
 	{
@@ -235,7 +236,7 @@ launchAA( ent )
 				if( dist < 1000 )
 				{
 					damage = level.mannedchopper.maxHealth / ( dist / 20 );
-					level.mannedchopper.owner.heliHud[ 5 ] setValue( int( level.mannedchopper.maxHealth - level.mannedchopper.damageTaken - damage ) );
+					level.mannedchopper.owner.heliHud[ 1 ] setText( lua_getLocString( level.mannedchopper.owner.pers[ "language" ], "CHOPPER_HEALTH" ) + ( level.mannedchopper.maxHealth - level.mannedchopper.damageTaken ) );
 				}
 				
 				if( level.mannedchopper.damageTaken + damage >= level.mannedchopper.maxHealth )
@@ -263,7 +264,7 @@ launchAA( ent )
 					r = 0.0 + ( level.mannedchopper.damageTaken / level.mannedchopper.maxHealth );
 					g = 1.0 - ( level.mannedchopper.damageTaken / level.mannedchopper.maxHealth );
 					
-					level.mannedchopper.owner.heliHud[ 5 ].color = ( r, g, 0.0 );
+					level.mannedchopper.owner.heliHud[ 1 ].color = ( r, g, 0.0 );
 					self notify( "destroyed_helicopter" );
 				}
 				else
@@ -273,7 +274,7 @@ launchAA( ent )
 					r = 0.0 + ( level.mannedchopper.damageTaken / level.mannedchopper.maxHealth );
 					g = 1.0 - ( level.mannedchopper.damageTaken / level.mannedchopper.maxHealth );
 					
-					level.mannedchopper.owner.heliHud[ 5 ].color = ( r, g, 0.0 );
+					level.mannedchopper.owner.heliHud[ 1 ].color = ( r, g, 0.0 );
 				}
 				
 				self thread finish();
@@ -296,7 +297,7 @@ trailFX( )
 
 	while( isDefined( level.missileLaunched ) )
 	{
-		playFxonTag( level.hardEffects[ "hellfireGeo" ], level.plane[ "missile" ], "tag_origin" );
+		playFxonTag( level.hardEffects[ "hellfireGeo" ], level.plane[ "missile" ], "tag_fx" );
 		
 		wait 2;
 	}
@@ -322,6 +323,21 @@ callStrike_planeSound_credit( plane, bombsite )
 	plane notify ( "stop sound" + "veh_mig29_dist_loop" );
 }
 
+playPlaneFx()
+{
+	self endon ( "death" );
+
+	while( isDefined( self ) )
+	{
+		playfxontag( level.fx_airstrike_afterburner, self, "tag_engine_right" );
+		playfxontag( level.fx_airstrike_afterburner, self, "tag_engine_left" );
+		playfxontag( level.fx_airstrike_contrail, self, "tag_right_wingtip" );
+		playfxontag( level.fx_airstrike_contrail, self, "tag_left_wingtip" );
+		
+		wait 2;
+	}
+}
+
 drop()
 {
 	self endon( "disconnect" );
@@ -331,7 +347,7 @@ drop()
 	if( isDefined( level.flyingPlane ) )
 		return;
 	
-	self iPrintLnBold( "If you'd like to drop this hardpoint hold [{+activate}] for 2 seconds!" );
+	self iPrintLnBold( &"ASF_DROP_ITEM" );
 	
 	time = 6 * 20;
 	hold = 0;

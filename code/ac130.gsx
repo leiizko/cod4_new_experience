@@ -4,19 +4,13 @@ init()
 {
 	if( isDefined( level.flyingPlane ) || isDefined( level.flyingPlane ) )
 	{
-		self iPrintLnBold( "AC130 not available" );
-		return false;
-	}
-	else if( isDefined( self.pers[ "lastACUse" ] ) && getTime() - self.pers[ "lastACUse" ] < 25000 )
-	{
-		time = int( 25 - ( getTime() - self.pers[ "lastACUse" ] ) / 1000 );
-		self iPrintLnBold( "AC130 REARMING - ETA " + time + " SECONDS" );
+		self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "HARDPOINT_NOT_AVAILABLE" ), lua_getLocString( self.pers[ "language" ], "AC130" ) );
 		return false;
 	}
 	
 	if( self isProning() )
 	{
-		self iPrintLnBold( "You must stand to use this killstreak!" );
+		self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "HARDPOINT_MUST_STAND" ) );
 		return false;
 	}
 	
@@ -32,8 +26,8 @@ init()
 
 setup()
 {
-	thread notifyTeam( "FRIENDLY AC130 INBOUND!", ( 0.1, 0.1, 1 ), 3 );
-	self thread notifyTeamLn( "Friendly AC130 called by^1 " + self.name );
+	thread notifyTeam( lua_getLocString( self.pers[ "language" ], "AC130_FRIENDLY" ), ( 0.1, 0.1, 1 ), 3 );
+	self thread notifyTeamLn( lua_getLocString( self.pers[ "language" ], "HARDPOINT_CALLED_BY" ), lua_getLocString( self.pers[ "language" ], "AGM" ), self.name );
 	
 	waittillframeend;
 	
@@ -54,7 +48,7 @@ setup()
 	waittillframeend;
 	
 	self.oldPosition = self getOrigin();
-	self thread planeSetup();
+	self thread planeSetup( "vehicle_ac130_low" );
 	self thread infoHUD();
 	
 	waittillframeend;
@@ -76,45 +70,34 @@ infoHUD()
 	level endon( "flyOver" );
 	
 	self.info = [];
-	
-	self.info[ 0 ] = newClientHudElem( self );
+
+	self.info[ 0 ] = newClientHudElem(self);
 	self.info[ 0 ].elemType = "font";
-	self.info[ 0 ].x = 0;
-	self.info[ 0 ].y = 60;
+	self.info[ 0 ].x = -32;
+	self.info[ 0 ].y = -45;
 	self.info[ 0 ].alignX = "center";
-	self.info[ 0 ].alignY = "top";
+	self.info[ 0 ].alignY = "bottom";
 	self.info[ 0 ].horzAlign = "center";
-	self.info[ 0 ].vertAlign = "top";
-	self.info[ 0 ] setText( "Press ^1[{+attack}] ^7to ^1fire^7, press ^2[{+activate}] ^7to ^2cycle weapons^7, press ^3[{+melee}] ^7to ^3simplify HUD" );
-	//self.info[ 0 ].color = ( 0.0, 0.8, 0.0 );
+	self.info[ 0 ].vertAlign = "bottom";
+	self.info[ 0 ] setText( lua_getLocString( self.pers[ "language" ], "CHOPPER_TIME_LEFT" ) );
+	self.info[ 0 ].color = (0.0, 0.8, 0.0);
 	self.info[ 0 ].fontscale = 1.4;
 	self.info[ 0 ].archived = 0;
-	
-	self.info[ 1 ] = newClientHudElem(self);
+			
+	self.info[ 1 ] = newClientHudElem( self );
 	self.info[ 1 ].elemType = "font";
-	self.info[ 1 ].x = -32;
+	self.info[ 1 ].x = 32;
 	self.info[ 1 ].y = -45;
 	self.info[ 1 ].alignX = "center";
 	self.info[ 1 ].alignY = "bottom";
 	self.info[ 1 ].horzAlign = "center";
 	self.info[ 1 ].vertAlign = "bottom";
-	self.info[ 1 ] setText("^1Fly time left:");
-	self.info[ 1 ].color = (0.0, 0.8, 0.0);
+	self.info[ 1 ] setTimer( 30 );
+	self.info[ 1 ].color = ( 1.0, 0.0, 0.0 );
 	self.info[ 1 ].fontscale = 1.4;
 	self.info[ 1 ].archived = 0;
-			
-	self.info[ 2 ] = newClientHudElem( self );
-	self.info[ 2 ].elemType = "font";
-	self.info[ 2 ].x = 32;
-	self.info[ 2 ].y = -45;
-	self.info[ 2 ].alignX = "center";
-	self.info[ 2 ].alignY = "bottom";
-	self.info[ 2 ].horzAlign = "center";
-	self.info[ 2 ].vertAlign = "bottom";
-	self.info[ 2 ] setTimer( 30 );
-	self.info[ 2 ].color = ( 1.0, 0.0, 0.0 );
-	self.info[ 2 ].fontscale = 1.4;
-	self.info[ 2 ].archived = 0;
+	
+	self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "AC130_HINT" ) );
 }
 
 planeTimer()
@@ -174,8 +157,9 @@ fire( gun )
 		// 10 RPM = 6 sec
 		case 0:
 			self playSound("mp_lose_flag");
+			//self playSound("ac130_105mm_fire");
 			level.plane[ "105mm" ] = spawn( "script_model", self.origin );
-			level.plane[ "105mm" ] setModel( "projectile_hellfire_missile" );
+			level.plane[ "105mm" ] setModel( "weapon_ac130_projectile" );
 			level.plane[ "105mm" ].angles = self getPlayerAngles();
 			level.plane[ "105mm" ] moveTo( trace[ "position" ], 2 );
 			
@@ -183,8 +167,9 @@ fire( gun )
 			
 			wait 2;
 			
+			//thread playSoundinSpace( "ac130_105mm_exp", trace[ "position" ] );
 			thread playSoundinSpace( "exp_suitcase_bomb_main", trace[ "position" ] );
-			PlayFX( level.hardEffects[ "tankerExp" ], trace[ "position" ] );
+			PlayFX( level.hardEffects[ "105mm" ], trace[ "position" ] );
 
 			ents = maps\mp\gametypes\_weapons::getDamageableents( trace[ "position" ], 400 );
 			for( i = 0; i < ents.size; i++ )
@@ -193,6 +178,9 @@ fire( gun )
 				{
 					if( !isDefined( ents[ i ] ) )
 						continue;
+						
+					if( ents[ i ].entity sightConeTrace( trace[ "position" ], ents[ i ].entity ) < 0.1 )
+						continue;
 					
 					if( isPlayer( ents[ i ].entity ) )
 						ents[ i ].entity.sWeaponForKillcam = "ac130_105mm";
@@ -200,7 +188,7 @@ fire( gun )
 					ents[ i ] maps\mp\gametypes\_weapons::damageEnt(
 																	level.plane[ "105mm" ], 
 																	self, 
-																	10000, 
+																	2500, 
 																	"MOD_PROJECTILE_SPLASH", 
 																	"artillery_mp", 
 																	trace[ "position" ], 
@@ -231,9 +219,10 @@ fire( gun )
 				
 			waittillframeend;
 			
+			//self playSound("ac130_40mm_fire");
 			self playSound("mp_lose_flag");
 			level.plane[ "40mm" ][ i ] = spawn( "script_model", self.origin );
-			level.plane[ "40mm" ][ i ] setModel( "projectile_rpg7" );
+			level.plane[ "40mm" ][ i ] setModel( "projectile_at4" );
 			level.plane[ "40mm" ][ i ].angles = self getPlayerAngles();
 			level.plane[ "40mm" ][ i ] moveTo( trace[ "position" ], 1.8 );
 			
@@ -243,8 +232,9 @@ fire( gun )
 			
 			wait 1.8;
 			
+			//thread playSoundinSpace( "ac130_40mm_exp", trace[ "position" ] );
 			thread playSoundinSpace( "artillery_impact", trace[ "position" ] );
-			PlayFX( level.hardEffects[ "artilleryExp" ], trace[ "position" ] );
+			PlayFX( level.hardEffects[ "40mm" ], trace[ "position" ] );
 			
 			ents = maps\mp\gametypes\_weapons::getDamageableents( trace[ "position" ], 240 );
 			for( n = 0; n < ents.size; n++ )
@@ -254,13 +244,16 @@ fire( gun )
 					if( !isDefined( ents[ n ] ) )
 						continue;
 						
+					if( ents[ n ].entity sightConeTrace( trace[ "position" ], ents[ n ].entity ) < 0.1 )
+						continue;
+						
 					if( isPlayer( ents[ n ].entity ) )
 						ents[ n ].entity.sWeaponForKillcam = "ac130_40mm";
 
 					ents[ n ] maps\mp\gametypes\_weapons::damageEnt(
 																	level.plane[ "40mm" ][ i ], 
 																	self, 
-																	10000, 
+																	1000, 
 																	"MOD_PROJECTILE_SPLASH", 
 																	"artillery_mp", 
 																	trace[ "position" ], 
@@ -298,13 +291,14 @@ fire( gun )
 			level.plane[ "25mm" ][ i ].angles = self getPlayerAngles();
 			level.plane[ "25mm" ][ i ] moveTo( trace[ "position" ], .75 );
 			
+			//level.plane[ "25mm" ][ i ] playSound( "ac130_25mm_fire" );
 			level.plane[ "25mm" ][ i ] playSound( "weap_m197_cannon_fire" );
 			
 			self.gun25Proj++;
 			
 			wait .75;
 			
-			PlayFX( level.hardEffects[ "smallExp" ], trace[ "position" ] );
+			PlayFX( level.hardEffects[ "25mm" ], trace[ "position" ] );
 			
 			ents = maps\mp\gametypes\_weapons::getDamageableents( trace[ "position" ], 50 );
 			for( n = 0; n < ents.size; n++ )
@@ -314,13 +308,16 @@ fire( gun )
 					if( !isDefined( ents[ n ] ) )
 						continue;
 						
+					if( ents[ n ].entity sightConeTrace( trace[ "position" ], ents[ n ].entity ) < 0.1 )
+						continue;
+						
 					if( isPlayer( ents[ n ].entity ) )
 						ents[ n ].entity.sWeaponForKillcam = "ac130_25mm";
 
 					ents[ n ] maps\mp\gametypes\_weapons::damageEnt(
 																	level.plane[ "25mm" ][ i ], 
 																	self, 
-																	10000, 
+																	250, 
 																	"MOD_PROJECTILE_SPLASH", 
 																	"artillery_mp", 
 																	trace[ "position" ], 
@@ -382,8 +379,6 @@ endHardpoint()
 	
 	waittillframeend;
 	
-	self.pers[ "lastACUse" ] = getTime();
-	
 	self.oldPosition = undefined;
 	if( !level.dvar[ "old_hardpoints" ] )
 		self thread code\hardpoints::moneyHud();
@@ -396,22 +391,10 @@ endHardpoint()
 	
 	waittillframeend;
 	
-	if( isDefined( self.r ) ) 
-	{
-		for( k = 0; k < self.r.size; k++ ) 
-			if( isDefined( self.r[ k ] ) )
-				self.r[ k ] destroy();
-	}
+	self thread clearHUD();
 	
-	self.r = undefined;
+	waittillframeend;
 	
-	if( isDefined( self.info ) )
-	{
-		for( i = 0; i < self.info.size; i++ )
-			self.info[ i ] destroy();
-	}
-	
-	self.info = undefined;
 	self.currentCannon = undefined;
 	self.gun40Proj = undefined;
 	self.gun25Proj = undefined;
@@ -419,16 +402,6 @@ endHardpoint()
 	waittillframeend;
 	
 	self thread restoreVisionSettings();
-	
-	waittillframeend;
-	
-	if( isDefined( self.targetMarker ) )
-	{
-		for( k = 0; k < self.targetMarker.size; k++ ) 
-				self.targetMarker[ k ] destroy();
-	}
-	
-	self.targetMarker = undefined;
 	
 	if( isArray( self.fireTimes ) )
 	{

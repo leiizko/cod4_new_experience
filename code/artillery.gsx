@@ -3,8 +3,7 @@ startBarrage( endPos, startPos )
 	self endon( "disconnect" );
 	level endon( "endBarage" );
 	
-	self thread code\common::notifyTeamLn( "Friendly artillery called by^1 " + self.name );
-	level thread playerDC( self );
+	self thread code\common::notifyTeamLn( lua_getLocString( self.pers[ "language" ], "HARDPOINT_CALLED_BY" ), lua_getLocString( self.pers[ "language" ], "ARTY" ), self.name );
 	
 	players = level.players;
 	for( i = 0; i < players.size; i++ )
@@ -33,7 +32,7 @@ startBarrage( endPos, startPos )
 	for( i = 0; i < level.dvar[ "arty_shell_num" ]; i++ )
 	{
 		level.mortarShell[ i ] = spawn( "script_model", ( startPos[ 0 ] + RandomIntRange( -375, 375 ), startPos[ 1 ] + RandomIntRange( -375, 375 ), startPos[ 2 ] ) );
-		level.mortarShell[ i ] setModel( "projectile_hellfire_missile" );
+		level.mortarShell[ i ] setModel( "projectile_at4" );
 		
 		power = ( ( endPos[ 0 ] - startPos[ 0 ] ) / 3.4 + RandomIntRange( -25, 25 ), ( endPos[ 1 ] - startPos[ 1 ] ) / 3.4 + RandomIntRange( -25, 25 ), 1381.95 );
 		level.mortarShell[ i ] MoveGravity( power, 4 );
@@ -75,8 +74,8 @@ endBarage()
 
 playerDC( player )
 {
-	level endon( "endBarage" );
-	level endon( "game_ended" );
+	self endon( "endBarage" );
+	self endon( "game_ended" );
 	
 	player waittill( "disconnect" );
 	
@@ -116,18 +115,21 @@ roundThink( ent )
 						if( !isDefined( ents[ i ] ) )
 							continue;
 							
+						if( isDefined( ents[ i ].entity ) && ents[ i ].entity sightConeTrace( collision[ "position" ], ents[ i ].entity ) < 0.1 )
+							continue;
+							
 						if( isPlayer( ents[ i ].entity ) )
 							ents[ i ].entity.sWeaponForKillcam = "artillery";
-
+							
 						ents[ i ] maps\mp\gametypes\_weapons::damageEnt(
 							ent, 
 							self, 
-							1000, 
+							400, 
 							"MOD_PROJECTILE_SPLASH", 
 							"artillery_mp", 
 							collision[ "position" ], 
 							vectornormalize( collision[ "position" ] - ents[ i ].entity.origin ) 
-						);
+							);
 					}
 				}
 				earthquake( 2.4, 0.7, collision[ "position" ], 280 );
@@ -156,13 +158,7 @@ selectLocation()
 	
 	if ( isDefined( level.artilleryBarrage ) )
 	{
-		self iPrintLnBold( "ARTILLERY BARRAGE not available" );
-		return false;
-	}
-	else if( isDefined( self.pers[ "lastArtyUse" ] ) && getTime() - self.pers[ "lastArtyUse" ] < 45000 )
-	{
-		time = int( 45 - ( getTime() - self.pers[ "lastArtyUse" ] ) / 1000 );
-		self iPrintLnBold( "ARTILLERY REARMING - ETA " + time + " SECONDS" );
+		self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "HARDPOINT_NOT_AVAILABLE" ), lua_getLocString( self.pers[ "language" ], "ARTY" ) );
 		return false;
 	}
 	
@@ -188,14 +184,14 @@ selectLocation()
 
 	if ( isDefined( level.artilleryBarrage ) )
 	{
-		self iPrintLnBold( "ARTILLERY BARRAGE not available" );
+		self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "HARDPOINT_NOT_AVAILABLE" ), lua_getLocString( self.pers[ "language" ], "ARTY" ) );
 		self thread maps\mp\gametypes\_hardpoints::stopAirstrikeLocationSelection( false );
 		return false;
 	}
 
 	self thread finishUsage( location );
+	level thread playerDC( self );
 	level.artilleryBarrage = true;
-	self.pers[ "lastArtyUse" ] = getTime();
 	return true;
 }
 

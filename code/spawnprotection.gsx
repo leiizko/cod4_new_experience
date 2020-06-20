@@ -7,13 +7,13 @@ onPlayerSpawn()
 {
 	self endon( "disconnect" );
 	
-	if( isDefined( level.nukeInProgress ) )
-		self endon( "death" );
-	
 	if( level.inPrematchPeriod )
 		level waittill( "prematch_over" );
 		
 	waittillframeend;
+	
+	if( isDefined( self.rankUpdateInit ) )
+		return;
 	
 	self thread code\common::godMod();
 	self.spawnprotected = true;

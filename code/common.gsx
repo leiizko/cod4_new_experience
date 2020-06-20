@@ -1,4 +1,4 @@
-planeSetup()
+planeSetup( modelName )
 {
 	level endon( "game_ended" );
 	level endon( "flyOver" );
@@ -6,8 +6,18 @@ planeSetup()
 	level.planePos = getPosition();
 	level.plane = [];
 	level.plane[ "plane" ] = spawn( "script_model", ( level.planePos[ 0 ] + 1150, level.planePos[ 1 ], level.planePos[ 2 ] ) );
-	level.plane[ "plane" ] setModel( "vehicle_mig29_desert" );
-	self linkTo( level.plane[ "plane" ], "tag_left_wingtip", ( -280, 110, -20 ), level.plane[ "plane" ].angles );
+//	level.plane[ "plane" ] setModel( "vehicle_mig29_desert" );
+	level.plane[ "plane" ] setModel( "tag_origin" );
+	level.plane[ "plane" ] hide();
+	
+	if( modelName == "vehicle_ac130_low" )
+		self linkTo( level.plane[ "plane" ], "tag_origin", ( 120, -60, -20 ), ( 0, 0, 0 ) );
+	else
+		self linkTo( level.plane[ "plane" ], "tag_origin", ( 140, 0, -35 ), ( 0, 0, 0 ) );
+	
+	level.plane[ "model" ] = spawn( "script_model", ( level.planePos[ 0 ] + 1150, level.planePos[ 1 ], level.planePos[ 2 ] ) );
+	level.plane[ "model" ] setModel( modelName );
+	level.plane[ "model" ] linkTo( level.plane[ "plane" ], "tag_origin", ( 0, 0, 0 ), ( 0, 0, 0 ) );
 	
 	thread destroyPlane();
 	
@@ -18,7 +28,11 @@ planeSetup()
 			location = ( level.planePos[ 0 ] + ( 1150 * cos( k ) ), level.planePos[ 1 ] + ( 1150 * sin( k ) ), level.planePos[ 2 ] );
 			angles = vectorToAngles( location - level.plane[ "plane" ].origin );
 			level.plane[ "plane" ] moveTo( location, .1 );
-			level.plane[ "plane" ].angles = ( angles[ 0 ], angles[ 1 ], angles[ 2 ] - 40 );
+			
+			if( modelName == "vehicle_ac130_low" )
+				angles = ( angles[ 0 ], angles[ 1 ] + 90, angles[ 2 ] );
+				
+			level.plane[ "plane" ].angles = angles;
 			wait .1;
 		}
 	}
@@ -28,17 +42,13 @@ initialVisionSettings()
 {
 	self.hardpointVision = true;
 	
-	self setClientDvars( "r_FilmTweakDarktint", "1 1 1",
-						 "r_FilmTweakLighttint", "1 1 1", 
-						 "r_FilmTweakInvert", "1", 
-						 "r_FilmTweakBrightness", "0.5", 
-						 "r_FilmTweakContrast", "1.55", 
+	self setClientDvars( "r_FilmTweakInvert", "1",
+						 "r_FilmTweakBrightness", "0.37", 
 						 "r_FilmTweakDesaturation", "1",
 						 "r_FilmTweakEnable", "1",
 					 	 "r_FilmUseTweaks", "1",
 						 "r_FullBright", "0",
 						 "cg_fovscale", "1.25",
-						 "cg_fov", "80",
 						 "waypointiconheight", 15,
 						 "waypointiconwidth", 15 );
 }
@@ -68,6 +78,9 @@ destroyPlane()
 	
 	if( isDefined( level.plane[ "plane" ] ) )
 		level.plane[ "plane" ] delete();
+		
+	if( isDefined( level.plane[ "model" ] ) )
+		level.plane[ "model" ] delete();
 	
 	if( isDefined( level.plane[ "missile" ] ) )
 		level.plane[ "missile" ] delete();
@@ -138,13 +151,11 @@ hudLogic( type )
 	level endon( "game_ended" );
 	level endon( "flyOver" );
 	
-	hudSetting = 0;
-	basicHud = false;
 	
 	if( type == "extended" )
 	{
 		gun = 0;
-		self thread setHUD( hudSetting );
+		self thread setHUD( gun );
 		
 		while( isDefined( level.flyingPlane ) )
 		{
@@ -155,26 +166,9 @@ hudLogic( type )
 				else
 					gun = 0;
 				
-				self thread setHUD( hudSetting + gun * 2 );
+				self thread setHUD( gun );
 				self.currentCannon = gun;
 				
-				wait .5;
-			}
-			
-			else if( self meleeButtonPressed() )
-			{
-				if( !basicHud )
-				{
-					basicHud = true;
-					hudSetting++;
-					self thread removeInfoHUD();
-				}
-				else
-				{
-					basicHud = false;
-					hudSetting--;
-				}
-				self thread setHUD( hudSetting + gun * 2 );
 				wait .5;
 			}
 			wait .05;
@@ -183,107 +177,93 @@ hudLogic( type )
 	
 	else
 	{
-		self thread setHUD( hudSetting );
-		
-		while( isDefined( level.flyingPlane ) )
-		{
-			if( self meleeButtonPressed() )
-			{
-				if( !basicHud )
-				{
-					basicHud = true;
-					hudSetting++;
-					self thread removeInfoHUD();
-				}
-				else
-				{
-					basicHud = false;
-					hudSetting--;
-				}
-				self thread setHUD( hudSetting );
-				wait .5;
-			}
-			wait .05;
-		}
+		self thread setHUD( 0 );
 	}
 }
 
-/*
-	TYPE:
-		 0 FULL 105mm
-		 1 BASIC 105mm
-		 2 FULL 40mm
-		 3 BASIC 40mm
-		 4 FULL 25mm
-		 5 BASIC 25mm
-*/
 setHUD( type )
 {
-	waittillframeend;
-	
-	if( isDefined( self.r ) ) 
-	{
-		for( k = 0; k < self.r.size; k++ )
-			if( isDefined( self.r[ k ] ) )
-				self.r[ k ] destroy();
-	}
-	
-	self.r = [];
-	coord = [];
-	
-	waittillframeend;
-
+	shader = "";
 	switch( type )
 	{
-		case 0:	// 105mm FULL
-			coord = strTok( "21, 0, 2, 24; -20, 0, 2, 24; 0, -11, 40, 2; 0, 11, 40, 2; 0, -39, 2, 57; 0, 39, 2, 57; -48, 0, 57, 2; 49, 0, 57, 2; -155, -122, 2, 21; -154, 122, 2, 21; 155, 122, 2, 21; 155, -122, 2, 21; -145, 132, 21, 2; 145, -132, 21, 2; -145, -132, 21, 2; 146, 132, 21, 2", ";" );
+		case 0:
+			shader = "ac130_overlay_105mm";
 			self setClientDvar( "cg_fovscale", 1.25 );
-			break; 
+			break;
 		
-		case 1: // 105mm BASIC
-			coord = strTok( "21, 0, 2, 24; -20, 0, 2, 24; 0, -11, 40, 2; 0, 11, 40, 2", ";" ); 
-			self setClientDvar( "cg_fovscale", 1.25 );
-			break; 
+		case 1:
+			shader = "ac130_overlay_40mm";
+			self setClientDvar( "cg_fovscale", 1 );
+			break;
 		
-		case 2: // 40mm FULL
-			coord = strTok( "0, -80, 2, 130; 0, 80, 2, 130; -95, 0, 160, 2; 95, 0, 160, 2; 175, 0, 1.5, 24; -175, 0, 1.5, 24; 125, 0, 1.5, 12; -125, 0, 1.5, 12; 85, 0, 1.5, 12; -85, 0, 1.5, 12; 45, 0, 1.5, 12; -45, 0, 1.5, 12; 0, -145, 24, 1.5; 0, 145, 24, 1.5; 0, -95, 12, 1.5; 0, 95, 12, 1.5; 0, -45, 12, 1.5; 0, 45, 12, 1.5", ";" );
-			self setClientDvar( "cg_fovscale", 1.0 );
-			break; 
-		
-		case 3: // 40mm BASIC
-			coord = strTok( "0, -80, 2, 130; 0, 80, 2, 130; -95, 0, 160, 2; 95, 0, 160, 2", ";" ); 
-			self setClientDvar( "cg_fovscale", 1.0 );
-			break; 
-		
-		case 4: // 25mm FULL
-			coord = strTok( "-73, -85, 25, 2; -85, -73, 2, 25; 73, 85, 25, 2; 85, 73, 2, 25; -73, 85, 25, 2; -85, 73, 2, 25; 73, -85, 25, 2; 85, -73, 2, 25; -25, 0, 40, 2; 25, 0, 40, 2; 0, 38, 2, 70; 10, 6, 9, 1; 6, 10, 1, 9; 15, 12, 9, 1; 11, 16, 1, 9; 22, 18, 9, 1; 18, 22, 1, 9; 28, 24, 9, 1; 24, 28, 1, 9; 37, 29, 9, 1; 33, 33, 1, 9", ";" ); 
+		case 2:
+			shader = "ac130_overlay_25mm";
 			self setClientDvar( "cg_fovscale", 0.75 );
-			break; 
-
-		case 5: // 25mm BASIC
-			coord = strTok( "-25, 0, 40, 2; 25, 0, 40, 2; 0, 38, 2, 70", ";" ); 
-			self setClientDvar( "cg_fovscale", 0.75 );
-			break; 
+			break;
 	}
 	
-	waittillframeend;
-	
-	for( k = 0; k < coord.size; k++ )
+	if( !isDefined( self.ACOverlay ) )
 	{
-		tCoord = strTok( coord[ k ], "," );
-		self.r[ k ] = newClientHudElem( self );
-		self.r[ k ].sort = 100;
-		self.r[ k ].archived = true;
-		self.r[ k ].alpha = .8;
-		self.r[ k ] setShader( "white", int( tCoord[ 2 ] ), int( tCoord[ 3 ] ) );
-		self.r[ k ].x = int( tCoord[ 0 ] );
-		self.r[ k ].y = int( tCoord[ 1 ] );
-		self.r[ k ].hideWhenInMenu = true;
-		self.r[ k ].alignX = "center";
-		self.r[ k ].alignY = "middle";
-		self.r[ k ].horzAlign = "center";
-		self.r[ k ].vertAlign = "middle";
+		self.ACOverlay = newClientHudElem( self );
+		self.ACOverlay.sort = 100;
+		self.ACOverlay.archived = true;
+		self.ACOverlay.alpha = .9;
+		self.ACOverlay.x = 0;
+		self.ACOverlay.y = 0;
+		self.ACOverlay.hideWhenInMenu = true;
+		self.ACOverlay.foreground = true;
+		self.ACOverlay.alignX = "left";
+		self.ACOverlay.alignY = "top";
+		self.ACOverlay.horzAlign = "fullscreen";
+		self.ACOverlay.vertAlign = "fullscreen";
+		self.ACOverlay setShader( shader, 640, 480 );
 	}
+	else
+		self.ACOverlay setShader( shader, 640, 480 );
+	
+	if( !isDefined( self.ACOverlayGrain ) )
+	{
+		self.ACOverlayGrain = newClientHudElem( self );
+		self.ACOverlayGrain.archived = true;
+		self.ACOverlayGrain.alpha = .5;
+		self.ACOverlayGrain.x = 0;
+		self.ACOverlayGrain.y = 0;
+		self.ACOverlayGrain.hideWhenInMenu = true;
+		self.ACOverlayGrain.foreground = true;
+		self.ACOverlayGrain.alignX = "left";
+		self.ACOverlayGrain.alignY = "top";
+		self.ACOverlayGrain.horzAlign = "fullscreen";
+		self.ACOverlayGrain.vertAlign = "fullscreen";
+		self.ACOverlayGrain setShader( "ac130_overlay_grain", 640, 480 );
+	}
+}
+
+clearHUD()
+{
+	if( isDefined( self.ACOverlay ) ) 
+	{
+		self.ACOverlay destroy();
+		self.ACOverlayGrain destroy();
+		self.ACOverlay = undefined;
+		self.ACOverlayGrain = undefined;
+	}
+	
+	if( isDefined( self.info ) )
+	{
+		for( i = 0; i < self.info.size; i++ )
+			self.info[ i ] destroy();
+			
+		self.info = undefined;
+	}
+	
+	if( isDefined( self.targetMarker ) )
+	{
+		for( k = 0; k < self.targetMarker.size; k++ ) 
+				self.targetMarker[ k ] destroy();
+				
+		self.targetMarker = undefined;
+	}
+	
 }
 
 onPlayerDisconnect( player )
@@ -476,19 +456,24 @@ notifyTeam( string, glow, duration )
 	}
 }
 
-notifyTeamLn( string )
+notifyTeamLn( string, arg, arg2 )
 {
 	if( !level.teambased )
 		return;
 
-	players = getPlayers();
+	players = level.players;
 	
 	for( i = 0; i < players.size; i++ )
 	{
 		player = players[ i ];
 		
 		if( player.pers[ "team" ] == self.pers[ "team" ] )
-			player iPrintLn( string );
+		{
+			if( isDefined( arg2 ) )
+				player iPrintLn( string, arg, arg2 );
+			else
+				player iPrintLn( string );
+		}
 	}
 }
 
@@ -537,27 +522,19 @@ playSoundinSpace( alias, origin )
 
 godMod()
 {
-	self.maxHealth = 120000;
-	self.health = self.maxHealth;
+	self setClientDvar( "ui_healthProtected", 1 );
+	self.HealthProtected = true;
 }
 
 restoreHP()
 {
-	if( level.hardcoreMode )
-		self.maxhealth = 30;
-		
-	else if( level.oldschool )
-		self.maxhealth = 200;
-
-	else
-		self.maxhealth = 100;
-
-	self.health = self.maxhealth;
+	self.HealthProtected = undefined;
 	
-	self setClientDvar( "ui_hud_hardcore", level.hardcoreMode );
+	self setClientDvars( "ui_hud_hardcore", level.hardcoreMode,
+						 "ui_healthProtected", 0 );
 }
 
-toUpper( letter )
+toUpper_old( letter )
 {
 	upper = letter;
 	

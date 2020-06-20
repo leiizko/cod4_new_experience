@@ -85,6 +85,9 @@ killcam(
 	self.visiondata.fov = self.pers[ "fov" ];
 	self.visiondata.promod = self.pers[ "promodTweaks" ];
 	
+	if( isDefined( self.ac_modHud ) )
+		self.ac_modHud destroy();
+	
 	if( isDefined( attacker ) )
 	{	
 		self.pers[ "fullbright" ] = attacker.pers[ "fullbright" ];
@@ -152,8 +155,6 @@ killcam(
 	
 	////////////////////////////////////////////////////
 	
-	self SetClientDvar( "ui_ShowMenuOnly", "class" );
-	
 	waittillframeend;
 	
 	///////////////////////////////////////////////////
@@ -183,7 +184,6 @@ killcam(
 		self.killcamentity = -1;
 		self.archivetime = 0;
 		self.psoffsettime = 0;
-		self SetClientDvar( "ui_ShowMenuOnly", "" );
 		
 		return;
 	}
@@ -448,10 +448,12 @@ endKillcam()
 	
 	self thread code\player::userSettings();
 	
+	if( isDefined( self.antiCampMod ) )
+		self thread code\anticamp::modHud();
+	
 	self.killcam = undefined;
 	self.hardpointVision = undefined;
 	
-	self SetClientDvar( "ui_ShowMenuOnly", "" );
 	self.sWeaponForKillcam = undefined;
 	
 	self thread maps\mp\gametypes\_spectating::setSpectatePermissions();

@@ -242,7 +242,7 @@ nameCap( string )
 			if( new != "" )
 				new += " ";
 
-			new += code\common::toUpper( stringArray[ t ][ 0 ] );
+			new += toUpper( stringArray[ t ][ 0 ] );
 			for( i = 1; i < stringArray[ t ].size; i++ )
 				new += stringArray[ t ][ i ];
 		}

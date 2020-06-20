@@ -208,6 +208,9 @@ showNotifyMessage( notifyData )
 			self.notifyText2.alpha = 1;
 			anchorElem = self.notifyText2;
 	}
+	
+	if( isDefined( notifyData.locString ) )
+		self iPrintLnBold( notifyData.locString.label, notifyData.locString.arg1, notifyData.locString.arg2 );
 
 	if ( isDefined( notifyData.iconName ) )
 	{

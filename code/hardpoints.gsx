@@ -28,10 +28,10 @@ makeShopArray()
 {
 	level.hardpointShopData = [];
 	
-	dvarNames = "radar;airstrike;artillery;helicopter;agm;predator;asf;ac130;mannedheli;nuke";
+	dvarNames = "radar;airstrike;artillery;helicopter;agm;predator;asf;ac130;mannedheli;nuke;carepackage;cuav";
 	dvarNames = strTok( dvarNames, ";" );
 	
-	names = "Radar;Airstrike;Artillery;Helicopter;Hellfire Missile;Predator Drone;Fighter Support;AC130 Gunship;Manned Helicopter;Thermonuclear Bomb";
+	names = "Radar;Airstrike;Artillery;Helicopter;Hellfire Missile;Predator Drone;Fighter Support;AC130 Gunship;Manned Helicopter;Thermonuclear Bomb;Care Package;Counter UAV";
 	names = strTok( names, ";" );
 	
 	callbacks = [];
@@ -45,6 +45,8 @@ makeShopArray()
 	callbacks[ callbacks.size ] = code\ac130::init;
 	callbacks[ callbacks.size ] = code\heli::init;
 	callbacks[ callbacks.size ] = code\nuke::init;
+	callbacks[ callbacks.size ] = code\cp::init;
+	callbacks[ callbacks.size ] = code\cuav::useCUAV;
 	
 	extras = [];
 	extras[ 0 ] = "radar_mp";
@@ -340,7 +342,7 @@ trigger( hardpointType )
 {
 	if ( hardpointType == "radar_mp" )
 	{
-		if( isDefined( level.radarPlayer[ self.team ] ) )
+		if( !level.dvar[ "hardpoint_menu" ] && isDefined( level.radarPlayer[ self.team ] ) )
 		{
 			self iPrintLnBold( "UAV RECON NOT AVAILABLE" );
 			return false;
@@ -358,19 +360,11 @@ trigger( hardpointType )
 			self iPrintLnBold( level.hardpointHints[hardpointType+"_not_available"] );
 			return false;
 		}
-		else if( isDefined( self.pers[ "lastAirUse" ] ) && getTime() - self.pers[ "lastAirUse" ] < 30000 )
-		{
-			time = int( 30 - ( getTime() - self.pers[ "lastAirUse" ] ) / 1000 );
-			self iPrintLnBold( "JETS REARMING - ETA " + time + " SECONDS" );
-			return false;
-		}
 			
 		result = self maps\mp\gametypes\_hardpoints::selectAirstrikeLocation();
 		
 		if ( !isDefined( result ) || !result )
 			return false;
-		
-		self.pers[ "lastAirUse" ] = getTime();
 	}
 	else if ( hardpointType == "helicopter_mp" )
 	{
@@ -385,13 +379,6 @@ trigger( hardpointType )
 		else if ( isDefined( level.chopper ) || isDefined( level.mannedchopper ) )
 		{
 			self iPrintLnBold( level.hardpointHints[hardpointType+"_not_available"] );
-			return false;
-		}
-		
-		if( isDefined( self.pers[ "lastHeliUse" ] ) && getTime() - self.pers[ "lastHeliUse" ] < 25000 )
-		{
-			time = int( 25 - ( getTime() - self.pers[ "lastHeliUse" ] ) / 1000 );
-			self iPrintLnBold( "HELICOPTER REARMING - ETA " + time + " SECONDS" );
 			return false;
 		}
 		

@@ -28,7 +28,7 @@ processRcon( data )
 	
 	player = getEntByNum( int( data[ 1 ] ) );
 	
-	if( !isPlayer( player ) )
+	if( !isDefined( player ) || !isPlayer( player ) )
 		return;
 	
 	if( isDefined( data[ 2 ] ) )

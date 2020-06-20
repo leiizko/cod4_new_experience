@@ -29,10 +29,18 @@ init()
 			player.moneyHud destroy( );
 	}
 	
-	if( level.dvar[ "mysql" ] )
-		level thread bestPlayersMySQL();
+	if( getDvarInt( "legacy_ending" ) )
+	{
+		if( level.dvar[ "mysql" ] )
+			level thread getBestPlayersMySQL();
+		else
+			level thread bestPlayers();
+	}
 	else
-		level thread bestPlayers();
+	{
+		level thread topRankedPlayers();
+	}
+	
 	
 	if( level.endingPoints.size < 2 )
 		return;
@@ -52,6 +60,104 @@ init()
 		wait duration;
 	}
 }
+
+topRankedPlayers()
+{
+#if isSyscallDefined httpPostJson
+	level.topRankedPlayersOrder = "skill";
+	if( level.teamBased )
+		level.topRankedPlayersOrder = "kda";
+		
+	order = level.topRankedPlayersOrder;
+
+	query = "SELECT * FROM `" + level.dvar[ "mysql_trueskill_table" ] + "` WHERE `kills` > " + game[ "minKillCount" ] + " ORDER BY `" + order + "` DESC LIMIT 5";
+	
+	json = game[ "mysql" ] + query + "\"}";
+
+	httpPostJson( level.dvar[ "web" ], json, ::topRankedPlayersH );
+	
+	level waittill( "topRankedPlayersH_queryDone" );
+	
+	if( !isArray( level.topRankedPlayersArr ) )
+	{
+		array = [];
+		array[ 0 ][ 0 ] = "No ranked players yet!";
+		array[ 0 ][ 1 ] = 1;
+		
+		rollPlayers( array );
+		
+		thread credits();
+		
+		return;
+	}
+	
+	array = [];
+	for( i = 0; i < level.topRankedPlayersArr.size; i++ )
+	{
+		if( order == "skill" )
+		{
+			array[ i ][ 0 ] = "Rank " + ( i + 1 ) + ": " + level.topRankedPlayersArr[ i ][ 0 ] + " with Trueskill rating: " + level.topRankedPlayersArr[ i ][ 1 ];
+			array[ i ][ 1 ] = 1;
+		}
+		else
+		{
+			array[ i ][ 0 ] = "Rank " + ( i + 1 ) + ": " + level.topRankedPlayersArr[ i ][ 0 ] + " with KDA rating: " + level.topRankedPlayersArr[ i ][ 1 ];
+			array[ i ][ 1 ] = 1;
+		}
+	}
+	
+	level.topRankedPlayersArr = undefined;
+	level.topRankedPlayersOrder = undefined;
+
+	level.leaderBoardHud = createElem( "center", "top", "center", "top", 330, 0, 2.0, 1 );
+	level.leaderBoardHud.color = ( randomFloat( 1 ), randomFloat( 1 ), randomFloat( 1 ) );
+	level.leaderBoardHud setText( "Leaderboards:" );
+			
+	level.leaderBoardHud moveOverTime( 0.5 );
+	level.leaderBoardHud.x = 0;
+	level.leaderBoardHud.y = 80;
+
+	
+	rollPlayers( array );
+		
+	thread credits();
+#endif
+}
+
+#if isSyscallDefined httpPostJson
+topRankedPlayersH( handle )
+{
+	if( !handle )
+	{
+		level notify( "topRankedPlayersH_queryDone" );
+		return;
+	}
+		
+	if( jsonGetString( handle, "status" ) != "okay" )
+	{
+		jsonReleaseObject( handle );
+		level notify( "topRankedPlayersH_queryDone" );
+		return;
+	}
+
+	size = int( jsonGetString( handle, "num" ) );
+	level.topRankedPlayersArr = [];
+
+	for( i = 0; i < size; i++ )
+	{
+		name = "" + i + ".name";
+		numerics = "" + i + "." + level.topRankedPlayersOrder;
+		id = "" + i + ".id";
+		level.topRankedPlayersArr[ i ][ 0 ] = jsonGetString( handle, name );
+		level.topRankedPlayersArr[ i ][ 1 ] = jsonGetString( handle, numerics );
+		
+		thread code\mysql::banLookup( jsonGetString( handle, id ) );
+	}
+	
+	level notify( "topRankedPlayersH_queryDone" );
+	jsonReleaseObject( handle );
+}
+#endif
 
 /*
 	0 = kills
@@ -159,15 +265,55 @@ bestPlayers()
 	thread credits();
 }
 
-bestPlayersMySQL()
+getBestPlayersMySQL()
 {
-	data = [];
+#if isSyscallDefined httpPostJson
 	mapname = "'" + toLower( getDvar( "mapname" ) ) + "'";
-#if isSyscallDefined mysql_close
-	data = code\mysql::getData( level.dvar[ "mysql_mapstats_table" ], mapname );
+	query = "SELECT * FROM `" + level.dvar[ "mysql_mapstats_table" ] + "` WHERE `id` = " + mapname + " LIMIT 1";
+		
+	json = game[ "mysql" ] + query + "\"}";
+
+	httpPostJson( level.dvar[ "web" ], json, ::mapstats );
+#else
+	thread bestPlayersMySQL( undefined );
 #endif
+}
+
+#if isSyscallDefined httpPostJson
+mapstats( handle )
+{
+	if( !handle )
+	{
+		thread bestPlayersMySQL( undefined );
+		return;
+	}
 	
+	if( jsonGetString( handle, "status" ) != "okay" )
+	{
+		thread bestPlayersMySQL( undefined );
+		
+		jsonReleaseObject( handle );
+		
+		return;
+	}
+	
+	data = [];
+	data[ "kills" ] = jsonGetString( handle, "0.kills" );
+	data[ "deaths" ] = jsonGetString( handle, "0.deaths" );
+	data[ "meleekills" ] = jsonGetString( handle, "0.meleekills" );
+	data[ "headshots" ] = jsonGetString( handle, "0.headshots" );
+	data[ "explosivekills" ] = jsonGetString( handle, "0.explosivekills" );
+	
+	thread bestPlayersMySQL( data );
+		
+	jsonReleaseObject( handle );
+}
+#endif
+
+bestPlayersMySQL( data )
+{	
 	array = [];
+	mapname = "'" + toLower( getDvar( "mapname" ) ) + "'";
 	if( isDefined( data ) )
 	{
 		array[ 0 ] = data[ "kills" ];
@@ -244,7 +390,7 @@ bestPlayersMySQL()
 	q[ 4 ] = "headshots='" + array[ 3 ][ 0 ] + ";" + array[ 3 ][ 1 ] + "'";
 	q[ 5 ] = "explosivekills='" + array[ 4 ][ 0 ] + ";" + array[ 4 ][ 1 ] + "'";
 	
-#if isSyscallDefined mysql_close
+#if isSyscallDefined httpPostJson
 	data = code\mysql::sendData( level.dvar[ "mysql_mapstats_table" ], q );
 #endif
 
@@ -307,6 +453,12 @@ rollPlayers( array )
 	
 	wait 10;
 	
+	if( isDefined( level.leaderBoardHud ) )
+	{
+		level.leaderBoardHud fadeOverTime( 1 );
+		level.leaderBoardHud.alpha = 0;
+	}
+	
 	for( i = 0; i < array.size; i++ )
 	{
 		huds[ i ] fadeOverTime( 1 );
@@ -317,6 +469,9 @@ rollPlayers( array )
 	
 	for( i = 0; i < huds.size; i++ )
 		huds[ i ] destroy();
+		
+	if( isDefined( level.leaderBoardHud ) )
+		level.leaderBoardHud destroy();
 }
 
 credits()
@@ -328,7 +483,7 @@ credits()
 	credits[ 0 ].y = 210;
 	
 	credits[ 1 ] = createElem( "center", "bottom", "center", "bottom", 0, 50, 1.8, 1 );
-	credits[ 1 ] setText( "New Experience by Leiizko" );
+	credits[ 1 ] setText( "New Experience 2.0 by Leiizko" );
 	credits[ 1 ].color = ( randomFloat( 1 ), randomFloat( 1 ), randomFloat( 1 ) );
 	credits[ 1 ] moveOverTime( 2 );
 	credits[ 1 ].y = -210;

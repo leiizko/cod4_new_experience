@@ -7,8 +7,10 @@
 init()
 {
 	thread code\events::addConnectEvent( ::onCon );
+	TS_UpdateMu( 100 );
+	TS_UpdateDraw( 0.01 );
 	
-#if isSyscallDefined mysql_close
+#if isSyscallDefined httpPostJson
 	if( level.dvar[ "mysql" ] )
 		thread code\mysql::topPlayers();
 #endif
@@ -21,13 +23,30 @@ init()
 gameEnd( winner )
 {	
 	if( level.players.size < 2 )
+	{
+		if( level.dvar[ "mysql" ] )
+		{
+#if isSyscallDefined httpPostJson
+			players = level.players;
+			for ( index = 0; index < players.size; index++ )
+			{
+				player = players[ index ];
+				
+				if( !isDefined( player.pers[ "mu" ] ) || !isDefined( player.pers[ "sigma" ] ) || !isDefined( player.kda_data ) )
+					continue;
+				
+				player thread code\mysql::saveRank();
+			}
+#endif
+		}
 		return;
+	}
 	
 	updateSkill( winner );
 		
 	if( level.dvar[ "mysql" ] )
 	{
-#if isSyscallDefined mysql_close
+#if isSyscallDefined httpPostJson
 		players = level.players;
 		for ( index = 0; index < players.size; index++ )
 		{
@@ -74,7 +93,7 @@ gameEnd( winner )
 
 updateSkill( winner )
 {
-	players = addPlayers();
+	players = addPlayers( winner );
 	
 	if( !isArray( players ) || players.size < 2 )
 		return;
@@ -142,6 +161,8 @@ updateSkill( winner )
 	
 	if( level.dvar[ "fs_players" ] )
 		thread updateTopPlayers();
+		
+	exec( "say Trueskill ratings updated. Game is safe to leave." );
 }
 
 onCon()
@@ -213,14 +234,42 @@ saveRank()
 	self setStat( 3174, int( self.pers[ "mu" ] - ( 3 * self.pers[ "sigma" ] ) ) );
 }
 
-addPlayers()
+addPlayers( winner )
 {
 	waittillframeend;
 	
-	if( isDefined( level.TSPenality ) )
+	while( isDefined( level.TSPenality ) )
 		wait .05;
 
 	players = level.players;
+	
+	sum[ "axis" ] = 0;
+	sum[ "allies" ] = 0;
+	axis = 0;
+	allies = 0;
+	for( i = 0; i < players.size; i++ )
+	{
+		if( players[ i ].team == "axis" )
+		{
+			sum[ "axis" ] += players[ i ].score;
+			axis++;
+		}
+		else if( players[ i ].team == "allies" )
+		{
+			sum[ "allies" ] += players[ i ].score;
+			allies++;
+		}
+	}
+	
+	if( axis == 0 || allies == 0 )
+		return 0;
+	
+	avg[ "allies" ] = int( sum[ "allies" ] / allies );
+	avg[ "axis" ] = int( sum[ "axis" ] / axis );
+	mins = level.GameTime / 1000 / 60;
+	avgpm[ "allies" ] = int( avg[ "allies" ] / mins );
+	avgpm[ "axis" ] = int( avg[ "axis" ] / mins );
+	
 	t = 0;
 	rGroup = [];
 	for( i = 0; i < players.size; i++ )
@@ -228,6 +277,9 @@ addPlayers()
 		player = players[ i ];
 		
 		if( ( player.team != "axis" && player.team != "allies" ) || !isDefined( player.pers[ "firstSpawnTime" ] ) )
+			continue;
+		
+		if( !isDefined( player.pers[ "mu" ] ) || !isDefined( player.pers[ "sigma" ] ) )
 			continue;
 			
 		weight = ( level.GameTimeEnd - player.pers[ "firstSpawnTime" ] ) / level.GameTime;
@@ -237,8 +289,8 @@ addPlayers()
 		
 		if( weight > 0.95 )
 			weight = 1.0;
-		else if( weight < 0.05 )
-			weight = 0.0;
+		else if( weight < 0.03 )
+			weight = 0.03;
 		
 		if( level.teambased )
 		{
@@ -246,6 +298,41 @@ addPlayers()
 				team = 1;
 			else
 				team = 2;
+				
+			pavgpm = int( player.score / mins );
+			
+			if( pavgpm == 0 && weight > 0.1 && player.pers[ "deaths" ] > 0 )
+				pavgpm = 1;
+				
+			if( pavgpm > 0 && avgpm[ player.team ] > 0 )
+			{
+				if( player.team == winner )
+				{
+					adj = pavgpm / avgpm[ player.team ];
+					if( adj < 0.5 )
+						adj = 0.5;
+
+					weight = weight * adj;
+					
+					if( weight > 1.5 )
+						weight = 1.5;
+					else if( weight < 0.03 )
+						weight = 0.03;
+				}
+				else
+				{
+					adj = avgpm[ player.team ] / pavgpm;
+					if( adj < 0.5 )
+						adj = 0.5;
+					
+					weight = weight * adj;
+					
+					if( weight > 1.5 )
+						weight = 1.5;
+					else if( weight < 0.03 )
+						weight = 0.03;
+				}
+			}
 		}
 		else
 		{

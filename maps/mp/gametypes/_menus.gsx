@@ -15,6 +15,9 @@ init()
 	game["menu_muteplayer"] = "muteplayer";
 	precacheMenu(game["menu_callvote"]);
 	precacheMenu(game["menu_muteplayer"]);
+	precacheMenu( "hardpoint" );
+	precacheMenu( "rank_update" );
+	precacheMenu( "rank_update_confirm" );
 		
 	// ---- back up one folder to access game_summary.menu ----
 	// game summary menu file precache
@@ -72,18 +75,51 @@ onMenuResponse()
 	for(;;)
 	{
 		self waittill("menuresponse", menu, response);
-		
-		if( isArray( self.kc_hud ) && response != "back" )
-			self SetClientDvar( "ui_ShowMenuOnly", "" );
 			
 		if ( response == "back" )
 		{
-			if( isArray( self.kc_hud ) )
-				self SetClientDvar( "ui_ShowMenuOnly", "class" );
-
 			self closeMenu();
 			self closeInGameMenu();
 
+			continue;
+		}
+		
+		if( response == "add_fav" )
+		{
+			self closeMenu();
+			self closeInGameMenu();
+			
+			self iPrintLnBold( "Server added to favorites" );
+			
+			continue;
+		}
+		
+		if( isSubStr( menu, "rank_update" ) )
+		{
+			if( response == "yes" )
+				self notify( "rank_update_re", 1 );
+			else
+				self notify( "rank_update_re", 0 );
+				
+			continue;
+		}
+
+		if( menu == "hardpoint" )
+		{
+			if( !level.dvar[ "hardpoint_menu" ] )
+				continue;
+
+			if( !isDefined( response ) || response == "" )
+			{
+				print( "Hardpoint menuresponse: Missing response \n" );
+				continue;
+			}
+				
+			if( response.size == 1 )
+				self thread maps\mp\gametypes\_hardpoints::menuResponse( int( response ) );
+			else
+				self thread maps\mp\gametypes\_hardpoints::menuResponse_selection( response );
+				
 			continue;
 		}
 		

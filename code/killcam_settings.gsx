@@ -178,6 +178,8 @@ killcamData( weap, means )
 			
 		case "cobra":
 		case "hind":
+		case "mi28":
+		case "helicopter":
 			data.icon = "compass_objpoint_helicopter_busy";
 			data.name = "Helicopter";
 			break;
@@ -317,7 +319,7 @@ weaponName( weap )
 	for( i = 0; i < weap.size; i++ )
 	{
 		if( !int( weap[ i ] ) )
-			new += code\common::toUpper( weap[ i ] );
+			new += toUpper( weap[ i ] );
 		else
 			new += weap[ i ];
 	}

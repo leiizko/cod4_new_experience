@@ -1,11 +1,9 @@
 #include common_scripts\utility;
 #include maps\mp\gametypes\_hud_util;
 
-
 init()
 {
 	level.scoreInfo = [];
-	level.rankTable = [];
 
 	precacheShader("white");
 
@@ -48,15 +46,17 @@ init()
 		
 	while ( isDefined( rankName ) && rankName != "" )
 	{
-		level.rankTable[rankId][1] = tableLookup( "mp/ranktable.csv", 0, rankId, 1 );
-		level.rankTable[rankId][2] = tableLookup( "mp/ranktable.csv", 0, rankId, 2 );
-		level.rankTable[rankId][3] = tableLookup( "mp/ranktable.csv", 0, rankId, 3 );
-		level.rankTable[rankId][7] = tableLookup( "mp/ranktable.csv", 0, rankId, 7 );
-
 		precacheString( tableLookupIString( "mp/ranktable.csv", 0, rankId, 16 ) );
 
 		rankId++;
 		rankName = tableLookup( "mp/ranktable.csv", 0, rankId, 1 );		
+	}
+	
+	level.maxRank = 256;
+	for( i = 1; i < 6; i++ )
+	{
+		elem = "rank_prestige" + i;
+		precacheShader( elem );
 	}
 
 	level.statOffsets = [];
@@ -103,26 +103,33 @@ getScoreInfoLabel( type )
 
 getRankInfoMinXP( rankId )
 {
-	return int(level.rankTable[rankId][2]);
+	return int( lua_getRankInfo( rankId, 2 ) );
 }
 
 getRankInfoXPAmt( rankId )
 {
-	return int(level.rankTable[rankId][3]);
+	return int( lua_getRankInfo( rankId, 3 ) );
 }
 
 getRankInfoMaxXp( rankId )
 {
-	return int(level.rankTable[rankId][7]);
+	return int( lua_getRankInfo( rankId, 7 ) );
 }
 
 getRankInfoFull( rankId )
 {
+	rankId = rankId % 55;
 	return tableLookupIString( "mp/ranktable.csv", 0, rankId, 16 );
 }
 
 getRankInfoIcon( rankId, prestigeId )
 {
+	if( rankId > 54 )
+	{
+		icon = "rank_prestige" + int( rankId / 55 );
+		return icon;
+	}
+	
 	return tableLookup( "mp/rankIconTable.csv", 0, rankId, prestigeId+1 );
 }
 
@@ -158,7 +165,8 @@ getRankInfoUnlockAttachment( rankId )
 
 getRankInfoLevel( rankId )
 {
-	return int( tableLookup( "mp/ranktable.csv", 0, rankId, 13 ) );
+	return rankId + 1;
+	//return int( tableLookup( "mp/ranktable_io.csv", 0, rankId, 13 ) );
 }
 
 
@@ -167,28 +175,245 @@ onPlayerConnect()
 	for(;;)
 	{
 		level waittill( "connected", player );
+		
+		thread setup( player );
+		level.rankxptomysql[ player getEntityNumber() ] = [];
+	}
+}
 
-		player.pers["rankxp"] = player maps\mp\gametypes\_persistence::statGet( "rankxp" );
-		rankId = player getRankForXp( player getRankXP() );
+updateRank_safe( endXP )
+{
+	self endon( "disconnect" );
+	
+	self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "RANK_RESTORE_WAIT" ) );
+	
+	while( !isDefined( self.pers[ "unlocks" ] ) )
+		wait .1;
+	
+	rankFrom = 0;
+	rankTo = self getRankForXp( endXP );
+	rankOg = self.pers[ "rankxp" ];
+	self.pers[ "rank" ] = 0;
+	
+	for( rankId = rankFrom + 1; rankId <= rankTo; rankId++ )
+	{
+		self.pers[ "rankxp" ] = int( lua_getRankInfo( rankId, 2 ) );
+		self updateRank();
+		
+		wait 0.1;
+	}
+	
+	offset = 2301 + level.rankStatXPOffset;
+	self.pers[ "rankxp" ] = rankOg;
+	level.rankxptomysql[ self getEntityNumber() ][ 1 ] = self.pers["rankxp"];
+	self setStat( offset, rankOg );
+	
+	waittillframeend;
+	
+	self.pers[ "rankxp_old" ] = endXP;
+	self maps\mp\gametypes\_persistence::statSet( "rankxp", endXP );
+	
+	waittillframeend;
+
+	//self updateRank();
+	self.pers["rank"] = self getRank();
+	self maps\mp\gametypes\_persistence::statSet( "minxp", int( lua_getRankInfo( self.pers["rank"], 2 ) ) );
+	self maps\mp\gametypes\_persistence::statSet( "maxxp", int( lua_getRankInfo( self.pers["rank"], 7 ) ) );
+	rankidx = 252 + level.rankStatOffset;
+	self setStat( rankidx, self.pers["rank"] );
+	self setRank( self.pers["rank"], 0 );
+	self thread updateRankAnnounceHUD();
+
+	wait .1;
+	
+	self code\rank::AttachCamoUnlock();
+
+	waittillframeend;
+	
+	self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "RANK_RESTORE_DONE" ) );
+}
+
+askRankUpdate( xp )
+{
+	self endon( "disconnect" );
+	
+	self.rankUpdateInit = true; // stop spawnprotection
+	
+	self waittill( "spawned_player" );
+	
+	self.HealthProtected = true;
+	
+	waittillframeend;
+	
+	self hide();
+	self freezeControls( true );
+	
+	wait .25;
+	
+	if( !isDefined( self.pers[ "language" ] ) )
+		self waittill( "language_set" );
+	
+	self setClientDvars( "RANK_CONFIRM_RESET", lua_getLocString( self.pers[ "language" ], "RANK_CONFIRM_RESET" ),
+						 "RANK_RESTORE", lua_getLocString( self.pers[ "language" ], "RANK_RESTORE" ) );
+	
+	self closeMenu();
+	self closeInGameMenu();
+	self openMenu( "rank_update" );
+	
+	self waittill( "rank_update_re", re );
+	
+	if( re )
+	{
+		self updateRank_safe( xp );
+	}
+	else
+	{
+		self.pers[ "rankxp" ] = self.pers[ "rankxp_old" ];
+		self updateRank();
+		level.rankxptomysql[ self getEntityNumber() ][ 1 ] = self.pers["rankxp"];
+		
+#if isSyscallDefined httpPostJson
+
+		self thread code\mysql::UpdateRankXP( self.pers[ "rankxp" ] );
+		
+#endif
+
+		self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "RANK_RESTORE_RESET" ) );
+	}
+	
+	waittillframeend;
+	
+	self show();
+	self freezeControls( false );
+	
+	self.HealthProtected = undefined;
+	self.rankUpdateInit = undefined;
+}
+
+/*
+	Offsets required:
+	- Rank ID -> 252
+	- Rank XP -> 2301
+	
+	min, max XP and "rank" stat are reset based on ID and XP
+*/
+setup( player )
+{
+	player endon( "disconnect" );
+	
+#if isSyscallDefined httpPostJson
+
+	player thread code\mysql::getRankXP();
+	player waittill( "getRankXP_cb" );
+	
+#else
+
+	offset = 2301 + level.rankStatXPOffset;
+	player.pers["rankxp"] = player getStat( offset );
+	
+#endif
+
+	player.pers["rankxp_old"] = player maps\mp\gametypes\_persistence::statGet( "rankxp" );
+
+/*	
+	if( player.pers["rankxp"] == 0 && player.pers["rankxp_old"] > 125490 )
+	{
+		player __debugRankSetup( "init" );
+		player __debugRankSetup( "name: ", player.name );
+		player __debugRankSetup( "guid: ", player getGuid() );
+		player __debugRankSetup( "old_xp_start: ", player.pers["rankxp_old"] );
+	}
+*/
+		
+		// below lvl55 we don't care
+		if( player.pers["rankxp"] < player.pers["rankxp_old"] )
+		{
+			if( player.pers["rankxp_old"] > 120280 )
+			{
+				player.pers["rankxp_old"] = 120280;
+				player maps\mp\gametypes\_persistence::statSet( "rankxp", 120280 );
+			}
+			
+//			if( isDefined( player.rank_debug_a ) )
+//				player __debugRankSetup( "old_xp_to_dbxp: ", player.pers["rankxp_old"] );
+			
+			player.pers["rankxp"] = player.pers["rankxp_old"];
+			offset = 2301 + level.rankStatXPOffset;
+			player setStat( offset, player.pers["rankxp"] );
+			
+#if isSyscallDefined httpPostJson
+
+			player thread code\mysql::updateRankXP( player.pers["rankxp"] );
+			
+#endif
+
+		}
+		else if( player.pers["rankxp_old"] < 120280 && player.pers["rankxp"] > player.pers["rankxp_old"] )
+		{
+			newxp = 120280;
+			if( player.pers["rankxp"] < newxp )
+				newxp = player.pers["rankxp"];
+				
+/*
+			if( isDefined( player.rank_debug_a ) )
+			{
+				player __debugRankSetup( "restore_newxp: ", newxp );
+				player __debugRankSetup( "restore_rankxp: ", player.pers["rankxp"] );
+			}
+*/
+				
+			player thread askRankUpdate( newxp );
+		}		
+		// 
+		entnum = player getEntityNumber();
+		level.rankxptomysql[ entnum ][ 0 ] = player getGuid();
+		level.rankxptomysql[ entnum ][ 1 ] = player.pers["rankxp"];
+		rankId = player getRankForXp( player.pers["rankxp"] );
 		player.pers["rank"] = rankId;
 		player.pers["participation"] = 0;
+		
+/*
+		if( isDefined( player.rank_debug_a ) )
+		{
+			player __debugRankSetup( "final_rankxp: ", player.pers["rankxp"] );
+			player __debugRankSetup( "final_rankxp_old: ", player.pers["rankxp_old"] );
+			player __debugRankSetup( "final_rank_idx: ", rankId );
+			player __debugRankSetup( "write" );
+		}
+*/
 
-		player maps\mp\gametypes\_persistence::statSet( "rank", rankId );
+		rankidx = 252 + level.rankStatOffset;
+		minxp_s = 2351 + level.rankStatMinXPOffset;
+		maxxp_s = 2352 + level.rankStatMaxXPOffset;
+		
+		player setStat( rankidx, rankId );
+		//player setStat( minxp_s, getRankInfoMinXp( rankId ) );
+		//player setStat( maxxp_s, getRankInfoMaxXp( rankId ) );
+		
+		rankId_old = rankId;
+		if( rankId_old > 54 )
+			rankId_old = 54;
+		player maps\mp\gametypes\_persistence::statSet( "rank", rankId_old );
 		player maps\mp\gametypes\_persistence::statSet( "minxp", getRankInfoMinXp( rankId ) );
 		player maps\mp\gametypes\_persistence::statSet( "maxxp", getRankInfoMaxXp( rankId ) );
-		player maps\mp\gametypes\_persistence::statSet( "lastxp", player.pers["rankxp"] );
+		//player maps\mp\gametypes\_persistence::statSet( "lastxp", player.pers["rankxp"] );
 		
 		player.rankUpdateTotal = 0;
 		
-		// for keeping track of rank through stat#251 used by menu script
-		// attempt to move logic out of menus as much as possible
+
 		player.cur_rankNum = rankId;
-		assertex( isdefined(player.cur_rankNum), "rank: "+ rankId + " does not have an index, check mp/ranktable.csv" );
-		player setStat( 251, player.cur_rankNum );
+
+		if( rankId < 55 )
+			player setStat( 252, player.cur_rankNum );
+		else
+			player setStat( 252, 54 );
+		
 		
 		prestige = 0;
 		player setRank( rankId, prestige );
-		player.pers["prestige"] = prestige;
+		
+		if( !isDefined( player.pers["prestige"] ) )
+			player.pers["prestige"] = prestige;
 		
 		// resetting unlockable vars
 		if ( !isDefined( player.pers["unlocks"] ) )
@@ -203,43 +428,44 @@ onPlayerConnect()
 			player.pers["unlocks"]["page"] = 0;
 
 			// resetting unlockable dvars
-			player setClientDvar( "player_unlockweapon0", "" );
-			player setClientDvar( "player_unlockweapon1", "" );
-			player setClientDvar( "player_unlockweapon2", "" );
-			player setClientDvar( "player_unlockweapons", "0" );
+/*
+			player setClientDvars( "player_unlockweapon0", "",
+									"player_unlockweapon1", "",
+									"player_unlockweapon2", "",
+									"player_unlockweapons", "0" );
+
+			player setClientDvars( "player_unlockcamo0a", "",
+									"player_unlockcamo0b", "",
+									"player_unlockcamo1a", "",
+									"player_unlockcamo1b", "",
+									"player_unlockcamo2a", "",
+									"player_unlockcamo2b", "",
+									"player_unlockcamos", "0" );
 			
-			player setClientDvar( "player_unlockcamo0a", "" );
-			player setClientDvar( "player_unlockcamo0b", "" );
-			player setClientDvar( "player_unlockcamo1a", "" );
-			player setClientDvar( "player_unlockcamo1b", "" );
-			player setClientDvar( "player_unlockcamo2a", "" );
-			player setClientDvar( "player_unlockcamo2b", "" );
-			player setClientDvar( "player_unlockcamos", "0" );
+			player setClientDvars( "player_unlockattachment0a", "",
+									"player_unlockattachment0b", "",
+									"player_unlockattachment1a", "",
+									"player_unlockattachment1b", "",
+									"player_unlockattachment2a", "",
+									"player_unlockattachment2b", "",
+									"player_unlockattachments", "0" );
+									
+			player setClientDvars( "player_unlockperk0", "",
+									"player_unlockperk1", "",
+									"player_unlockperk2", "",
+									"player_unlockperks", "0" );
 			
-			player setClientDvar( "player_unlockattachment0a", "" );
-			player setClientDvar( "player_unlockattachment0b", "" );
-			player setClientDvar( "player_unlockattachment1a", "" );
-			player setClientDvar( "player_unlockattachment1b", "" );
-			player setClientDvar( "player_unlockattachment2a", "" );
-			player setClientDvar( "player_unlockattachment2b", "" );
-			player setClientDvar( "player_unlockattachments", "0" );
+			player setClientDvars( "player_unlockfeature0", "",
+									"player_unlockfeature1", "",
+									"player_unlockfeature2", "",
+									"player_unlockfeatures", "0" );
 			
-			player setClientDvar( "player_unlockperk0", "" );
-			player setClientDvar( "player_unlockperk1", "" );
-			player setClientDvar( "player_unlockperk2", "" );
-			player setClientDvar( "player_unlockperks", "0" );
-			
-			player setClientDvar( "player_unlockfeature0", "" );		
-			player setClientDvar( "player_unlockfeature1", "" );	
-			player setClientDvar( "player_unlockfeature2", "" );	
-			player setClientDvar( "player_unlockfeatures", "0" );
-			
-			player setClientDvar( "player_unlockchallenge0", "" );
-			player setClientDvar( "player_unlockchallenge1", "" );
-			player setClientDvar( "player_unlockchallenge2", "" );
-			player setClientDvar( "player_unlockchallenges", "0" );
-			
-			player setClientDvar( "player_unlock_page", "0" );
+			player setClientDvars( "player_unlockchallenge0", "",
+									"player_unlockchallenge1", "",
+									"player_unlockchallenge2", "",
+									"player_unlockchallenges", "0",
+									"player_unlock_page", "0" );
+*/
 		}
 		
 		if ( !isDefined( player.pers["summary"] ) )
@@ -252,11 +478,13 @@ onPlayerConnect()
 			player.pers["summary"]["misc"] = 0;
 
 			// resetting game summary dvars
-			player setClientDvar( "player_summary_xp", "0" );
-			player setClientDvar( "player_summary_score", "0" );
-			player setClientDvar( "player_summary_challenge", "0" );
-			player setClientDvar( "player_summary_match", "0" );
-			player setClientDvar( "player_summary_misc", "0" );
+/*
+			player setClientDvars( "player_summary_xp", "0",
+									"player_summary_score", "0",
+									"player_summary_challenge", "0",
+									"player_summary_match", "0",
+									"player_summary_misc", "0" );
+*/
 		}
 
 
@@ -264,7 +492,7 @@ onPlayerConnect()
 		
 		// set default popup in lobby after a game finishes to game "summary"
 		// if player got promoted during the game, we set it to "promotion"
-		player setclientdvar( "ui_lobbypopup", "" );
+		//player setclientdvar( "ui_lobbypopup", "" );
 		
 		player updateChallenges();
 		player.explosiveKills[0] = 0;
@@ -273,9 +501,7 @@ onPlayerConnect()
 		player thread onPlayerSpawned();
 		player thread onJoinedTeam();
 		player thread onJoinedSpectators();
-	}
 }
-
 
 onJoinedTeam()
 {
@@ -462,52 +688,70 @@ updateRank()
 	oldRank = self.pers["rank"];
 	rankId = self.pers["rank"];
 	self.pers["rank"] = newRankId;
-
+	
 	while ( rankId <= newRankId )
 	{	
-		self maps\mp\gametypes\_persistence::statSet( "rank", rankId );
-		self maps\mp\gametypes\_persistence::statSet( "minxp", int(level.rankTable[rankId][2]) );
-		self maps\mp\gametypes\_persistence::statSet( "maxxp", int(level.rankTable[rankId][7]) );
+		/*
+		minxp_s = 2351 + level.rankStatMinXPOffset;
+		maxxp_s = 2352 + level.rankStatMaxXPOffset;
+		self setStat( minxp_s, int( lua_getRankInfo( rankId, 2 ) ) );
+		self setStat( maxxp_s, int( lua_getRankInfo( rankId, 7 ) ) );
+		*/
+		
+		self maps\mp\gametypes\_persistence::statSet( "minxp", int( lua_getRankInfo( rankId, 2 ) ) );
+		self maps\mp\gametypes\_persistence::statSet( "maxxp", int( lua_getRankInfo( rankId, 7 ) ) );
+		
+		if( rankId < 55 )
+		{
+			self maps\mp\gametypes\_persistence::statSet( "rank", rankId );
+			self setStat( 252, rankId );
+		}
 	
 		// set current new rank index to stat#252
-		self setStat( 252, rankId );
+		rankidx = 252 + level.rankStatOffset;
+		self setStat( rankidx, rankId );
 	
 		// tell lobby to popup promotion window instead
 		self.setPromotion = true;
+		/*
 		if ( level.rankedMatch && level.gameEnded )
 			self setClientDvar( "ui_lobbypopup", "promotion" );
+		*/
 		
-		// unlocks weapon =======
-		unlockedWeapon = self getRankInfoUnlockWeapon( rankId );	// unlockedweapon is weapon reference string
-		if ( isDefined( unlockedWeapon ) && unlockedWeapon != "" )
-			unlockWeapon( unlockedWeapon );
-	
-		// unlock perk ==========
-		unlockedPerk = self getRankInfoUnlockPerk( rankId );	// unlockedweapon is weapon reference string
-		if ( isDefined( unlockedPerk ) && unlockedPerk != "" )
-			unlockPerk( unlockedPerk );
+		if( rankId < 55 )
+		{
+			// unlocks weapon =======
+			unlockedWeapon = self getRankInfoUnlockWeapon( rankId );	// unlockedweapon is weapon reference string
+			if ( isDefined( unlockedWeapon ) && unlockedWeapon != "" )
+				unlockWeapon( unlockedWeapon );
+		
+			// unlock perk ==========
+			unlockedPerk = self getRankInfoUnlockPerk( rankId );	// unlockedweapon is weapon reference string
+			if ( isDefined( unlockedPerk ) && unlockedPerk != "" )
+				unlockPerk( unlockedPerk );
+				
+			// unlock challenge =====
+			unlockedChallenge = self getRankInfoUnlockChallenge( rankId );
+			if ( isDefined( unlockedChallenge ) && unlockedChallenge != "" )
+				unlockChallenge( unlockedChallenge );
+
+			// unlock attachment ====
+			unlockedAttachment = self getRankInfoUnlockAttachment( rankId );	// ex: ak47 gl	
+			if ( isDefined( unlockedAttachment ) && unlockedAttachment != "" )
+				unlockAttachment( unlockedAttachment );	
 			
-		// unlock challenge =====
-		unlockedChallenge = self getRankInfoUnlockChallenge( rankId );
-		if ( isDefined( unlockedChallenge ) && unlockedChallenge != "" )
-			unlockChallenge( unlockedChallenge );
+			unlockedCamo = self getRankInfoUnlockCamo( rankId );	// ex: ak47 camo_brockhaurd
+			if ( isDefined( unlockedCamo ) && unlockedCamo != "" )
+				unlockCamo( unlockedCamo );
 
-		// unlock attachment ====
-		unlockedAttachment = self getRankInfoUnlockAttachment( rankId );	// ex: ak47 gl	
-		if ( isDefined( unlockedAttachment ) && unlockedAttachment != "" )
-			unlockAttachment( unlockedAttachment );	
-		
-		unlockedCamo = self getRankInfoUnlockCamo( rankId );	// ex: ak47 camo_brockhaurd
-		if ( isDefined( unlockedCamo ) && unlockedCamo != "" )
-			unlockCamo( unlockedCamo );
-
-		unlockedFeature = self getRankInfoUnlockFeature( rankId );	// ex: feature_cac
-		if ( isDefined( unlockedFeature ) && unlockedFeature != "" )
-			unlockFeature( unlockedFeature );
+			unlockedFeature = self getRankInfoUnlockFeature( rankId );	// ex: feature_cac
+			if ( isDefined( unlockedFeature ) && unlockedFeature != "" )
+				unlockFeature( unlockedFeature );
+		}
 
 		rankId++;
 	}
-	self logString( "promoted from " + oldRank + " to " + newRankId + " timeplayed: " + self maps\mp\gametypes\_persistence::statGet( "time_played_total" ) );		
+	//self logString( "promoted from " + oldRank + " to " + newRankId + " timeplayed: " + self maps\mp\gametypes\_persistence::statGet( "time_played_total" ) );		
 
 	self setRank( newRankId );
 	return true;
@@ -530,20 +774,10 @@ updateRankAnnounceHUD()
 	notifyData = spawnStruct();
 
 	notifyData.titleText = &"RANK_PROMOTED";
-	notifyData.iconName = self getRankInfoIcon( self.pers["rank"], self.pers["prestige"] );
+	notifyData.iconName = self getRankInfoIcon( self.pers["rank"], 0 );
 	notifyData.sound = "mp_level_up";
 	notifyData.duration = 4.0;
-	
-	/* //flawed
-	if ( isSubStr( level.rankTable[self.pers["rank"]][1], "2" ) )
-		subRank = 2;
-	else if ( isSubStr( level.rankTable[self.pers["rank"]][1], "3" ) )
-		subRank = 3;
-	else
-		subRank = 1;
-	*/
-	
-	rank_char = level.rankTable[self.pers["rank"]][1];
+	rank_char = lua_getRankInfo( self.pers[ "rank" ], 1 );
 	subRank = int(rank_char[rank_char.size-1]);
 	
 	if ( subRank == 2 )
@@ -584,7 +818,7 @@ updateRankAnnounceHUD()
 // 0 = no unlocks, 1 = only page one, 2 = only page two, 3 = both pages
 unlockPage( in_page )
 {
-	if( in_page == 1 )
+	/*if( in_page == 1 )
 	{
 		if( self.pers["unlocks"]["page"] == 0 )
 		{
@@ -603,7 +837,7 @@ unlockPage( in_page )
 		}
 		if( self.pers["unlocks"]["page"] == 1 )
 			self setClientDvar( "player_unlock_page", "3" );	
-	}		
+	}	*/	
 }
 
 // unlocks weapon
@@ -619,9 +853,9 @@ unlockWeapon( refString )
 		return;
 
 	self setStat( stat, 65537 );	// 65537 is binary mask for newly unlocked weapon
-	self setClientDvar( "player_unlockWeapon" + self.pers["unlocks"]["weapon"], refString );
+	//self setClientDvar( "player_unlockWeapon" + self.pers["unlocks"]["weapon"], refString );
 	self.pers["unlocks"]["weapon"]++;
-	self setClientDvar( "player_unlockWeapons", self.pers["unlocks"]["weapon"] );
+	//self setClientDvar( "player_unlockWeapons", self.pers["unlocks"]["weapon"] );
 	
 	self unlockPage( 1 );
 }
@@ -637,9 +871,9 @@ unlockPerk( refString )
 		return;
 
 	self setStat( stat, 2 );	// 2 is binary mask for newly unlocked perk
-	self setClientDvar( "player_unlockPerk" + self.pers["unlocks"]["perk"], refString );
+	//self setClientDvar( "player_unlockPerk" + self.pers["unlocks"]["perk"], refString );
 	self.pers["unlocks"]["perk"]++;
-	self setClientDvar( "player_unlockPerks", self.pers["unlocks"]["perk"] );
+	//self setClientDvar( "player_unlockPerks", self.pers["unlocks"]["perk"] );
 	
 	self unlockPage( 2 );
 }
@@ -678,10 +912,10 @@ unlockCamoSingular( refString )
 	self setStat( weaponStat, setstatto );
 	
 	//fullName = tableLookup( "mp/statstable.csv", 4, baseWeapon, 3 ) + " " + tableLookup( "mp/attachmentTable.csv", 4, addon, 3 );
-	self setClientDvar( "player_unlockCamo" + self.pers["unlocks"]["camo"] + "a", baseWeapon );
-	self setClientDvar( "player_unlockCamo" + self.pers["unlocks"]["camo"] + "b", addon );
+	//self setClientDvar( "player_unlockCamo" + self.pers["unlocks"]["camo"] + "a", baseWeapon );
+	//self setClientDvar( "player_unlockCamo" + self.pers["unlocks"]["camo"] + "b", addon );
 	self.pers["unlocks"]["camo"]++;
-	self setClientDvar( "player_unlockCamos", self.pers["unlocks"]["camo"] );
+	//self setClientDvar( "player_unlockCamos", self.pers["unlocks"]["camo"] );
 
 	self unlockPage( 1 );
 }
@@ -719,10 +953,10 @@ unlockAttachmentSingular( refString )
 	self setStat( weaponStat, setstatto );
 
 	//fullName = tableLookup( "mp/statstable.csv", 4, baseWeapon, 3 ) + " " + tableLookup( "mp/attachmentTable.csv", 4, addon, 3 );
-	self setClientDvar( "player_unlockAttachment" + self.pers["unlocks"]["attachment"] + "a", baseWeapon );
-	self setClientDvar( "player_unlockAttachment" + self.pers["unlocks"]["attachment"] + "b", addon );
+	//self setClientDvar( "player_unlockAttachment" + self.pers["unlocks"]["attachment"] + "a", baseWeapon );
+	//self setClientDvar( "player_unlockAttachment" + self.pers["unlocks"]["attachment"] + "b", addon );
 	self.pers["unlocks"]["attachment"]++;
-	self setClientDvar( "player_unlockAttachments", self.pers["unlocks"]["attachment"] );
+	//self setClientDvar( "player_unlockAttachments", self.pers["unlocks"]["attachment"] );
 	
 	self unlockPage( 1 );
 }
@@ -819,7 +1053,7 @@ unlockChallengeSingular( refString )
 	
 	//self setClientDvar( "player_unlockchallenge" + self.pers["unlocks"]["challenge"], level.challengeInfo[refString]["name"] );
 	self.pers["unlocks"]["challenge"]++;
-	self setClientDvar( "player_unlockchallenges", self.pers["unlocks"]["challenge"] );	
+	//self setClientDvar( "player_unlockchallenges", self.pers["unlocks"]["challenge"] );	
 	
 	self unlockPage( 2 );
 }
@@ -864,7 +1098,7 @@ unlockChallengeGroup( refString )
 
 	//self setClientDvar( "player_unlockchallenge" + self.pers["unlocks"]["challenge"], desc );		
 	self.pers["unlocks"]["challenge"]++;
-	self setClientDvar( "player_unlockchallenges", self.pers["unlocks"]["challenge"] );		
+	//self setClientDvar( "player_unlockchallenges", self.pers["unlocks"]["challenge"] );		
 	self unlockPage( 2 );
 }
 
@@ -889,9 +1123,9 @@ unlockFeature( refString )
 		return;
 	}
 	
-	self setClientDvar( "player_unlockfeature"+self.pers["unlocks"]["feature"], tableLookup( "mp/statstable.csv", 4, refString, 3 ) );
+	//self setClientDvar( "player_unlockfeature"+self.pers["unlocks"]["feature"], tableLookup( "mp/statstable.csv", 4, refString, 3 ) );
 	self.pers["unlocks"]["feature"]++;
-	self setClientDvar( "player_unlockfeatures", self.pers["unlocks"]["feature"] );
+	//self setClientDvar( "player_unlockfeatures", self.pers["unlocks"]["feature"] );
 	
 	self unlockPage( 2 );
 }
@@ -945,14 +1179,14 @@ buildChallegeInfo()
 			level.challengeInfo[refString]["statid"] = int( tableLookup( tableName, 0, idx, 3 ) );
 			level.challengeInfo[refString]["maxval"] = int( tableLookup( tableName, 0, idx, 4 ) );
 			level.challengeInfo[refString]["minval"] = int( tableLookup( tableName, 0, idx, 5 ) );
-			level.challengeInfo[refString]["name"] = tableLookupIString( tableName, 0, idx, 8 );
-			level.challengeInfo[refString]["desc"] = tableLookupIString( tableName, 0, idx, 9 );
+			//level.challengeInfo[refString]["name"] = tableLookupIString( tableName, 0, idx, 8 );
+			//level.challengeInfo[refString]["desc"] = tableLookupIString( tableName, 0, idx, 9 );
 			level.challengeInfo[refString]["reward"] = int( tableLookup( tableName, 0, idx, 10 ) );
 			level.challengeInfo[refString]["camo"] = tableLookup( tableName, 0, idx, 12 );
 			level.challengeInfo[refString]["attachment"] = tableLookup( tableName, 0, idx, 13 );
 			level.challengeInfo[refString]["group"] = tableLookup( tableName, 0, idx, 14 );
 
-			precacheString( level.challengeInfo[refString]["name"] );
+			//precacheString( level.challengeInfo[refString]["name"] );
 
 			if ( !int( level.challengeInfo[refString]["stateid"] ) )
 			{
@@ -1037,7 +1271,7 @@ getRank()
 getRankForXp( xpVal )
 {
 	rankId = 0;
-	rankName = level.rankTable[rankId][1];
+	rankName = lua_getRankInfo( rankId, 1 );
 	assert( isDefined( rankName ) );
 	
 	while ( isDefined( rankName ) && rankName != "" )
@@ -1046,8 +1280,8 @@ getRankForXp( xpVal )
 			return rankId;
 
 		rankId++;
-		if ( isDefined( level.rankTable[rankId] ) )
-			rankName = level.rankTable[rankId][1];
+		if( lua_isRankDefined( rankId ) )
+			rankName = lua_getRankInfo( rankId, 1 );
 		else
 			rankName = undefined;
 	}
@@ -1072,17 +1306,41 @@ getRankXP()
 	return self.pers["rankxp"];
 }
 
+getRankXP_old()
+{
+	return self.pers["rankxp_old"];
+}
+
+
 incRankXP( amount )
 {
-	if ( !level.rankedMatch )
-		return;
-	
-	xp = self getRankXP();
+	xp = self.pers["rankxp"];
+	xp_old = self.pers["rankxp_old"];
 	newXp = (xp + amount);
+	newXp_old = (xp_old + amount);
 
-	if ( self.pers["rank"] == level.maxRank && newXp >= getRankInfoMaxXP( level.maxRank ) )
+	if ( self.pers["rank"] >= level.maxRank && newXp >= getRankInfoMaxXP( level.maxRank ) )
+	{
+//		self thread __debugMaxRankInc( amount, xp, newXp, xp_old, newXp_old );
 		newXp = getRankInfoMaxXP( level.maxRank );
+	}
+	
+	maxRankOld = 54;
+	if ( self.pers["rank"] >= maxRankOld && newXp_old >= getRankInfoMaxXP( maxRankOld ) )
+		newXp_old = getRankInfoMaxXP( maxRankOld );
 
 	self.pers["rankxp"] = newXp;
-	self maps\mp\gametypes\_persistence::statSet( "rankxp", newXp );
+	
+	if( xp_old != newXp_old )
+	{
+		self maps\mp\gametypes\_persistence::statSet( "rankxp", newXp_old );
+		self.pers["rankxp_old"] = newXp_old;
+	}
+		
+	offset = 2301 + level.rankStatXPOffset;
+	if( xp != newXp )
+	{
+		self setStat( offset, newxp );
+		level.rankxptomysql[ self getEntityNumber() ][ 1 ] = self.pers["rankxp"];
+	}
 }

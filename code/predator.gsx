@@ -4,19 +4,13 @@ init()
 {
 	if( isDefined( level.flyingPlane ) )
 	{
-		self iPrintLnBold( "PREDATOR DRONE not available" );
-		return false;
-	}
-	else if( isDefined( self.pers[ "lastPredatorUse" ] ) && getTime() - self.pers[ "lastPredatorUse" ] < 25000 )
-	{
-		time = int( 25 - ( getTime() - self.pers[ "lastPredatorUse" ] ) / 1000 );
-		self iPrintLnBold( "DRONE REARMING - ETA " + time + " SECONDS" );
+		self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "HARDPOINT_NOT_AVAILABLE" ), lua_getLocString( self.pers[ "language" ], "PREDATOR" ) );
 		return false;
 	}
 	
 	if( self isProning() )
 	{
-		self iPrintLnBold( "You must stand to use this killstreak!" );
+		self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "HARDPOINT_MUST_STAND" ) );
 		return false;
 	}
 	
@@ -32,8 +26,8 @@ init()
 
 setup()
 {
-	thread notifyTeam( "FRIENDLY DRONE INBOUND!", ( 0.1, 0.1, 1 ), 3 );
-	self thread notifyTeamLn( "Friendly DRONE called by^1 " + self.name );
+	thread notifyTeam( lua_getLocString( self.pers[ "language" ], "PREDATOR_FRIENDLY" ), ( 0.1, 0.1, 1 ), 3 );
+	self thread notifyTeamLn( lua_getLocString( self.pers[ "language" ], "HARDPOINT_CALLED_BY" ), lua_getLocString( self.pers[ "language" ], "PREDATOR" ), self.name );
 	
 	waittillframeend;
 	
@@ -55,7 +49,7 @@ setup()
 	waittillframeend;
 	
 	self.oldPosition = self getOrigin();
-	self thread planeSetup();
+	self thread planeSetup( "vehicle_uav" );
 	self thread infoHUD();
 	
 	waittillframeend;
@@ -86,7 +80,7 @@ infoHUD()
 	self.info[ 0 ].alignY = "top";
 	self.info[ 0 ].horzAlign = "center";
 	self.info[ 0 ].vertAlign = "top";
-	self.info[ 0 ] setText( "Press ^1[{+attack}] ^7to ^1fire^7, press ^2[{+melee}] ^7to ^2simplify HUD" );
+	self.info[ 0 ] setText( lua_getLocString( self.pers[ "language" ], "PREDATOR_FIRE" ) );
 	//self.info[ 0 ].color = ( 0.0, 0.8, 0.0 );
 	self.info[ 0 ].fontscale = 1.4;
 	self.info[ 0 ].archived = 0;
@@ -99,7 +93,7 @@ infoHUD()
 	self.info[ 1 ].alignY = "bottom";
 	self.info[ 1 ].horzAlign = "center";
 	self.info[ 1 ].vertAlign = "bottom";
-	self.info[ 1 ] setText("^1Out of fuel in ");
+	self.info[ 1 ] setText( lua_getLocString( self.pers[ "language" ], "CHOPPER_TIME_LEFT" ) );
 	self.info[ 1 ].color = (0.0, 0.8, 0.0);
 	self.info[ 1 ].fontscale = 1.4;
 	self.info[ 1 ].archived = 0;
@@ -125,7 +119,7 @@ infoHUD()
 	self.info[ 3 ].alignY = "bottom";
 	self.info[ 3 ].horzAlign = "left";
 	self.info[ 3 ].vertAlign = "bottom";
-	self.info[ 3 ] setText( "AGMs left: " + self.predatorAmmoLeft );
+	self.info[ 3 ] setText( lua_getLocString( self.pers[ "language" ], "CHOPPER_AGM" ) + self.predatorAmmoLeft );
 	self.info[ 3 ].color = ( 1, 0, 0 );
 	self.info[ 3 ].fontscale = 2;
 	self.info[ 3 ].archived = 0;
@@ -134,14 +128,14 @@ infoHUD()
 	{
 		if( isDefined( level.missileLaunched ) && isDefined( self.info ) )
 		{
-			self.info[ 0 ] setText( "Press ^1[{+attack}] ^7to speed up ^1AGM missile" );
+			self.info[ 0 ] setText( lua_getLocString( self.pers[ "language" ], "AGM_SPEED_UP" ) );
 			
 			self waittill( "missileExpoded" );
 			
 			if( !isDefined( self.info ) )
 				break;
 			
-			self.info[ 0 ] setText( "Press ^1[{+attack}] ^7to ^1fire^7, press ^2[{+melee}] ^7to ^2simplify HUD" );
+			self.info[ 0 ] setText( lua_getLocString( self.pers[ "language" ], "PREDATOR_FIRE" ) );
 		}
 		wait .1;
 	}
@@ -209,6 +203,7 @@ launchMissile()
 
 	level.plane[ "missile" ] = spawn( "script_model", self.origin );
 	level.plane[ "missile" ] setModel( "projectile_hellfire_missile" );
+	//level.plane[ "missile" ] playSound( "agm_burst" );
 	level.plane[ "missile" ] playSound( "weap_cobra_missile_fire" );
 
 	self LinkTo( level.plane[ "missile" ] );
@@ -218,7 +213,7 @@ launchMissile()
 	
 	self hide();
 	
-	speed = 20;
+	speed = 30;
 	monitor = 1;
 	
 	wait .1;
@@ -233,15 +228,15 @@ launchMissile()
 		{
 			if( self attackButtonPressed() )
 			{
-				speed = 90;
+				speed = 120;
 				monitor = 0;
 			}
-			else if( speed > 60 )
+			else if( speed > 120 )
 			{
-				speed = 60;
+				speed = 120;
 				monitor = 0;
 			}
-			else if( speed < 60 )
+			else if( speed < 120 )
 				speed += 0.5;
 		}
 
@@ -260,11 +255,11 @@ launchMissile()
 			level.missileLaunched = undefined;
 			self.predatorAmmoLeft--;
 			if( isDefined( self.info ) )
-				self.info[ 3 ] setText( "AGMs left: " + self.predatorAmmoLeft );
+				self.info[ 3 ] setText( lua_getLocString( self.pers[ "language" ], "CHOPPER_AGM" ) + self.predatorAmmoLeft );
 			target = level.plane[ "missile" ].origin;
 			self unlink();
 			if( self.predatorAmmoLeft > 0 )
-				self linkTo( level.plane[ "plane" ], "tag_left_wingtip", ( -280, 110, -20 ), level.plane[ "plane" ].angles );
+				self linkTo( level.plane[ "plane" ], "tag_origin", ( 140, 0, -35 ), ( 0, 0, 0 ) );
 			else
 				self setOrigin( self.oldPosition );
 			
@@ -278,11 +273,11 @@ launchMissile()
 			level.missileLaunched = undefined;
 			self.predatorAmmoLeft--;
 			if( isDefined( self.info ) )
-				self.info[ 3 ] setText( "AGMs left: " + self.predatorAmmoLeft );
+				self.info[ 3 ] setText( lua_getLocString( self.pers[ "language" ], "CHOPPER_AGM" ) + self.predatorAmmoLeft );
 			target = level.plane[ "missile" ].origin;
 			self unlink();
 			if( self.predatorAmmoLeft > 0 )
-				self linkTo( level.plane[ "plane" ], "tag_left_wingtip", ( -280, 110, -20 ), level.plane[ "plane" ].angles );
+				self linkTo( level.plane[ "plane" ], "tag_origin", ( 140, 0, -35 ), ( 0, 0, 0 ) );
 			else
 				self setOrigin( self.oldPosition );			
 			
@@ -303,7 +298,7 @@ trailFX()
 
 	while( isDefined( level.missileLaunched ) )
 	{
-		playFxonTag( level.hardEffects[ "hellfireGeo" ], level.plane[ "missile" ], "tag_origin" );
+		playFxonTag( level.hardEffects[ "hellfireGeo" ], level.plane[ "missile" ], "tag_fx" );
 		
 		wait 2;
 	}
@@ -320,7 +315,7 @@ explodeAGM( target )
 
 	if( isDefined( target ) )
 	{
-		thread playSoundinSpace( "exp_suitcase_bomb_main", target );
+		thread playSoundinSpace( "agm_exp", target );
 		PlayFX( level.hardEffects[ "tankerExp" ], target );
 		
 		ents = maps\mp\gametypes\_weapons::getDamageableents( target, 400 );
@@ -330,6 +325,9 @@ explodeAGM( target )
 			{
 				if( !isDefined( ents[ i ] ) )
 					continue;
+					
+				if( ents[ i ].entity sightConeTrace( target, ents[ i ].entity ) < 0.1 )
+					continue;
 				
 				if( isPlayer( ents[ i ].entity ) )
 					ents[ i ].entity.sWeaponForKillcam = "agm";
@@ -337,7 +335,7 @@ explodeAGM( target )
 				ents[ i ] maps\mp\gametypes\_weapons::damageEnt(
 																self, 
 																self, 
-																10000, 
+																2500, 
 																"MOD_PROJECTILE_SPLASH", 
 																"artillery_mp", 
 																target, 
@@ -365,12 +363,11 @@ endHardpoint()
 	self endon( "disconnect" );
 	level notify( "flyOver" );
 	
-	self.pers[ "lastPredatorUse" ] = getTime();
-	
 	waittillframeend;
 
 	level.missileLaunched = undefined;
 	self.oldPosition = undefined;
+	
 	if( !level.dvar[ "old_hardpoints" ] )
 		self thread code\hardpoints::moneyHud();
 	
@@ -382,36 +379,11 @@ endHardpoint()
 	
 	waittillframeend;
 	
-	if( isDefined( self.r ) ) 
-	{
-		for( k = 0; k < self.r.size; k++ ) 
-			if( isDefined( self.r[ k ] ) )
-				self.r[ k ] destroy();
-	}
-	
-	self.r = undefined;
-	
-	if( isDefined( self.info ) )
-	{
-		for( i = 0; i < self.info.size; i++ )
-			self.info[ i ] destroy();
-	}
-	
-	self.info = undefined;
+	self thread clearHUD();
 	
 	waittillframeend;
 	
 	self thread restoreVisionSettings();
-	
-	waittillframeend;
-	
-	if( isDefined( self.targetMarker ) )
-	{
-		for( k = 0; k < self.targetMarker.size; k++ ) 
-				self.targetMarker[ k ] destroy();
-	}
-	
-	self.targetMarker = undefined;
 	
 	wait .1;
 	

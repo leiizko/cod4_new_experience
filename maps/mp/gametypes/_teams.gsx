@@ -50,6 +50,9 @@ onPlayerDisconnect()
 
 onPlayerConnect()
 {
+	self.pers[ "antiGT" ] = 0;
+	
+	//self thread antiGT();
 	self thread onJoinedTeam();
 	self thread onJoinedSpectators();
 }
@@ -65,6 +68,8 @@ onJoinedTeam()
 		self logString( "joined team: " + self.pers[ "team" ] );
 		
 		self.pers[ "teamTime" ] = getTime();
+		
+		//self restoreAntiGT();
 			
 		level thread getTeamBalance();
 	}
@@ -79,7 +84,41 @@ onJoinedSpectators()
 		self waittill( "joined_spectators" );
 		self.pers[ "teamTime" ] = undefined;
 		level thread getTeamBalance();
+		//self thread antiGT();
 	}
+}
+
+antiGT()
+{
+	self endon( "joined_team" );
+	self endon( "joined_spectators" );
+	self endon( "disconnect" );
+	
+	while( 1 )
+	{
+		time = 25 + randomIntRange( 10, 25 );
+		//print( "Time: " + time + "\n" );
+		wait time;
+		
+		self.pers[ "antiGT" ]++;
+		
+		if( self.pers[ "antiGT" ] == 10 )
+		{
+			self iPrintLnBold( "Inactivity warning!" );
+			self iPrintLnBold( "Start playing or you will be kicked!" );
+		}
+		if( self.pers[ "antiGT" ] > 10 )
+		{
+			exec( "kick " + self getEntityNumber() + " Inactivity!" );
+		}
+		self.score += 10 * level.dvar[ "xp_multi" ];
+	}
+}
+
+restoreAntiGT()
+{
+	self.score -= self.pers[ "antiGT" ] * 10 * level.dvar[ "xp_multi" ];
+	self.pers[ "antiGT" ] = 0;
 }
 
 getTeamBalance()

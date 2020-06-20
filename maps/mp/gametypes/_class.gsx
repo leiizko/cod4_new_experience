@@ -754,9 +754,13 @@ giveLoadout( team, class )
 		if ( grenadeTypePrimary != "" )
 		{
 			grenadeCount = self.custom_class[class_num]["grenades_count"]; 
+			self.grenadeCount = grenadeCount;
 	
 			self GiveWeapon( grenadeTypePrimary );
-			self SetWeaponAmmoClip( grenadeTypePrimary, grenadeCount );
+			if( level.dvar[ "disable_frag_start" ] )
+				self SetWeaponAmmoClip( grenadeTypePrimary, 0 );
+			else
+				self SetWeaponAmmoClip( grenadeTypePrimary, grenadeCount );
 			self SwitchToOffhand( grenadeTypePrimary );
 		}
 		
@@ -858,9 +862,13 @@ giveLoadout( team, class )
 		if ( grenadeTypePrimary != "" )
 		{
 			grenadeCount = level.classGrenades[class]["primary"]["count"];
+			self.grenadeCount = grenadeCount;
 	
 			self GiveWeapon( grenadeTypePrimary );
-			self SetWeaponAmmoClip( grenadeTypePrimary, grenadeCount );
+			if( level.dvar[ "disable_frag_start" ] )
+				self SetWeaponAmmoClip( grenadeTypePrimary, 0 );
+			else
+				self SetWeaponAmmoClip( grenadeTypePrimary, grenadeCount );
 			self SwitchToOffhand( grenadeTypePrimary );
 		}
 		

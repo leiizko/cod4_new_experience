@@ -4,27 +4,19 @@ init()
 {
 	if( isDefined( level.chopper ) || isDefined( level.mannedchopper ) )
 	{
-		self iPrintLnBold( "MANNED HELICOPTER not available!" );
+		self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "HARDPOINT_NOT_AVAILABLE" ), lua_getLocString( self.pers[ "language" ], "CHOPPER_GUNNER" ) );
 		return false;
 	}
 	
 	if( isDefined( level.tacticalNuke ) )
 	{
-		self iPrintLnBold( "MANNED HELICOPTER not available due to radiation!" );
+		self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "HARDPOINT_NOT_AVAILABLE" ), lua_getLocString( self.pers[ "language" ], "CHOPPER_GUNNER" ) );
 		return false;
 	}
 	
 	if( self isProning() )
 	{
-		self iPrintLnBold( "You must stand to use this hardpoint!" );
-		return false;
-	}
-	
-	if( !isDefined( level.heliDistanceMax ) || level.heliDistanceMax == 0 )
-	{
-		self iPrintLnBold( "MANNED HELICOPTER not available this match!" );
-		print( "\n********** ERROR **********\n" );
-		print( "Heli map plot was not successful, possible unsuported map. Terminating hardpoint!\n\n" );
+		self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "HARDPOINT_MUST_STAND" ) );
 		return false;
 	}
 	
@@ -36,26 +28,28 @@ init()
 	return true;
 }
 
+spawn_helicopter( owner, origin, angles, model, targetname )
+{
+	chopper = spawnHelicopter( owner, origin, angles, model, targetname );
+	chopper.attractor = Missile_CreateAttractorEnt( chopper, level.heli_attract_strength, level.heli_attract_range );
+	return chopper;
+}
+
 setup()
 {
 	self endon( "disconnect" );
 	
-	self thread code\common::notifyTeam( "FRIENDLY MANNED HELI INBOUND!", ( 0.1, 0.1, 1 ), 3 );
-	self thread code\common::notifyTeamLn( "Friendly MANNED HELI called by^1 " + self.name );
+	thread code\common::notifyTeam( lua_getLocString( self.pers[ "language" ], "CHOPPER_GUNNER_FRIENDLY" ), ( 0.1, 0.1, 1 ), 3 );
+	self thread code\common::notifyTeamLn( lua_getLocString( self.pers[ "language" ], "HARDPOINT_CALLED_BY" ), lua_getLocString( self.pers[ "language" ], "CHOPPER_GUNNER" ), self.name );
 
-	heliOrigin = self.origin + ( 0, 0, 1000 );
-	heliAngles = self.angles;
+	random_path = randomint( level.heli_paths[ 0 ].size );
+	startnode = level.heli_paths[ 0 ][ random_path ];
 	
-	if( self.team == "allies" )
-	{
-		chopper = spawnHelicopter( self, heliOrigin, heliAngles, "cobra_mp", "vehicle_cobra_helicopter_fly" );
-		chopper playLoopSound( "mp_cobra_helicopter" );
-	}
-	else
-	{
-		chopper = spawnHelicopter( self, heliOrigin, heliAngles, "cobra_mp", "vehicle_mi24p_hind_desert" );
-		chopper playLoopSound( "mp_hind_helicopter" );
-	}
+	heliOrigin = startnode.origin;
+	heliAngles = startnode.angles;
+	
+	chopper = spawn_helicopter( self, heliOrigin, heliAngles, "cobra_mp", "vehicle_mi-28_flying" );
+	chopper playLoopSound( "mp_hind_helicopter" );
 	
 	cockpit = spawn( "script_model", chopper.origin );
 	cockpit setModel( "projectile_m203grenade" );
@@ -64,19 +58,15 @@ setup()
 	gunner = spawn( "script_model", chopper.origin );
 	gunner setModel( "projectile_m203grenade" );
 	gunner hide();
-	
-	if( self.team == "allies" )
-	{
-		//cockpit linkTo( chopper, "tag_store_r_2", ( 115, 40, 980 ), ( 0, 0, 0 ) );
-		cockpit linkTo( chopper, "tag_store_r_2", ( 115, 40, -20 ), ( 0, 0, 0 ) );
-		gunner linkTo( chopper, "tag_store_r_2", ( 90, 40, -90 ), ( 0, 0, 0 ) );
-	}
-	else
-	{
-		//cockpit linkTo( chopper, "tag_store_r_2", ( 192, 102, 960 ), ( 0, 0, 0 ) );
-		cockpit linkTo( chopper, "tag_store_r_2", ( 192, 102, -40 ), ( 0, 0, 0 ) );
-		gunner linkTo( chopper, "tag_store_r_2", ( 165, 102, -105 ), ( 0, 0, 0 ) );
-	}
+
+	cockpit linkTo( chopper, "tag_gunner", ( 0, 0, 0 ), ( 0, 0, 0 ) );
+	/*
+		tag_gunner
+		tag_player
+		tag_turret
+		tag_pilot
+	*/
+	gunner linkTo( chopper, "tag_turret", ( 35, 0, -65 ), ( 0, 0, 0 ) );
 	
 	self.oldPosition = self.origin;
 	
@@ -85,20 +75,24 @@ setup()
 	chopper.currentstate = "ok";
 	chopper.evasive = false;
 	chopper.health_evasive = false;
+	chopper.damageTaken = 0;
+	
 	chopper.missile_ammo = 8; // Clip size, gotta reload after depleted
-	chopper.timeLeft = 120;
 	chopper.flares = 1;
-	chopper.owner = self;
 	chopper.playerInside = true;
+	chopper.owner = self;
+	
 	chopper setSpeed( 100, 20 );
 	chopper setAirResistance( 160 );
+	chopper setHoverParams( 0, 0, 0 );
+	
 	chopper.team = self.team;
 	chopper.pers[ "team" ] = self.team;
 	chopper.loopcount = 0; 
 	chopper.attacker = undefined;
 	chopper.waittime = level.heli_dest_wait;
-	chopper setHoverParams( 0, 0, 0 );
-	chopper.angles = self.angles;
+	chopper.nodeJumps = 0;
+	chopper.timeLeft = 120;
 	
 	self linkTo( cockpit, "tag_origin", ( 0, 0, 0 ), ( 0, 0, 0 ) );
 	
@@ -110,31 +104,57 @@ setup()
 	self thread HudStuff();
 	
 	self disableWeapons();
+	self thread code\common::godMod();	
 	
 	chopper thread playerDC( self );
 	chopper thread onGameEnd();
 	chopper thread damageMonitor();
 	chopper thread heliHealth();
 	
-	self thread yaw();
-	self thread flyControls();
+	self thread flyControls( startnode );
+	self thread yawAndTime();
 	self thread fireControls();
-	self thread miscStuff();
 	self thread death();
 	self thread emergency();
+	self thread gunnerView();
 	
 	self setClientDvars( "cg_fovscale", 1.25,
-						 "cg_fov", 80,
 						 "g_compassshowenemies", 1,
 						 "ui_hud_hardcore", 1 );
 }
 
 HudStuff()
 {
-	self endon( "disconnect" );
-	level.mannedchopper endon( "heliEnd" );
-	
 	n = 0;
+	
+	self.heliHud[ n ] = newClientHudElem( self );
+	self.heliHud[ n ].archived = false;
+	self.heliHud[ n ].alignX = "right";
+	self.heliHud[ n ].alignY = "bottom";
+	self.heliHud[ n ] setText( lua_getLocString( self.pers[ "language" ], "CHOPPER_AGM" ) + level.mannedchopper.missile_ammo ); 
+	self.heliHud[ n ].horzAlign = "right";
+	self.heliHud[ n ].vertAlign = "bottom";
+	self.heliHud[ n ].fontscale = 1.7;
+	self.heliHud[ n ].x = -20;
+	self.heliHud[ n ].y = -40;
+	self.heliHud[ n ].archived = 0;
+	
+	n = 1;
+	
+	self.heliHud[ n ] = newClientHudElem( self );
+	self.heliHud[ n ].archived = false;
+	self.heliHud[ n ].alignX = "right";
+	self.heliHud[ n ].alignY = "bottom";
+	self.heliHud[ n ] setText( lua_getLocString( self.pers[ "language" ], "CHOPPER_HEALTH" ) + level.mannedchopper.maxHealth );
+	self.heliHud[ n ].horzAlign = "right";
+	self.heliHud[ n ].vertAlign = "bottom";
+	self.heliHud[ n ].fontscale = 1.7;
+	self.heliHud[ n ].x = -20;
+	self.heliHud[ n ].y = -20;
+	self.heliHud[ n ].color = ( 0.0, 1, 0.0 );
+	self.heliHud[ n ].archived = 0;
+	
+	n = 2;
 	
 	self.heliHud[ n ] = newClientHudElem(self);
 	self.heliHud[ n ].elemType = "font";
@@ -144,12 +164,12 @@ HudStuff()
 	self.heliHud[ n ].alignY = "bottom";
 	self.heliHud[ n ].horzAlign = "center";
 	self.heliHud[ n ].vertAlign = "bottom";
-	self.heliHud[ n ] setText("^1Fly time left:");
+	self.heliHud[ n ] setText( lua_getLocString( self.pers[ "language" ], "CHOPPER_TIME_LEFT" ) );
 	self.heliHud[ n ].color = (0.0, 0.8, 0.0);
 	self.heliHud[ n ].fontscale = 1.4;
 	self.heliHud[ n ].archived = 0;
 	
-	n = 1;
+	n = 3;
 	
 	self.heliHud[ n ] = newClientHudElem( self );
 	self.heliHud[ n ].elemType = "font";
@@ -163,71 +183,6 @@ HudStuff()
 	self.heliHud[ n ].color = ( 1.0, 0.0, 0.0 );
 	self.heliHud[ n ].fontscale = 1.4;
 	self.heliHud[ n ].archived = 0;
-	
-	n = 2;
-	
-	self.heliHud[ n ] = newClientHudElem( self );
-	self.heliHud[ n ].archived = false;
-	self.heliHud[ n ].alignX = "right";
-	self.heliHud[ n ].alignY = "bottom";
-	self.heliHud[ n ].label = &"Rockets: ";
-	self.heliHud[ n ].horzAlign = "right";
-	self.heliHud[ n ].vertAlign = "bottom";
-	self.heliHud[ n ].fontscale = 1.7;
-	self.heliHud[ n ].x = -20;
-	self.heliHud[ n ].y = -40;
-	self.heliHud[ n ] setValue( int( level.mannedchopper.missile_ammo ) );
-	self.heliHud[ n ].archived = 0;
-	
-	n = 3;
-	
-	self.heliHud[ n ] = newClientHudElem( self );
-	self.heliHud[ n ].elemType = "font";
-	self.heliHud[ n ].x = 0;
-	self.heliHud[ n ].y = 20;
-	self.heliHud[ n ].alignX = "center";
-	self.heliHud[ n ].alignY = "top";
-	self.heliHud[ n ].horzAlign = "center";
-	self.heliHud[ n ].vertAlign = "top";
-	self.heliHud[ n ] setText( "^1[{+attack}] ^7to ^1fire^7 minigun, ^2[{+toggleads_throw}] ^7to ^2fire rockets^7, ^1[{+forward}], [{+back}], [{+moveleft}], [{+moveright}] ^7to ^1pilot \nthe helicopter^7, ^2[{+gostand}] ^7to ^2climb up, ^3[{+breath_sprint}] ^7to ^3climb down," );
-	//self.heliHud[ n ].color = ( 0.0, 0.8, 0.0 );
-	self.heliHud[ n ].fontscale = 1.4;
-	self.heliHud[ n ].archived = 0;
-	
-	n = 4;
-	
-	self.heliHud[ n ] = newClientHudElem( self );
-	self.heliHud[ n ].elemType = "font";
-	self.heliHud[ n ].x = 0;
-	self.heliHud[ n ].y = 53;
-	self.heliHud[ n ].alignX = "center";
-	self.heliHud[ n ].alignY = "top";
-	self.heliHud[ n ].horzAlign = "center";
-	self.heliHud[ n ].vertAlign = "top";
-	self.heliHud[ n ] setText( "^1[{+activate}] ^7to ^1freeze helicopter angle, ^2[{+melee}] ^7to ^2change gunner view^7, ^3[{+frag}] ^7to ^3pop flares, ^1[{+leanright}] ^7to ^1eject!" );
-	//self.heliHud[ n ].color = ( 0.0, 0.8, 0.0 );
-	self.heliHud[ n ].fontscale = 1.4;
-	self.heliHud[ n ].archived = 0;
-	
-	n = 5;
-	
-	self.heliHud[ n ] = newClientHudElem( self );
-	self.heliHud[ n ].archived = false;
-	self.heliHud[ n ].alignX = "right";
-	self.heliHud[ n ].alignY = "bottom";
-	self.heliHud[ n ].label = &"Helicopter Health: ";
-	self.heliHud[ n ].horzAlign = "right";
-	self.heliHud[ n ].vertAlign = "bottom";
-	self.heliHud[ n ].fontscale = 1.7;
-	self.heliHud[ n ].x = -20;
-	self.heliHud[ n ].y = -20;
-	self.heliHud[ n ].color = ( 0.0, 1, 0.0 );
-	self.heliHud[ n ].archived = 0;
-	
-	if( !isDefined( level.mannedchopper.damageTaken ) )
-		level.mannedchopper.damageTaken = 0;
-	
-	self.heliHud[ n ] setValue( int( level.mannedchopper.maxHealth - level.mannedchopper.damageTaken ) );
 }
 
 emergency()
@@ -245,7 +200,7 @@ emergency()
 		
 		if( self leanRightButtonPressed() )
 		{
-			self iPrintLnBold( "Press [{+leanright}] to confirm ejection, [{+frag}] to cancel!" );
+			self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "CHOPPER_CONFIRM_EJECT" ) );
 			wait .2;
 			num = 0;
 			while( num < 40 )
@@ -334,8 +289,11 @@ warning()
 	level.mannedchopper endon( "heliEnd" );
 	self endon( "disconnect" );
 	
-	self iPrintLnBold( "^1WARNING: MISSILE LOCK!" );
-	self iPrintLnBold( "Press [{+frag}] to pop flares" );
+	self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "CHOPPER_MISSILE_LOCK" ) );
+	if( level.mannedchopper.flares )
+		self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "CHOPPER_POP_FLARES" ) );
+	else
+		self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "CHOPPER_EJECT" ) );
 	
 	waittillframeend;
 	
@@ -347,128 +305,12 @@ warning()
 	}
 }
 
-miscStuff()
-{
-	level.mannedchopper endon( "heliEnd" );
-	self endon( "disconnect" );
-	
-	waittillframeend;
-	
-	self thread code\common::godMod();	
-	
-	self iPrintLnBold( "Use [{+forward}], [{+back}], [{+moveleft}], [{+moveright}] to pilot the helicopter" );
-	self iPrintLnBold( "[{+gostand}] to climb up, [{+breath_sprint}] to climb down" );
-	self iPrintLnBold( "[{+activate}] to freeze helicopter, [{+melee}] to change gunner view" );
-	self iPrintLnBold( "[{+attack}] to fire minigun, [{+toggleads_throw}] to fire rockets." );
-
-	while( level.mannedchopper.timeLeft > 0 )
-	{
-		wait 1;
-		level.mannedchopper.timeLeft--;
-		if( distance2D( level.heliCenterPoint, level.mannedchopper.origin ) > level.heliDistanceMax || abs( level.mannedchopper.origin[ 2 ] - level.heliCenterPoint[ 2 ] ) > 1500 )
-		{
-			self iprintlnbold( "You have left the combat zone. Move back or you will be shot!" );
-			
-			self.countdown[ 0 ] = newClientHudElem( self );
-			self.countdown[ 0 ].x = 0;
-			self.countdown[ 0 ].y = 180;
-			self.countdown[ 0 ].alignX = "center";
-			self.countdown[ 0 ].alignY = "middle";
-			self.countdown[ 0 ].horzAlign = "center_safearea";
-			self.countdown[ 0 ].vertAlign = "center_safearea";
-			self.countdown[ 0 ].alpha = 1;
-			self.countdown[ 0 ].archived = false;
-			self.countdown[ 0 ].font = "default";
-			self.countdown[ 0 ].fontscale = 1.4;
-			self.countdown[ 0 ].color = ( 0.980, 0.996, 0.388 );
-			self.countdown[ 0 ] setText( "Out of combat zone!" );
-			self.countdown[ 0 ].archived = 0;
-
-			self.countdown[ 1 ] = newClientHudElem( self );
-			self.countdown[ 1 ].x = 0;
-			self.countdown[ 1 ].y = 160;
-			self.countdown[ 1 ].alignX = "center";
-			self.countdown[ 1 ].alignY = "middle";
-			self.countdown[ 1 ].horzAlign = "center_safearea";
-			self.countdown[ 1 ].vertAlign = "center_safearea";
-			self.countdown[ 1 ].alpha = 1;
-			self.countdown[ 1 ].fontScale = 1.8;
-			self.countdown[ 1 ].color = ( .99, .00, .00 );	
-			self.countdown[ 1 ] setTenthsTimer( 10 );
-			self.countdown[ 1 ].archived = 0;
-			
-			time = 10;
-			
-			while( distance2D( level.heliCenterPoint, level.mannedchopper.origin ) > level.heliDistanceMax || abs( level.mannedchopper.origin[ 2 ] - level.heliCenterPoint[ 2 ] ) > 1500 )
-			{
-				wait 1;
-				level.mannedchopper.timeLeft--;
-				time--;
-				if( time == 0 )
-				{
-					self thread endHeli( 0 );
-					wait 1;
-					break;
-				}
-				else if( level.mannedchopper.timeLeft < 1 )
-					break;
-			}
-			
-			if( isDefined( self.countdown ) )
-			{
-				if( isDefined( self.countdown[ 0 ] ) )
-					self.countdown[ 0 ] destroy();
-				
-				if( isDefined( self.countdown[ 1 ] ) )
-					self.countdown[ 1 ] destroy();
-			}
-		}
-	}
-	
-	self thread endHeli( 2 );
-}
-
-yaw()
-{
-	level.mannedchopper endon( "heliEnd" );
-	self endon( "disconnect" );
-	
-	waittillframeend;
-	
-	while( 1 )
-	{
-		level.mannedchopper SetGoalYaw( self.angles[ 1 ] );
-		
-		if( self useButtonPressed() )
-		{
-			self iPrintLn( "Chopper angle locked!" );
-			wait .25;
-			while( !self useButtonPressed() && !self meleeButtonPressed() )
-				wait .05;
-			
-			self iPrintLn( "Chopper angle unlocked!" );
-			
-			wait .2;
-		}
-		
-		if( self meleeButtonPressed() && !isDefined( self.inGunner ) )
-		{
-			self thread gunnerView();
-			wait .15;
-		}
-			
-		wait .05;
-	}
-}
-
 gunnerView()
 {
 	level.mannedchopper endon( "heliEnd" );
 	self endon( "disconnect" );
 	
-	self.inGunner = true;
-	
-	waittillframeend;
+	wait 3;
 	
 	self hide();
 	
@@ -477,240 +319,359 @@ gunnerView()
 	self unlink();
 	self linkto( level.gunnerCockpit, "tag_origin", ( 0, 0, 0 ), ( 0, 0, 0 ) );
 	
-	coord = strTok( "-73, -85, 25, 2; -85, -73, 2, 25; 73, 85, 25, 2; 85, 73, 2, 25; -73, 85, 25, 2; -85, 73, 2, 25; 73, -85, 25, 2; 85, -73, 2, 25; -25, 0, 40, 2; 25, 0, 40, 2; 0, 38, 2, 70; 10, 6, 9, 1; 6, 10, 1, 9; 15, 12, 9, 1; 11, 16, 1, 9; 22, 18, 9, 1; 18, 22, 1, 9; 28, 24, 9, 1; 24, 28, 1, 9; 37, 29, 9, 1; 33, 33, 1, 9", ";" ); 
-	self setClientDvars( "cg_fovscale", 0.75,
-						 "cg_fov", 80 );
+	self setClientDvar( "cg_fovscale", 0.75 );
 	
-	for( k = 0; k < coord.size; k++ )
+	self.ACOverlay = newClientHudElem( self );
+	self.ACOverlay.sort = 100;
+	self.ACOverlay.archived = true;
+	self.ACOverlay.alpha = .9;
+	self.ACOverlay setShader( "ac130_overlay_25mm", 640, 480 );
+	self.ACOverlay.x = 0;
+	self.ACOverlay.y = 0;
+	self.ACOverlay.hideWhenInMenu = true;
+	self.ACOverlay.alignX = "center";
+	self.ACOverlay.alignY = "middle";
+	self.ACOverlay.horzAlign = "center";
+	self.ACOverlay.vertAlign = "middle";
+}
+
+fireT( trace )
+{
+	level.mannedchopper endon( "heliEnd" );
+	self endon( "disconnect" );
+	
+	level.gunnerCockpit playSound( "chopper_25mm_fire" );
+	playFXOnTag( level.hardEffects[ "heliTurret" ], level.mannedchopper, "tag_flash" );
+	
+	wait .05;
+
+	PlayFX( level.hardEffects[ "25mm" ], trace[ "position" ] );
+
+	ents = maps\mp\gametypes\_weapons::getDamageableents( trace[ "position" ], 50 );
+	for( n = 0; n < ents.size; n++ )
 	{
-		tCoord = strTok( coord[ k ], "," );
-		self.r[ k ] = newClientHudElem( self );
-		self.r[ k ].archived = false;
-		self.r[ k ].sort = 100;
-		self.r[ k ].alpha = .8;
-		self.r[ k ] setShader( "white", int( tCoord[ 2 ] ), int( tCoord[ 3 ] ) );
-		self.r[ k ].x = int( tCoord[ 0 ] );
-		self.r[ k ].y = int( tCoord[ 1 ] );
-		self.r[ k ].hideWhenInMenu = true;
-		self.r[ k ].alignX = "center";
-		self.r[ k ].alignY = "middle";
-		self.r[ k ].horzAlign = "center";
-		self.r[ k ].vertAlign = "middle";
+		if ( !ents[ n ].isPlayer || isAlive( ents[ n ].entity ) )
+		{
+			if( !isDefined( ents[ n ] ) )
+				continue;
+
+			if( ents[ n ].entity sightConeTrace( trace[ "position" ], ents[ n ].entity ) < 0.1 )
+				continue;
+
+			ents[ n ] maps\mp\gametypes\_weapons::damageEnt(
+															level.mannedchopper, 
+															self, 
+															250, 
+															"MOD_PROJECTILE_SPLASH", 
+															"helicopter_mp", 
+															trace[ "position" ], 
+															vectornormalize( trace[ "position" ] - ents[ n ].entity.origin ) 
+															);
+		}
 	}
+}
+
+getRandomTag()
+{
+	tags = [];
+	tags[ tags.size ] = "tag_store_l_1_a";
+	tags[ tags.size ] = "tag_store_l_1_d";
+	tags[ tags.size ] = "tag_store_l_2_a";
+	tags[ tags.size ] = "tag_store_l_2_d";
+	tags[ tags.size ] = "tag_store_r_1_a";
+	tags[ tags.size ] = "tag_store_r_1_d";
+	tags[ tags.size ] = "tag_store_r_2_a";
+	tags[ tags.size ] = "tag_store_r_2_d";
 	
-	/////////////////////////////////
-	//  PART 1 END
-	/////////////////////////////////
+	return tags[ randomInt( tags.size ) ];
+}
+
+fireAGM( trace )
+{
+	self endon( "disconnect" );
 	
-	wait .25;
+	tag = getRandomTag();
+	speed = 90;
 	
-	while( !self meleeButtonPressed() )
-		wait .1;
+	org = level.mannedchopper getTagOrigin( tag );
+	ang = level.mannedchopper getTagAngles( tag );
 	
-	/////////////////////////////////
-	//  PART 2 START - Clean up & return to cockpit view
-	/////////////////////////////////
+	missile = spawn( "script_model", org );	
+	missile.angles = ang;
+	missile setModel( "projectile_hellfire_missile" );
 	
-	self unlink();
+	self thread trailFX( missile );
 	
-	self linkto( level.heliCockpit, "tag_origin", ( 0, 0, 0 ), ( 0, 0, 0 ) );
-		
 	waittillframeend;
-		
-	if( isDefined( self.r ) ) 
+	
+	/#
+	self linkTo( missile, "tag_origin", ( 0, 0, 0 ), ( 0, 0, 0 ) );
+	#/
+	
+	self thread removeOnDC( missile );
+	
+	//missile playSound( "agm_burst" );
+	missile playSound( "weap_cobra_missile_fire" );
+	
+	pos = org + anglesToForward( missile.angles ) * ( speed * 8 );
+	missile moveTo( pos, 0.4 );
+	
+	wait .4;
+	
+	for( i = 0; i < 220; i++ )
 	{
-		for( k = 0; k < self.r.size; k++ ) 
-				self.r[ k ] destroy();
+		angles = vectorToAngles( trace[ "position" ] - missile.origin );
+		
+		ma = missile.angles[ 1 ];
+		maxdiff = 7;
+		
+		if( abs( angles[ 1 ] - ma ) > maxdiff )
+		{
+			if( abs( angles[ 1 ] - ma ) > 180 )
+			{
+				if( angles[ 1 ] > ma )
+					angles = ( angles[ 0 ], int( ma - maxdiff + 360 ) % 360, angles[ 2 ] );
+				else
+					angles = ( angles[ 0 ], int( ma + maxdiff ) % 360, angles[ 2 ] );
+			}
+			else
+			{
+				if( angles[ 1 ] > ma )
+					angles = ( angles[ 0 ], int( ma + maxdiff ) % 360, angles[ 2 ] );
+				else
+					angles = ( angles[ 0 ], int( ma - maxdiff + 360 ) % 360, angles[ 2 ] );
+			}
+		}
+		
+		ma = missile.angles[ 0 ];
+		
+		if( abs( angles[ 0 ] - ma ) > maxdiff )
+		{
+			if( abs( angles[ 0 ] - ma ) > 180 )
+			{
+				if( angles[ 0 ] > ma )
+					angles = ( int( ma - maxdiff + 360 ) % 360, angles[ 1 ], angles[ 2 ] );
+				else
+					angles = ( int( ma + maxdiff ) % 360, angles[ 1 ], angles[ 2 ] );
+			}
+			else
+			{
+				if( angles[ 0 ] > ma )
+					angles = ( int( ma + maxdiff ) % 360, angles[ 1 ], angles[ 2 ] );
+				else
+					angles = ( int( ma - maxdiff + 360 ) % 360, angles[ 1 ], angles[ 2 ] );
+			}
+		}
+
+		missile.angles = angles;
+		
+		if( missile.angles[ 0 ] < 2 )
+			missile.angles = ( 2, missile.angles[ 1 ], missile.angles[ 2 ] );
+		
+		vector = anglesToForward( missile.angles );
+		forward = missile.origin + ( vector[ 0 ] * speed, vector[ 1 ] * speed, vector[ 2 ] * speed );
+		collision = bulletTrace( missile.origin, forward, false, level.mannedchopper );
+		missile moveTo( forward, .05 );
+		
+		if( collision[ "surfacetype" ] != "default" && collision[ "fraction" ] < 1 ) 
+		{
+			target = collision[ "position" ];
+			
+			/#
+			self linkTo( level.gunnerCockpit, "tag_origin", ( 0, 0, 0 ), ( 0, 0, 0 ) );
+			#/
+
+			thread code\common::playSoundinSpace( "agm_exp", target );
+			PlayFX( level.hardEffects[ "tankerExp" ], target );
+			
+			ents = maps\mp\gametypes\_weapons::getDamageableents( target, 400 );
+			for( i = 0; i < ents.size; i++ )
+			{
+				if ( !ents[ i ].isPlayer || isAlive( ents[ i ].entity ) )
+				{
+					if( !isDefined( ents[ i ] ) )
+						continue;
+						
+					if( isDefined( ents[ i ].entity ) && ents[ i ].entity sightConeTrace( target, ents[ i ].entity ) < 0.1 )
+						continue;
+
+					ents[ i ] maps\mp\gametypes\_weapons::damageEnt(
+																	missile, 
+																	self, 
+																	2500, 
+																	"MOD_PROJECTILE_SPLASH", 
+																	"cobra_FFAR_mp", 
+																	target, 
+																	vectornormalize( target - ents[ i ].entity.origin ) 
+																	);
+				}
+			}
+			
+			earthquake( 3, 1.2, target, 700 );
+
+			break;
+		}
+		
+		wait .05;
 	}
+
+	missile notify( "heli_agm_end" );
+	missile delete();
+}
+
+trailFX( missile )
+{
+	self endon( "disconnect" );
+	missile endon( "heli_agm_end" );
 	
-	self setClientDvars( "cg_fovscale", 1.25,
-						 "cg_fov", 80 );
-						 
-	waittillframeend;
+	wait .05;
 	
-	self show();
+	while( isDefined( missile ) )
+	{
+		playFxonTag( level.hardEffects[ "hellfireGeo" ], missile, "tag_fx" );
+		
+		wait 2;
+	}
+}
+
+removeOnDC( missile )
+{
+	missile endon( "heli_agm_end" );
 	
-	wait .3;
+	self waittill( "disconnect" );
 	
-	self.inGunner = undefined;
+	if( isDefined( missile ) )
+		missile delete();
 }
 
 fireControls()
 {
 	level.mannedchopper endon( "heliEnd" );
 	self endon( "disconnect" );
-	
-	if ( self.team == "allies" )
-		weaponName = "cobra_FFAR_mp";
-	else
-		weaponName = "hind_FFAR_mp";
 		
-	wait .1;
+	wait 3.1;
+	
+	lastRT = 0;
+	lastMT = 0;
+	
+	self iprintlnbold( lua_getLocString( self.pers[ "language" ], "CHOPPER_FIRE_HINT" ) );
 	
 	while( 1 )
 	{
 		trace = BulletTrace( self getEye() + ( 0, 0, 20 ) , self getEye() + ( 0, 0, 20 ) + anglesToForward( self getPlayerAngles() ) * 10000, false, level.mannedchopper );
 		level.mannedchopper SetTurretTargetVec( trace[ "position" ] );
 		
-		if( self attackButtonPressed() )
+		if( self attackButtonPressed() && getTime() - lastMT > 100 )
 		{
-			level.mannedchopper setVehWeapon( "cobra_20mm_mp" );
-			miniGun = level.mannedchopper fireWeapon( "tag_flash" );
-		}
-		
-		if( self aimButtonPressed() && level.mannedchopper.missile_ammo > 0 && !isDefined( level.mannedchopper.reloadInProgress ) )
-		{
-			level.mannedchopper setVehWeapon( weaponName );
-			rocketLauncher = level.mannedchopper fireWeapon( "tag_flash" );
+			/*
+			org = level.mannedchopper getTagOrigin( "tag_flash" );
+			ang = level.mannedchopper getTagAngles( "tag_flash" );
 			
-			level.mannedchopper.missile_ammo--;
+			trace = BulletTrace( org , org + anglesToForward( ang ) * 10000, false, level.mannedchopper );
 			
-			self.heliHud[ 2 ] setValue( int( level.mannedchopper.missile_ammo ) );
-			
-			if( level.mannedchopper.missile_ammo == 0 )
-				self iprintlnbold( "Press [{+reload}] to Re-Arm Rockets!" );
+			self thread fireT( trace );
+			*/
 				
-			while( self aimButtonPressed() )
-				wait .05;
+			level.mannedchopper setVehWeapon( "mi28_mp" );
+			//level.gunnerCockpit playSound( "chopper_25mm_fire" );
+			level.gunnerCockpit playSound( "weap_m197_cannon_fire" );
+			miniGun = level.mannedchopper fireWeapon( "tag_flash" );
+			lastMT = getTime();
 		}
 		
-		if( self reloadButtonPressed() && !isDefined( level.mannedchopper.reloadInProgress ) )
-			thread reloadMissiles();
+		else if( self aimButtonPressed() && getTime() - lastRT > 1500 )
+		{
+			if( !level.mannedchopper.missile_ammo )
+			{
+
+				self iprintlnbold( lua_getLocString( self.pers[ "language" ], "CHOPPER_AGM_DRY" ) );
+			}
+			else
+			{
+				self thread fireAGM( trace );
+				level.mannedchopper.missile_ammo--;
+				self.heliHud[ 0 ] setText( lua_getLocString( self.pers[ "language" ], "CHOPPER_AGM" ) + level.mannedchopper.missile_ammo ); 
+			}
+			lastRT = getTime();
+		}
 			
 		wait .05;
 	}
 }
 
-reloadMissiles()
+flyControls( currentnode )
 {
 	level.mannedchopper endon( "heliEnd" );
 	self endon( "disconnect" );
 	
-	level.mannedchopper.reloadInProgress = true;
-	self iprintlnbold( "Rockets Re-Arming..." );
+	chopper = level.mannedchopper;
+	chopper.enRoute = true;
 	
-	wait 5;
+	chopper heli_reset();
 	
-	level.mannedchopper.missile_ammo = 12;
-	level.mannedchopper.reloadInProgress = undefined;
+	nextNode = getEnt( currentnode.target, "targetname" );
+	pos = nextNode.origin + ( 0, 0, 30 );
 	
-	self.heliHud[ 2 ] setValue( int( level.mannedchopper.missile_ammo ) );
-	self iprintlnbold( "Rockets Re-Armed" );
-}
+	chopper setGoalYaw( nextNode.angles[ 1 ] );
+	chopper setVehGoalPos( pos, 1 );
+	
+	chopper waittillmatch( "goal" );
+	
+	chopper.enRoute = undefined;
+	chopper.nodeJumps++;
 
-/*
-flyControls()
-{
-	level.mannedchopper endon( "heliEnd" );
-	self endon( "disconnect" );
-	
-	waittillframeend;
-	
-	level.mannedchopper setvehgoalpos( level.mannedchopper.origin, 1 );
-
-	
-	while( 1 )
+	if( chopper.nodeJumps > 3 )
 	{
-		if( self forwardButtonPressed() )
-		{
-			vector = vector_scale( anglesToForward( level.mannedchopper.angles ), 200 );
-			new = level.mannedchopper.origin + vector;
-			level.mannedchopper setvehgoalpos( new, 1 );
-		}
-		
-		else if( self backButtonPressed() )
-		{
-			vector = vector_scale( anglesToForward( level.mannedchopper.angles ), 200 );
-			new = level.mannedchopper.origin - vector;
-			level.mannedchopper setvehgoalpos( new, 1 );
-		}
-		
-		else if( self moveLeftButtonPressed() )
-		{
-			vector = vector_scale( anglesToRight( level.mannedchopper.angles ), 100 );
-			new = level.mannedchopper.origin - vector;
-			level.mannedchopper setvehgoalpos( new, 1 );
-		}
-		
-		else if( self moveRightButtonPressed() )
-		{
-			vector = vector_scale( anglesToRight( level.mannedchopper.angles ), 100 );
-			new = level.mannedchopper.origin + vector;
-			level.mannedchopper setvehgoalpos( new, 1 );
-		}
-		
-		else if( self jumpButtonPressed() )
-		{
-			vector = vector_scale( anglesToUp( level.mannedchopper.angles ), 100 );
-			new = level.mannedchopper.origin + vector;
-			level.mannedchopper setvehgoalpos( new, 1 );
-		}
-		
-		else if( self sprintButtonPressed() )
-		{
-			vector = vector_scale( anglesToUp( level.mannedchopper.angles ), 100 );
-			new = level.mannedchopper.origin - vector;
-			level.mannedchopper setvehgoalpos( new, 1 );
-		}
-			
-		wait .05;
-	}
-}
-*/
-
-flyControls()
-{
-	level.mannedchopper endon( "heliEnd" );
-	self endon( "disconnect" );
-	
-	waittillframeend;
-
-	while( 1 )
-	{
-		new = level.mannedchopper.origin;
-		
-		if( self forwardButtonPressed() )
-		{
-			vector = vector_scale( anglesToForward( level.mannedchopper.angles ), 200 );
-			new += vector;
-		}
-		
-		if( self backButtonPressed() )
-		{
-			vector = vector_scale( anglesToForward( level.mannedchopper.angles ), 200 );
-			new -= vector;
-		}
-		
-		if( self moveRightButtonPressed() )
-		{
-			vector = vector_scale( anglesToRight( level.mannedchopper.angles ), 100 );
-			new += vector;
-		}
-		
-		if( self moveLeftButtonPressed() )
-		{
-			vector = vector_scale( anglesToRight( level.mannedchopper.angles ), 100 );
-			new -= vector;
-		}
-		
-		if( self jumpButtonPressed() )
-		{
-			vector = vector_scale( anglesToUp( level.mannedchopper.angles ), 100 );
-			new += vector;
-		}
-		
-		if( self sprintButtonPressed() )
-		{
-			vector = vector_scale( anglesToUp( level.mannedchopper.angles ), 100 );
-			new -= vector;
-		}
-		
-		level.mannedchopper setVehGoalPos( new, 1 );
-		
-		wait .05;
-		
-		while( !self forwardButtonPressed() && !self backButtonPressed() && !self moveLeftButtonPressed() && !self moveRightButtonPressed() && !self jumpButtonPressed() && !self sprintButtonPressed() )
+		self iprintlnbold( lua_getLocString( self.pers[ "language" ], "CHOPPER_MOVE" ) );
+		while( !self jumpButtonPressed() )
 			wait .05;
+	}
+	
+	if( !isDefined( nextNode.target ) )
+		nextNode = level.heli_loop_paths[ 0 ];	
+	
+	self thread flyControls( nextNode );
+}
+
+heli_reset()
+{
+	self clearTargetYaw();
+	self clearGoalYaw();
+	self setspeed( 60, 25 );	
+	self setyawspeed( 75, 45, 45 );
+	self setmaxpitchroll( 30, 30 );
+	self setneargoalnotifydist( 256 );
+	self setturningability( 1 );
+}
+
+yawAndTime()
+{
+	level.mannedchopper endon( "heliEnd" );
+	self endon( "disconnect" );
+	
+	chopper = level.mannedchopper;
+	
+	waittillframeend;
+	
+	chopper.timeLeft *= 10;
+
+	while( 1 )
+	{
+		if( !isDefined( chopper.enRoute ) )
+		{
+			angles = self getPlayerAngles();
+			chopper SetGoalYaw( angles[ 1 ] );
+		}
+		
+		wait .1;
+		
+		if( chopper.timeLeft <= 0 )
+		{
+			self thread endHeli( 2 );
+			break;
+		}
+		
+		chopper.timeLeft--;
 	}
 }
 
@@ -740,40 +701,41 @@ heliHealth()
 	self.laststate = "ok";
 	self setdamagestage( 3 );
 	
+	lightHP = int( self.maxHealth / 100 ) * 75;
+	heavyHP = int( self.maxHealth / 100 ) * 90;
+	
 	for ( ;; )
 	{
 		hpleft = self.maxHealth - self.damageTaken;
 		
-		if ( hpleft <= 3000 )
+		if ( hpleft <= lightHP )
 			self.currentstate = "light smoke";
-		else if ( hpleft <= 1000 )
+		else if ( hpleft <= heavyHp )
 			self.currentstate = "heavy smoke";
 			
 		if ( self.currentstate == "light smoke" && self.laststate != "light smoke" )
 		{
 			self setdamagestage( 2 );
 			self.laststate = self.currentstate;
-			self.owner iprintlnbold( "Warning: Heavy damage sustained" );
+			self.owner iprintlnbold( lua_getLocString( self.owner.pers[ "language" ], "CHOPPER_DAMAGE_HEAVY" ) );
 		}
 		if ( self.currentstate == "heavy smoke" && self.laststate != "heavy smoke" )
 		{
 			self setdamagestage( 1 );
 			self notify ( "stop body smoke" );
 			self.laststate = self.currentstate;
-			self.owner iprintlnbold( "Warning: Critical damage sustained" );
+			self.owner iprintlnbold( lua_getLocString( self.owner.pers[ "language" ], "CHOPPER_DAMAGE_CRITICAL" ) );
+			self.owner iPrintLnBold( lua_getLocString( self.owner.pers[ "language" ], "CHOPPER_EJECT" ) );
 		}
 		
 		if( self.damageTaken >= self.maxhealth )
 		{
-			if( isDefined( self.playerInside ) )
-				self.owner thread endHeli( 0 );
-			else
-				self.owner thread endHeli( 1 );
+			self.owner thread endHeli( 0 );
 				
 			break;
 		}
 		
-		wait 1;
+		wait 0.25;
 	}
 }
 
@@ -782,6 +744,7 @@ damageMonitor()
 	self endon( "heliEnd" );
 	
 	self.damageTaken = 0;
+	self.lastHudUpdate = getTime();
 	
 	for( ;; )
 	{
@@ -791,7 +754,7 @@ damageMonitor()
 			continue;
 			
 		if ( level.teamBased )
-			isValidAttacker = (isdefined( attacker.pers[ "team" ] ) && attacker.pers[ "team" ] != self.team);
+			isValidAttacker = ( isdefined( attacker.pers[ "team" ] ) && attacker.pers[ "team" ] != self.team );
 		else
 			isValidAttacker = true;
 
@@ -803,7 +766,11 @@ damageMonitor()
 		if( self.damageTaken > self.maxHealth )
 			self.damageTaken = self.maxHealth;
 			
-		self.owner.heliHud[ 5 ] setValue( int( self.maxHealth - self.damageTaken ) );
+		if( getTime() - self.lastHudUpdate > 250 ) // 5 frames
+		{
+			self.owner.heliHud[ 1 ] setText( lua_getLocString( self.owner.pers[ "language" ], "CHOPPER_HEALTH" ) + ( self.maxHealth - self.damageTaken ) );
+			self.lastHudUpdate = getTime();
+		}
 		
 		attacker thread maps\mp\gametypes\_damagefeedback::updateDamageFeedback( false );
 		self.attacker = attacker;
@@ -813,7 +780,7 @@ damageMonitor()
 		r = 0.0 + ( self.damageTaken / self.maxHealth );
 		g = 1.0 - ( self.damageTaken / self.maxHealth );
 		
-		self.owner.heliHud[ 5 ].color = ( r, g, 0.0 );
+		self.owner.heliHud[ 1 ].color = ( r, g, 0.0 );
 
 		if( self.damageTaken >= self.maxHealth )
 		{
@@ -845,9 +812,7 @@ jumpOut()
 	
 	self linkTo( padalo, "tag_origin", ( 0, 0, 0 ), ( 0, 0, 0 ) );
 	
-	power = ( 0, 0, 1200 );
-	
-	padalo MoveGravity( power, 3 );
+	padalo MoveGravity( ( 0, 0, 1200 ), 3 );
 	
 	wait 2.5;
 	
@@ -877,8 +842,6 @@ endHeli( type )
 	level.heliCockpit unLink();
 	level.gunnerCockpit unLink();
 	
-	level.mannedchopper.playerInside = undefined;
-	
 	waittillframeend;
 	
 	if( type != 3 )
@@ -886,11 +849,9 @@ endHeli( type )
 		self thread code\common::restoreHP();
 		if( !level.dvar[ "old_hardpoints" ] )
 			self thread code\hardpoints::moneyHud();
-		self thread code\common::removeInfoHUD();
 		self thread code\common::restoreVisionSettings();
 		self setClientDvar( "g_compassshowenemies", 0 );
 		self show();
-		self.inGunner = undefined;
 	}
 	
 	if( type == 0 )
@@ -981,13 +942,11 @@ endHeli( type )
 	
 	waittillframeend;
 	
-	if( isDefined( self.r ) ) 
+	if( isDefined( self.ACOverlay ) ) 
 	{
-		for( k = 0; k < self.r.size; k++ )
-			if( isDefined( self.r[ k ] ) )
-				self.r[ k ] destroy();
+		self.ACOverlay destroy();
+		self.ACOverlay = undefined;
 	}
-	self.r = undefined;
 	
 	waittillframeend;
 	
@@ -1014,13 +973,13 @@ heli_crash()
 	self waittill ( "path start" );
 
 	// body explosion fx when on crash path
-	playfxontag( level.chopper_fx["explode"]["large"], self, "tag_engine_left" );
+	playfxontag( level.chopper_fx["explode"]["large"], self, "tag_engine_rear_left" );
 	// along with a sound
 	self playSound ( level.heli_sound[self.team]["hitsecondary"] );
 
 	self setdamagestage( 0 );
 	// form fire smoke trails on body after explosion
-	self thread maps\mp\_helicopter::trail_fx( level.chopper_fx["fire"]["trail"]["large"], "tag_engine_left", "stop body fire" );
+	self thread maps\mp\_helicopter::trail_fx( level.chopper_fx["fire"]["trail"]["large"], "tag_engine_rear_left", "stop body fire" );
 	
 	self waittill( "destination reached" );
 	self thread heli_explode();

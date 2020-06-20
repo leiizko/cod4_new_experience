@@ -459,7 +459,7 @@ giveLastAttackerWarning()
 	//self iprintlnbold(&"MP_YOU_ARE_THE_ONLY_REMAINING_PLAYER");
 	self maps\mp\gametypes\_globallogic::leaderDialogOnPlayer( "last_alive" );
 	
-	self maps\mp\gametypes\_missions::lastManSD();
+//	self maps\mp\gametypes\_missions::lastManSD();
 }
 
 

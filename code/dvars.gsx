@@ -40,9 +40,11 @@ init()
 	addDvar( "disable_jugger", "int", 1, 0, 1 ); // Disable JUGGERNAUT perk ( 1-yes ; 0-no )
 	addDvar( "disable_laststand", "int", 1, 0, 1 ); // Disable LAST STAND perk ( 1-yes ; 0-no )
 	addDvar( "disable_marty", "int", 1, 0, 1 ); // Disable MARTYDROP perk ( 1-yes ; 0-no )
+	addDvar( "disable_frag_start", "int", 0, 0, 1 ); // Disable Frag grenades at start of match ( 1-yes ; 0-no )
+	addDvar( "disable_frag_start_time", "int", 15, 1, 1000 ); // Disable Frag grenades at start of match for this much time ( 1 - 1000 )
 	// Used when script command support is disabled for specific setting
 	addDvar( "default_fps", "int", 0, 0, 1 ); // Fullbright setting, players won't be able to change it ( 1-enable ; 0-disable )
-	addDvar( "default_fov", "int", 2, 0, 2 ); // Field of view setting, players won't be able to change it ( 2-FOV=100 ; 1-FOV=90 ; 0-FOV=80 )
+	addDvar( "default_fov", "float", 1, 0.75, 1.5 ); // Field of view setting, players won't be able to change it ( 2-FOV=100 ; 1-FOV=90 ; 0-FOV=80 )
 	addDvar( "default_promod", "int", 1, 0, 1 ); // promod setting, players won't be able to change it ( 1-enable ; 0-disable )
 	addDvar( "hardpoint_streak", "int", 0, 0, 1 ); // Hardpoint kills count toward kill streak ( 1-yes ; 0-no )
 	addDvar( "showXP", "int", 1, 0, 1 ); // Show score XP on kills
@@ -59,6 +61,8 @@ init()
 	addDvar( "ac130", "int", 19, 1 );
 	addDvar( "mannedheli", "int", 22, 1 );
 	addDvar( "nuke", "int", 28, 1 );
+	addDvar( "carepackage", "int", 8, 1 );
+	addDvar( "cuav", "int", 4, 1 );
 	
 	// Hardpoints shop - required credits
 	addDvar( "radar_shop", "int", 20, 1 );
@@ -71,6 +75,8 @@ init()
 	addDvar( "ac130_shop", "int", 380, 1 );
 	addDvar( "mannedheli_shop", "int", 500, 1 );
 	addDvar( "nuke_shop", "int", 600, 1 );
+	addDvar( "carepackage_shop", "int", 70, 1 );
+	addDvar( "cuav_shop", "int", 10, 1 );
 	
 	addDvar( "arty_shell_num", "int", 35, 10, 100 ); // Number of artillery shells
 	
@@ -125,9 +131,12 @@ init()
 	addDvar( "mysql_user", "string", "user" ); // Mysql user
 	addDvar( "mysql_pw", "string", "123456789" ); // Mysql password
 	addDvar( "mysql_db", "string", "db_name" ); // Mysql database name
-	addDvar( "mysql_port", "int", 3306, 0, 65535 ); // Mysql port
+	addDvar( "mysql_player_table", "string", "players" ); // Mysql mapstats table
 	addDvar( "mysql_trueskill_table", "string", "trueskill" ); // Mysql trueskill table name ( only if trueskill is enabled )
 	addDvar( "mysql_mapstats_table", "string", "mapstats" ); // Mysql mapstats table
+	addDvar( "mysql_hardpoint_table", "string", "hardpoint" ); // Mysql trueskill table name ( only if trueskill is enabled )
+	addDvar( "mysql_rank_table", "string", "rank" ); // Mysql mapstats table
+	addDvar( "web", "string", "http::127.0.0.1/default.php" ); // Http entry point
 	
 	addDvar( "wallbang", "int", 1, 0, 1 ); // Enable wall peneteration ( 1-yes ; 0-no )
 	
@@ -137,6 +146,16 @@ init()
 	addDvar( "dynamic_low_maps", "string", "map mp_shipment map mp_killhouse map mp_strike" );
 	addDvar( "dynamic_med_maps", "string", "map mp_backlot map mp_crash map mp_crash_snow" );
 	addDvar( "dynamic_high_maps", "string", "map mp_pipeline map mp_convoy map mp_broadcast" );
+	
+	addDvar( "max_health_hc", "int", 30, 10, 200 );
+	addDvar( "wb_damage", "float", 0.67, 0, 1 );
+	addDvar( "anticamp", "int", 1, 0, 1 );
+	addDvar( "anticamp_dist", "int", 1950, 0, 100000 );
+	addDvar( "anticamp_time", "float", 10, 0, 100 );
+	
+	//-------------------
+	
+	addDvar( "hardpoint_menu", "int", 1, 0, 1 );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -103,9 +103,10 @@ onStartGameType()
 	setMapCenter( level.mapCenter );
 	
 	allowed[0] = "war";
+	allowed[1] = "hq";
 	
 	if ( getDvarInt( "scr_oldHardpoints" ) > 0 )
-		allowed[1] = "hardpoint";
+		allowed[2] = "hardpoint";
 	
 	level.displayRoundEndText = false;
 	maps\mp\gametypes\_gameobjects::main(allowed);

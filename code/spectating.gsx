@@ -12,11 +12,14 @@ spectating()
 	
 	data = spawnStruct();
 	
+	wait .1;
+	
 	for( ;; )
 	{
 		data.fps = self.pers[ "fullbright" ];
 		data.fov = self.pers[ "fov" ];
 		data.promod = self.pers[ "promodTweaks" ];
+		self.UAVstate = -1;
 		
 		while( self.sessionstate == "spectator" )
 		{	
@@ -27,7 +30,7 @@ spectating()
 			}
 			
 			entity = getEntByNum( self.spectatorClient );
-			if( !isDefined( entity ) || !isPlayer( entity ) )
+			if( !isDefined( entity ) )
 			{
 				wait 1;
 				continue;
@@ -46,11 +49,15 @@ spectating()
 			}
 			
 			self thread visionSettingsForEnt( entity );
+			self thread updateUAV( entity );
 			
 			while( isDefined( entity ) && self.spectatorClient == oldC )
 			{
 				if( isDefined( self.moneyHud ) )
 					self.moneyhud setValue( int( entity.money ) );
+					
+				if( isDefined( self.ac_modHud ) )
+					self.ac_modHud setValue( entity.antiCampMod * 100 );
 					
 				self.specFPS setValue( int( entity getCountedFps() ) );
 				wait 1;
@@ -62,6 +69,8 @@ spectating()
 		{
 			self.specFPS destroy();
 			self.specFPS = undefined;
+			self.isUAVonline destroy();
+			self.isUAVonline = undefined;
 		}
 		
 		if( isDefined( self.specKeys ) )
@@ -160,6 +169,71 @@ showFPS()
 	self.specFPS.label = &"Player FPS: ";
 	self.specFPS.color = ( 0.9, 0.2, 0.2 );
 	self.specFPS setValue( 0 );
+	
+	
+	self.isUAVonline = newClientHudElem( self );
+	self.isUAVonline.archived = false;
+	self.isUAVonline.alignX = "left";
+	self.isUAVonline.alignY = "top";
+	self.isUAVonline.horzAlign = "left";
+	self.isUAVonline.vertAlign = "top";
+	self.isUAVonline.fontscale = 1.5;
+	self.isUAVonline.x = 5;
+	self.isUAVonline.y = 2;
+}
+
+updateUAV( entity )
+{
+	self endon( "disconnect" );
+	self endon( "KillKeysThread" );
+	
+	while( isDefined( entity ) )
+	{
+		if( level.teambased )
+		{
+			if( isDefined( level.UAVinUse[ entity.team ] ) )
+			{
+				if( self.UAVstate != 1 )
+				{
+					self.isUAVonline setText( "UAV ONLINE!" );
+					self.isUAVonline.color = ( 0.4, 1, 0 );
+					self.UAVstate = 1;
+				}
+			}
+			else
+			{
+				if( self.UAVstate != 2 )
+				{
+					self.isUAVonline setText( "UAV OFFLINE!" );
+					self.isUAVonline.color = ( 1, 0.3, 0.3 );
+					self.UAVstate = 2;
+				}
+			}
+		}
+		else
+		{
+			if( isDefined( entity.hasRadar ) && entity.hasRadar )
+			{
+				if( self.UAVstate != 1 )
+				{
+					self.isUAVonline setText( "UAV ONLINE!" );
+					self.isUAVonline.color = ( 0.4, 1, 0 );
+					self.UAVstate = 1;
+				}
+			}
+			else
+			{
+				if( self.UAVstate != 2 )
+				{
+					self.isUAVonline setText( "UAV OFFLINE!" );
+					self.isUAVonline.color = ( 1, 0.3, 0.3 );
+					self.UAVstate = 2;
+				}
+			}
+		}
+		
+		level waittill( "UAVUpdateEvent" );
+	}
 }
 
 keys()

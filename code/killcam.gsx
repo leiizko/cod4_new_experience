@@ -20,7 +20,6 @@ killcam(
 		return;
 	}
 	
-	self SetClientDvar( "ui_ShowMenuOnly", "class" );
 	visionSetNaked( level.script );
 		
 	waittillframeend;
@@ -126,7 +125,6 @@ killcam(
 		self.killcamentity = -1;
 		self.archivetime = 0;
 		self.psoffsettime = 0;
-		self SetClientDvar( "ui_ShowMenuOnly", "" );
 		
 		return;
 	}
@@ -260,8 +258,6 @@ endKillcam()
 	
 	self.killcam = undefined;
 	self.finalcam = undefined;
-	
-	self SetClientDvar( "ui_ShowMenuOnly", "" );
 	
 	self thread maps\mp\gametypes\_spectating::setSpectatePermissions();
 }

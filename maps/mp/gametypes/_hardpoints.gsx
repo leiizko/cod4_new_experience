@@ -21,19 +21,19 @@
 
 registerHardpoints()
 {
-	dvarNames = "radar;airstrike;helicopter;artillery;agm;predator;asf;ac130;mannedheli;nuke";
+	dvarNames = "radar;airstrike;helicopter;artillery;agm;predator;asf;ac130;mannedheli;nuke;carepackage;cuav";
 	dvarNames = strTok( dvarNames, ";" );
 	
-	names = "default;default;default;Artillery;Hellfire Missile;Predator Drone;Fighter Support;AC130 Gunship;Manned Helicopter;Thermonuclear Bomb";
+	names = "default;default;default;Artillery;Hellfire Missile;Predator Drone;Fighter Support;AC130 Gunship;Chopper Gunner;Thermonuclear Bomb;Care Package;Counter UAV";
 	names = strTok( names, ";" );
 	
-	informs = "default;default;default;jet;jet;jet;jet;jet;heli;jet";
+	informs = "default;default;default;jet;jet;jet;jet;jet;heli;jet;heli;radar";
 	informs = strTok( informs, ";" );
 	
 	callbacks = [];
-	callbacks[ callbacks.size ] = ::none;
-	callbacks[ callbacks.size ] = ::none;
-	callbacks[ callbacks.size ] = ::none;
+	callbacks[ callbacks.size ] = code\hardpoints::trigger;
+	callbacks[ callbacks.size ] = code\hardpoints::trigger;
+	callbacks[ callbacks.size ] = code\hardpoints::trigger;
 	callbacks[ callbacks.size ] = code\artillery::selectLocation;
 	callbacks[ callbacks.size ] = code\agm::init;
 	callbacks[ callbacks.size ] = code\predator::init;
@@ -41,12 +41,31 @@ registerHardpoints()
 	callbacks[ callbacks.size ] = code\ac130::init;
 	callbacks[ callbacks.size ] = code\heli::init;
 	callbacks[ callbacks.size ] = code\nuke::init;
+	callbacks[ callbacks.size ] = code\cp::init;
+	callbacks[ callbacks.size ] = code\cuav::useCUAV;
 	
 	extraParam = [];
+	extraParam[ 0 ] = "radar_mp";
+	extraParam[ 1 ] = "airstrike_mp";
+	extraParam[ 2 ] = "helicopter_mp";
+	
+	locString = [];
+	locString[ locString.size ] = "";
+	locString[ locString.size ] = "";
+	locString[ locString.size ] = "";
+	locString[ locString.size ] = "ARTY";
+	locString[ locString.size ] = "AGM";
+	locString[ locString.size ] = "PREDATOR";
+	locString[ locString.size ] = "ASF";
+	locString[ locString.size ] = "AC130";
+	locString[ locString.size ] = "CHOPPER_GUNNER";
+	locString[ locString.size ] = "NUKE";
+	locString[ locString.size ] = "CP";
+	locString[ locString.size ] = "CUAV";
 	
 	level.hardpointStreakData = [];
 	for( i = 0; i < dvarNames.size; i++ )
-		addHardpoint( dvarNames[ i ], names[ i ], callbacks[ i ], informs[ i ], extraParam[ i ] );
+		addHardpoint( dvarNames[ i ], names[ i ], callbacks[ i ], informs[ i ], extraParam[ i ], locString[ i ] );
 		
 	///////////////////////////////////////
 	//    YOUR CUSTOM HARDPOINTS HERE    //
@@ -66,21 +85,47 @@ registerHardpoints()
 		}
 	}
 	
-	level.hardpointItems = [];
 	for( i = 0; i < level.hardpointStreakData.size; i++ )
 	{
-		n = level.hardpointStreakData[ i ][ 3 ];
-		
-		level.hardpointItems[ n ] = i;
-		
-		if( level.hardpointStreakData[ i ][ 1 ] != "default" )
+		lua_registerHardpointIndex( level.hardpointStreakData[ i ][ 3 ], i );
+	}
+	
+	level.hardpointItems = [];
+	if( !level.dvar[ "hardpoint_menu" ] )
+	{
+		for( i = 0; i < level.hardpointStreakData.size; i++ )
 		{
-			upName = allToUp( level.hardpointStreakData[ i ][ 1 ] );
-			level.hardpointHints[ n ] = "Press [{+actionslot 4}] for " + upName;
-			level.hardpointHints[ n + "_not_available" ] = upName + " not available";
-			level.hardpointInforms[ n ] = "mp_killstreak_" + level.hardpointStreakData[ i ][ 4 ];
+			n = level.hardpointStreakData[ i ][ 3 ];
+			
+			level.hardpointItems[ n ] = i;
+			
+			if( level.hardpointStreakData[ i ][ 1 ] != "default" )
+			{
+				upName = allToUp( level.hardpointStreakData[ i ][ 1 ] );
+				//level.hardpointHints[ n ] = "Press [{+actionslot 4}] for " + upName;
+				level.hardpointHints[ n + "_not_available" ] = upName + " not available";
+				level.hardpointInforms[ n ] = "mp_killstreak_" + level.hardpointStreakData[ i ][ 4 ];
+			}
+			
 		}
-		
+	}
+	else
+	{
+		for( i = 0; i < level.hardpointStreakData.size; i++ )
+		{
+			n = level.hardpointStreakData[ i ][ 3 ];
+			
+			level.hardpointItems[ n ] = i;
+			
+			if( level.hardpointStreakData[ i ][ 1 ] != "default" )
+			{
+				upName = allToUp( level.hardpointStreakData[ i ][ 1 ] );
+				//level.hardpointHints[ n ] = " for " + upName;
+				level.hardpointHints[ n + "_not_available" ] = upName + " not available";
+				level.hardpointInforms[ n ] = "mp_killstreak_" + level.hardpointStreakData[ i ][ 4 ];
+			}
+			
+		}
 	}
 }
 
@@ -99,9 +144,9 @@ init()
 
 	registerHardpoints();
 
-	level.hardpointHints["radar_mp"] = &"MP_EARNED_RADAR";
-	level.hardpointHints["airstrike_mp"] = &"MP_EARNED_AIRSTRIKE";
-	level.hardpointHints["helicopter_mp"] = &"MP_EARNED_HELICOPTER";
+	level.hardpointHints["radar_mp"] = "UAV";
+	level.hardpointHints["airstrike_mp"] = "AIRSTRIKE";
+	level.hardpointHints["helicopter_mp"] = "HELI";
 
 	level.hardpointHints["radar_mp_not_available"] = &"MP_RADAR_NOT_AVAILABLE";
 	level.hardpointHints["airstrike_mp_not_available"] = &"MP_AIRSTRIKE_NOT_AVAILABLE";
@@ -113,9 +158,6 @@ init()
 
 	maps\mp\gametypes\_rank::registerScoreInfo( "hardpoint", 10 );
 	
-	precacheString( level.hardpointHints["radar_mp"] );	
-	precacheString( level.hardpointHints["airstrike_mp"] );	
-	precacheString( level.hardpointHints["helicopter_mp"] );	
 	precacheString( level.hardpointHints["radar_mp_not_available"] );	
 	precacheString( level.hardpointHints["airstrike_mp_not_available"] );	
 	precacheString( level.hardpointHints["helicopter_mp_not_available"] );	
@@ -184,12 +226,12 @@ allToUp( s )
 	new = "";
 	
 	for( i = 0; i < s.size; i++ )
-		new += code\common::toUpper( s[ i ] );
+		new += toUpper( s[ i ] );
 		
 	return new;
 }
 
-addHardpoint( dvarName, name, callback, inform, extraParam )
+addHardpoint( dvarName, name, callback, inform, extraParam, locString )
 {
 	i = level.hardpointStreakData.size;
 	
@@ -200,6 +242,10 @@ addHardpoint( dvarName, name, callback, inform, extraParam )
 	level.hardpointStreakData[ i ][ 4 ] = inform;
 	if( isDefined( extraParam ) )
 		level.hardpointStreakData[ i ][ 5 ] = extraParam;
+	
+	game[ "dialog" ][ dvarName + "_mp" ] = dvarName;
+	
+	level.hardpointHints[ dvarName + "_mp" ] = locString;
 }
 
 none() {}
@@ -658,7 +704,7 @@ callStrike_bombEffect( plane, launchTime, owner, requiredDeathCount )
 			thread airstrikeLine( bombOrigin, traceHit, (1,0,0), 20 );
 		#/
 		
-		thread losRadiusDamage( traceHit + (0,0,16), 768, 200, 30, owner, bomb ); // targetpos, radius, maxdamage, mindamage, player causing damage, entity that player used to cause damage
+		thread losRadiusDamage( traceHit + (0,0,16), 512, 160, 30, owner, bomb ); // targetpos, radius, maxdamage, mindamage, player causing damage, entity that player used to cause damage
 	
 		if ( i%3 == 0 )
 		{
@@ -829,7 +875,7 @@ callStrike_bomb( bombTime, coord, repeat, owner )
 		
 		thread playsoundinspace( "artillery_impact", bombPoint );
 		radiusArtilleryShellshock( bombPoint, 512, 8, 4);
-		losRadiusDamage( bombPoint + (0,0,16), 768, 300, 50, owner); // targetpos, radius, maxdamage, mindamage, player causing damage
+		losRadiusDamage( bombPoint + (0,0,16), 512, 200, 50, owner); // targetpos, radius, maxdamage, mindamage, player causing damage
 	}
 }
 
@@ -956,17 +1002,41 @@ giveHardpointItemForStreak()
 	if( level.dvar[ "vip_streak" ] && isDefined( self.pers[ "vip" ] ) )
 		s++;
 
-	for( i = 0; i < level.hardpointStreakData.size; i++ )
+	if( !level.dvar[ "hardpoint_menu" ] )
 	{
-		if( s == level.hardpointStreakData[ i ][ 0 ] )
+		for( i = 0; i < level.hardpointStreakData.size; i++ )
 		{
-			self giveHardpoint( level.hardpointStreakData[ i ][ 3 ], s, i );
+			if( s == level.hardpointStreakData[ i ][ 0 ] )
+			{
+				self giveHardpoint( level.hardpointStreakData[ i ][ 3 ], s, i );
+				return;
+			}
+			
+			else if( s < level.hardpointStreakData[ i ][ 0 ] )
+				break;
+		}	
+	}
+	else
+	{
+		if( s == level.dvar[ "nuke" ] )
+		{
+			self giveHardpoint( "nuke_mp", s, 3 );
 			return;
 		}
-		
-		else if( s < level.hardpointStreakData[ i ][ 0 ] )
-			break;
-	}		
+			
+		for( i = 0; i < 3; i++ )
+		{
+			if( isDefined( self.pers[ "selectedHP_s" ][ i ] ) && s == self.pers[ "selectedHP_s" ][ i ] )
+			{
+				self giveHardpoint( self.pers[ "selectedHP" ][ i ], s, i );
+				return;
+			}
+			
+		}
+	}
+	
+	if( level.dvar[ "vip_streak" ] && isDefined( self.pers[ "vip" ] ) )
+		s--;
 		
 	if( ( s % 5 ) == 0 )
 		self streakNotify( s );
@@ -978,7 +1048,7 @@ streakNotify( streakVal )
 	self endon("disconnect");
 
 	// wait until any challenges have been processed
-	self waittill( "playerKilledChallengesProcessed" );
+//	self waittill( "playerKilledChallengesProcessed" );
 	wait .05;
 	
 	notifyData = spawnStruct();
@@ -995,36 +1065,395 @@ giveHardpoint( hardpointType, streak, i )
 {
 	if( level.dvar[ "vip_streak" ] && isDefined( self.pers[ "vip" ] ) )
 		streak--;
+		
+	if( !level.dvar[ "hardpoint_menu" ] )
+		status = self maps\mp\gametypes\_hardpoints::giveHardpointItem( hardpointType );
+	else
+		status = self maps\mp\gametypes\_hardpoints::giveHardpointItem_2( hardpointType, i );
 
-	if ( self maps\mp\gametypes\_hardpoints::giveHardpointItem( hardpointType ) )
+	if ( status )
 	{
 		self thread hardpointNotify( hardpointType, streak, i );
 	}
 }
 
+giveHardpointItem_2( hardpointType, i )
+{
+	if ( level.gameEnded )
+		return false;
+
+	if ( !isDefined( level.hardpointItems[hardpointType] ) )
+		return false;
+
+	if ( (!isDefined( level.heli_paths ) || !level.heli_paths.size) && hardpointType == "helicopter_mp" )
+		return false;
+		
+	if( isDefined( self.pers[ "hardPointItem_2" ][ i ] ) && i != 3 )
+		return false;
+	else if( isDefined( self.pers[ "hardPointItem_2" ][ i ] ) && i == 3 )
+	{
+		if ( level.hardpointItems[ hardpointType ] < level.hardpointItems[ self.pers[ "hardPointItem_2" ][ i ] ] )
+		{
+			self iPrintLnBold( lua_getLocString( self.pers[ "language" ], "CP_BETTER" ) );
+			return false;
+		}
+	}
+	
+	if( i == 0 )
+	{
+		self.pers["hardPointItem"] = hardpointType;
+		
+		cvar = "ne_hardpoint_a_" + i;
+		self setClientDvar( cvar, hardpointType );
+		
+		if( hardpointType != "radar_mp" && hardpointType != "airstrike_mp" && hardpointType != "helicopter_mp" )
+			hardpointType = "radar_mp";
+		
+		// 1 KS weapon, 2-3 scriptmenu response
+		self giveWeapon( hardpointType );
+		self giveMaxAmmo( hardpointType );
+		self setActionSlot( 4, "weapon", hardpointType );
+	}
+	else
+	{
+		cvar = "ne_hardpoint_a_" + i;
+		self setClientDvar( cvar, hardpointType );
+	}
+
+	self.pers[ "hardPointItem_2" ][ i ] = hardpointType;
+	
+	return true;
+}
+
+menuResponse_selection( re )
+{
+	if( re == "reset" )
+	{
+		for( i = 0; i < 4; i++ )
+		{
+			self.pers[ "selectedHP" ][ i ] = undefined;
+			self.pers[ "selectedHP_s" ][ i ] = undefined;
+		}
+		
+		self thread removeHP_2A();
+		
+		self setClientDvars( "hardpoint_1", "",
+							 "hardpoint_2", "",
+							 "hardpoint_3", "",
+							 "ui_hp_taken_1", -1,
+							 "ui_hp_taken_2", -1,
+							 "ui_hp_taken_3", -1 );
+
+		return;
+	}
+	else if( re == "update_db" )
+	{
+#if isSyscallDefined httpPostJson
+		self thread code\mysql::updateHP();
+#endif
+		return;
+	}
+	
+	idx = lua_getHardpointIndex( re );
+	grp = level.hardpointStreakData[ idx ][ 0 ]; // <-- kills needed
+	
+	if( !HPExists( re ) ) // Should not happen - debug purpose only!
+	{
+		print( "Critical failure!\n" );
+		print( "Unknown hardpoint: >>> " + re +  "<<< in group >>> " + grp + " <<<\n" );
+		exec( "killserver" );
+	}
+		
+	i = isInArray( re ); // This HP is already selected - remove it
+	if( isDefined( i ) )
+	{
+		self.pers[ "selectedHP" ][ i ] = undefined;
+		self.pers[ "selectedHP_s" ][ i ] = undefined;
+		
+		finishHPWrapper( i, 0 );
+		
+		return;
+	}
+
+	if( isGroupTaken( grp ) ) // HP from this group is already selected
+	{
+		self setClientDvar( "hardpoint_lastError", lua_getLocString( self.pers[ "language" ], "HP_E_ALREADY_SELECTED" ) );
+		return;
+	}
+	
+	i = getFreeSlot();
+	
+	if( i < 0 ) // No slots available
+	{
+		self setClientDvar( "hardpoint_lastError", lua_getLocString( self.pers[ "language" ], "HP_E_ALL_SELECTED" ) );
+		return;
+	}
+	
+	self.pers[ "selectedHP" ][ i ] = re;
+	self.pers[ "selectedHP_s" ][ i ] = grp;
+	
+	finishHPWrapper( i, 1 );
+	self setClientDvar( "hardpoint_lastError", "" );
+}
+
+// Mode 1 = ADD
+// Mode 0 = REMOVE
+finishHPWrapper( i, mode )
+{
+	if( !mode )
+	{
+		for( n = i; n < 3; n++ )
+		{
+			id = n + 1;
+			if( isDefined( self.pers[ "selectedHP" ][ id ] ) )
+			{
+				self.pers[ "selectedHP" ][ n ] = self.pers[ "selectedHP" ][ id ];
+				self.pers[ "selectedHP_s" ][ n ] = self.pers[ "selectedHP_s" ][ id ];
+				
+				d = "hardpoint_" + id;
+				d2 = "ui_hp_taken_" + id;
+				self setClientDvars( d, self.pers[ "selectedHP" ][ n ],
+									 d2, self.pers[ "selectedHP_s" ][ n ] );
+			}
+			else
+			{
+				self.pers[ "selectedHP" ][ n ] = undefined;
+				self.pers[ "selectedHP_s" ][ n ] = undefined;
+				d = "hardpoint_" + id;
+				d2 = "ui_hp_taken_" + id;
+				self setClientDvars( d, "",
+									 d2, -1 );
+				break;
+			}
+		}
+	}
+	else
+		alignHP();
+		
+	self thread removeHP_2A();
+}
+
+alignHP()
+{
+	temp = [];
+		
+	for( n = 0; n < 3; n++ )
+	{
+		if( isDefined( self.pers[ "selectedHP_s" ][ n ] ) )
+		{
+			temp[ self.pers[ "selectedHP_s" ][ n ] ] = self.pers[ "selectedHP" ][ n ];
+		}
+		else
+		{
+			self.pers[ "selectedHP_s" ][ n ] = 9999 + n;
+		}
+	}
+		
+	for( j = 0; j < self.pers[ "selectedHP_s" ].size; j++ )
+	{
+		for( n = j + 1; n < self.pers[ "selectedHP_s" ].size; n++ )
+		{
+			if( self.pers[ "selectedHP_s" ][ j ] > self.pers[ "selectedHP_s" ][ n ] )
+			{
+				tmp = self.pers[ "selectedHP_s" ][ j ];
+				self.pers[ "selectedHP_s" ][ j ] = self.pers[ "selectedHP_s" ][ n ];
+				self.pers[ "selectedHP_s" ][ n ] = tmp;
+			}
+		}
+	}
+		
+	for( j = 0; j < temp.size; j++ )
+	{
+		self.pers[ "selectedHP" ][ j ] = temp[ self.pers[ "selectedHP_s" ][ j ] ];
+		
+		d = "hardpoint_" + ( j + 1 );
+		d2 = "ui_hp_taken_" + ( j + 1 );
+		self setClientDvars( d, self.pers[ "selectedHP" ][ j ],
+							 d2, self.pers[ "selectedHP_s" ][ j ] );
+	}
+}
+
+getFreeSlot()
+{
+	r = -1;
+	
+	for( i = 0; i < 3; i++ )
+	{
+		if( !isDefined( self.pers[ "selectedHP" ][ i ] ) )
+		{
+			r = i;
+			break;
+		}
+	}
+	
+	return r;
+}
+
+isGroupTaken( id )
+{
+	for( i = 0; i < 3; i++ )
+	{
+		if( isDefined( self.pers[ "selectedHP_s" ][ i ] ) )
+		{
+			if( id == self.pers[ "selectedHP_s" ][ i ] )
+				return true;
+		}
+	}
+	
+	return false;
+}
+
+HPExists( re )
+{
+	if( lua_getHardpointIndex( re ) >= 0 )
+		return true;
+
+	return false;
+}
+
+isInArray( re )
+{
+	for( i = 0; i < 3; i++ )
+	{
+		if( isDefined( self.pers[ "selectedHP" ][ i ] ) )
+		{
+			if( isSubStr( self.pers[ "selectedHP" ][ i ], re ) )
+				return i;
+		}
+	}
+	
+	return undefined;
+}
+
+// ID = 1, 2
+menuResponse( id )
+{
+	self endon( "disconnect" );
+	self endon( "killed_player" );
+	
+	if( !isDefined( self.pers[ "hardPointItem_2" ][ id ] ) || isDefined( self.doingHardpointResponse ) || isDefined( self.spawnprotected ) || !isAlive( self ) )
+		return;
+		
+	self.doingHardpointResponse = true;
+	
+	waittillframeend;
+		
+	i = lua_getHardpointIndex( self.pers[ "hardPointItem_2" ][ id ] );
+		
+	waittillframeend;
+	
+	result = false;
+	
+	weapon = self getcurrentweapon();
+	remove = true;
+	
+	if( self hasWeapon( "c4_mp" ) )
+	{
+		self switchToWeapon( "c4_mp" );
+		remove = false;
+	}
+	else
+	{
+		self giveWeapon( "c4_mp" );
+		self switchToWeapon( "c4_mp" );
+	}
+	
+	if( weapon != "c4_mp" )
+		self waittill( "weapon_change" );
+
+	if( isDefined( level.hardpointStreakData[ i ][ 5 ] ) )
+		result = self [[level.hardpointStreakData[ i ][ 2 ]]]( level.hardpointStreakData[ i ][ 5 ] );
+	else
+		result = self [[level.hardpointStreakData[ i ][ 2 ]]]();
+	
+	if( weapon != "none" )
+		self switchToWeapon( weapon );
+	else
+		self switchToWeapon( self.pers[ "primaryWeapon" ] + "_mp" );
+	
+	if( remove )
+		self takeWeapon( "c4_mp" );
+
+	if( isDefined( result ) && result )
+		self removeHP_2( id );
+		
+	waittillframeend;
+	
+	self.doingHardpointResponse = undefined;
+}
+
+removeHP_2( id )
+{
+	self.pers[ "hardPointItem_2" ][ id ] = undefined;
+	
+	cvar = "ne_hardpoint_a_" + id;
+	self setClientDvar( cvar, "" );
+}
+
+removeHP_2A()
+{
+	self.pers[ "hardPointItem_2" ][ 0 ] = undefined;
+	self.pers[ "hardPointItem_2" ][ 1 ] = undefined;
+	self.pers[ "hardPointItem_2" ][ 2 ] = undefined;
+	
+	if( isDefined( self.pers[ "hardPointItem_2" ][ 3 ] ) && self.pers[ "hardPointItem_2" ][ 3 ] != "nuke_mp" )
+		self.pers[ "hardPointItem_2" ][ 3 ] = undefined;
+	
+
+	if( !isDefined( self.pers[ "hardPointItem_2" ][ 3 ] ) )
+		self setClientDvars( "ne_hardpoint_a_0", "",
+							 "ne_hardpoint_a_1", "", 
+							 "ne_hardpoint_a_2", "",
+							 "ne_hardpoint_a_3", "" );
+	else
+		self setClientDvars( "ne_hardpoint_a_0", "",
+							 "ne_hardpoint_a_1", "", 
+							 "ne_hardpoint_a_2", "" );
+}
 
 hardpointNotify( hardpointType, streakVal, i )
 {
 	self endon("disconnect");
-	
-	// wait until any challenges have been processed
-	self waittill( "playerKilledChallengesProcessed" );
+
 	wait .05;
 	
 	notifyData = spawnStruct();
-	notifyData.titleLabel = &"MP_KILLSTREAK_N";
-	notifyData.titleText = streakVal;
-	notifyData.notifyText = level.hardpointHints[hardpointType];
-	notifyData.sound = level.hardpointInforms[hardpointType];
-	
-	if( level.hardpointStreakData[ i ][ 4 ] == "default" )
-		notifyData.leaderSound = hardpointType;
-	else if( level.hardpointStreakData[ i ][ 4 ] == "jet" )
-		notifyData.leaderSound = "airstrike_mp";
-	else if( level.hardpointStreakData[ i ][ 4 ] == "heli" )
-		notifyData.leaderSound = "helicopter_mp";
+	if( i != 3 || ( hardpointType == "nuke_mp" && streakVal == level.dvar[ "nuke" ] ) )
+	{
+		notifyData.titleLabel = &"MP_KILLSTREAK_N";
+		notifyData.titleText = streakVal;
+	}
 	else
-		notifyData.leaderSound = "radar_mp";
+		notifyData.titleLabel = &"";
+
+	if( !level.dvar[ "hardpoint_menu" ] )
+	{
+		hpName = lua_getLocString( self.pers[ "language" ], level.hardpointHints[ hardpointType ] );
+		label = lua_getLocString( self.pers[ "language" ], "HARDPOINT_EARNED" );
+
+		button = "[{+actionslot 4}]";
+			
+		str_f = strReplace( label, button, hpName );
+		
+		notifyData.notifyText = str_f;
+	}
+	else
+	{
+		hpName = lua_getLocString( self.pers[ "language" ], level.hardpointHints[ hardpointType ] );
+		label = lua_getLocString( self.pers[ "language" ], "HARDPOINT_EARNED" );
+
+		if( i == 0 )
+			button = "[{+actionslot 4}]";
+		else
+			button = "[{openScriptMenu hardpoint " + i + "}]";
+			
+		str_f = strReplace( label, button, hpName );
+		
+		notifyData.notifyText = str_f;
+	}
+	
+	notifyData.sound = "";
+	notifyData.leaderSound = hardpointType;
 	
 	self maps\mp\gametypes\_hud_message::notifyMessage( notifyData );
 }
@@ -1033,7 +1462,7 @@ hardpointNotify( hardpointType, streakVal, i )
 giveHardpointItem( hardpointType )
 {
 	if ( level.gameEnded )
-		return;
+		return false;
 		
 	if ( isDefined( self.selectingLocation ) )
 		return false;
@@ -1131,12 +1560,7 @@ hardpointItemWaiter()
 			case "airstrike_mp":
 			case "helicopter_mp":
 				if ( self triggerHardpoint( currentWeapon ) )
-				{	
-					logString( "hardpoint: " + currentWeapon );
-					
-					if(self.pers["hardPointItem"] == "radar_mp" || self.pers["hardPointItem"] == "airstrike_mp" || self.pers["hardPointItem"] == "helicopter_mp")
-						self thread maps\mp\gametypes\_missions::useHardpoint( self.pers["hardPointItem"] );
-						
+				{					
 					self thread [[level.onXPEvent]]( "hardpoint" );
 					
 					self takeWeapon( currentWeapon );
@@ -1227,15 +1651,7 @@ triggerHardPoint( hardpointType )
 	
 	else if ( hardpointType == "radar_mp" && self.pers[ "hardPointItem" ] != "radar_mp" )
 	{
-		i = 0;
-		for( n = 0; n < level.hardpointStreakData.size; n++ )
-		{
-			if( level.hardpointStreakData[ n ][ 3 ] == self.pers[ "hardPointItem" ] )
-			{
-				i = n;
-				break;
-			}
-		}
+		i = lua_getHardpointIndex( self.pers[ "hardPointItem" ] );
 		
 		if( isDefined( level.hardpointStreakData[ i ][ 5 ] ) )
 		{
@@ -1252,6 +1668,9 @@ triggerHardPoint( hardpointType )
 				return false;
 		}
 	}
+	
+	if( level.dvar[ "hardpoint_menu" ] )
+		self thread removeHP_2( 0 );
 	
 	return true;
 }
@@ -1286,11 +1705,31 @@ useRadarItem()
 	otherteam = "axis";
 	if (team == "axis")
 		otherteam = "allies";
+		
+	if( level.teambased )
+	{
+		if( isDefined( level.cuav[ otherteam ] ) )
+		{
+			self iprintlnbold( lua_getLocString( self.pers[ "language" ], "CUAV_ACTIVE" ) );
+			return;
+		}
+	}
+	else
+	{
+		if( isDefined( level.cuav ) ) // UAV + CUAV can't be used by same player anyway.
+		{
+			self iprintlnbold( lua_getLocString( self.pers[ "language" ], "CUAV_ACTIVE" ) );
+			return;
+		}
+	}	
 	
 	assert( isdefined( level.players ) );
 	
+	level notify( "UAVUpdateEvent" );
+	
 	if ( level.teambased )
 	{
+		level.UAVinUse[ team ] = true;
 		UAVAcquiredPrintAndSound( team, otherteam, self, level.radarViewTime );
 
 		level notify( "radar_timer_kill_" + team );
@@ -1314,13 +1753,21 @@ useTeamUAV( team, otherteam )
 	
 	setTeamRadarWrapper( team, true );
 	
-	wait level.radarViewTime;
+	waittime = level.radarViewTime;
+	
+	while( !isDefined( level.cuav[ otherteam ] ) && waittime )
+	{
+		wait 1;
+		waittime--;
+	}
 	
 	setTeamRadarWrapper( team, false );
 	
 	if( isDefined( level.radarPlayer ) )
 		level.radarPlayer[ team ] = undefined;
 	
+	level.UAVinUse[ team ] = undefined;
+	level notify( "UAVUpdateEvent" );
 	printAndSoundOnEveryone( team, otherteam, &"MP_WAR_RADAR_EXPIRED", &"MP_WAR_RADAR_EXPIRED_ENEMY", undefined, undefined, "" );
 }
 
@@ -1334,9 +1781,16 @@ usePlayerUAV( team, otherteam )
 	self.hasRadar = true;
 	self setClientDvar( "ui_uav_client", 1 );
 	
-	wait level.radarViewTime;
+	waittime = level.radarViewTime;
+	
+	while( !isDefined( level.cuav ) && waittime )
+	{
+		wait 1;
+		waittime--;
+	}
 	
 	self.hasRadar = false;
+	level notify( "UAVUpdateEvent" );
 	self setClientDvar( "ui_uav_client", 0 );
 	
 	self iprintln( &"MP_WAR_RADAR_EXPIRED" );
