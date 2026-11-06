@@ -49,6 +49,8 @@ onPlayerSpawn()
 		self.spawnprot_cntr destroy(); 
 	if( isDefined( self.spawnprot_text ) ) 
 		self.spawnprot_text destroy();
+	if( isDefined( self.spawnprot_panel ) )
+		ghost\hud::destroyHudGroup( self.spawnprot_panel );
 	
 	self.spawnprotected = undefined;
 	self notify( "spawnProtectionDisabled" );
@@ -60,30 +62,26 @@ hud()
 		self.spawnprot_cntr destroy(); 
 	if( isDefined( self.spawnprot_text ) ) 
 		self.spawnprot_text destroy();
+	if( isDefined( self.spawnprot_panel ) )
+		ghost\hud::destroyHudGroup( self.spawnprot_panel );
 
-	self.spawnprot_text = newClientHudElem( self );
-	self.spawnprot_text.x = 0;
-	self.spawnprot_text.y = 180;
-	self.spawnprot_text.alignX = "center";
-	self.spawnprot_text.alignY = "middle";
-	self.spawnprot_text.horzAlign = "center_safearea";
-	self.spawnprot_text.vertAlign = "center_safearea";
-	self.spawnprot_text.alpha = 1;
-	self.spawnprot_text.archived = false;
-	self.spawnprot_text.font = "default";
-	self.spawnprot_text.fontscale = 1.4;
-	self.spawnprot_text.color = ( 0.980, 0.996, 0.388 );
-	self.spawnprot_text setText( "^1Spawn protection" );
+	self.spawnprot_panel = self ghost\hud::createPanel( 180, 40, 0, 150, "center", "center_safearea", "center", "top" );
+
+	self.spawnprot_text = self ghost\hud::createLabel( "Spawn protection", "objective", 1.4, 0, 154, "center", "center_safearea", "center", "top" );
+	self.spawnprot_text.color = level.hudTheme[ "accent" ];
 
 	self.spawnprot_cntr = newClientHudElem( self );
 	self.spawnprot_cntr.x = 0;
-	self.spawnprot_cntr.y = 160;
+	self.spawnprot_cntr.y = 172;
 	self.spawnprot_cntr.alignX = "center";
-	self.spawnprot_cntr.alignY = "middle";
-	self.spawnprot_cntr.horzAlign = "center_safearea";
+	self.spawnprot_cntr.alignY = "top";
+	self.spawnprot_cntr.horzAlign = "center";
 	self.spawnprot_cntr.vertAlign = "center_safearea";
 	self.spawnprot_cntr.alpha = 1;
-	self.spawnprot_cntr.fontScale = 1.8;
-	self.spawnprot_cntr.color = ( .99, .00, .00 );	
+	self.spawnprot_cntr.archived = false;
+	self.spawnprot_cntr.font = "default";
+	self.spawnprot_cntr.fontScale = 1.25;
+	self.spawnprot_cntr.color = level.hudTheme[ "primary" ];
+	self.spawnprot_cntr.sort = 2;
 	self.spawnprot_cntr setTenthsTimer( level.dvar[ "prot_time" ] );	
 }

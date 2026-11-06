@@ -222,8 +222,8 @@ hud( attacker, data )
 	
 	self.kc_hud[ 0 ] = newClientHudElem( self );
 	self.kc_hud[ 0 ].alpha = 1;
-	self.kc_hud[ 0 ] setShader( "white", 1, 79 );
-	self.kc_hud[ 0 ].color	= ( 1, 1, 1 );
+	self.kc_hud[ 0 ] setShader( "white", 2, 79 );
+	self.kc_hud[ 0 ].color	= ( 1.0, 0.55, 0.12 );
 	self.kc_hud[ 0 ].horzAlign = "center";
 	self.kc_hud[ 0 ].vertAlign = "fullscreen";
 	self.kc_hud[ 0 ].archived = false;
@@ -233,9 +233,9 @@ hud( attacker, data )
 	self.kc_hud[ 0 ].alignX = "center";
 	
 	self.kc_hud[ 1 ] = newClientHudElem( self );
-	self.kc_hud[ 1 ].alpha = 0.8;
+	self.kc_hud[ 1 ].alpha = 0.9;
 	self.kc_hud[ 1 ] setShader( "white", 440, 16 );
-	self.kc_hud[ 1 ].color	= ( 1, .7, 0 );
+	self.kc_hud[ 1 ].color	= ( 1.0, 0.55, 0.12 );
 	self.kc_hud[ 1 ].horzAlign = "center";
 	self.kc_hud[ 1 ].vertAlign = "fullscreen";
 	self.kc_hud[ 1 ].archived = false;
@@ -244,9 +244,9 @@ hud( attacker, data )
 	self.kc_hud[ 1 ].alignX = "center";
 	
 	self.kc_hud[ 2 ] = newClientHudElem( self );
-	self.kc_hud[ 2 ].alpha = 0.65;
+	self.kc_hud[ 2 ].alpha = 0.72;
 	self.kc_hud[ 2 ] setShader( "white", 440, 70 );
-	self.kc_hud[ 2 ].color	= ( 0, 0, 0 );
+	self.kc_hud[ 2 ].color	= ( 0.05, 0.05, 0.07 );
 	self.kc_hud[ 2 ].horzAlign = "center";
 	self.kc_hud[ 2 ].vertAlign = "fullscreen";
 	self.kc_hud[ 2 ].archived = false;
@@ -256,8 +256,8 @@ hud( attacker, data )
 	
 	self.kc_hud[ 3 ] = newClientHudElem( self );
 	self.kc_hud[ 3 ].alpha = 1;
-	self.kc_hud[ 3 ] setShader( "white", 1, 79 );
-	self.kc_hud[ 3 ].color	= ( 1, 1, 1 );
+	self.kc_hud[ 3 ] setShader( "white", 2, 79 );
+	self.kc_hud[ 3 ].color	= ( 1.0, 0.55, 0.12 );
 	self.kc_hud[ 3 ].horzAlign = "center";
 	self.kc_hud[ 3 ].vertAlign = "fullscreen";
 	self.kc_hud[ 3 ].archived = false;

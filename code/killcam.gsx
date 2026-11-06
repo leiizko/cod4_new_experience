@@ -206,21 +206,23 @@ finalHUD( attacker, victim )
 	self.kc_hud[ 0 ].horzAlign = "center";
 	self.kc_hud[ 0 ].vertAlign = "top";
 	self.kc_hud[ 0 ].archived = false;
+	self.kc_hud[ 0 ].font = "objective";
 	self.kc_hud[ 0 ].fontscale = 2.2;
+	self.kc_hud[ 0 ].color = ( 1.0, 0.55, 0.12 );
 	self.kc_hud[ 0 ] setText( "KILLCAM" );
 	
 	self.kc_hud[ 1 ] = newClientHudElem( self );
-	self.kc_hud[ 1 ].alpha = 0.25;
+	self.kc_hud[ 1 ].alpha = 0.72;
 	self.kc_hud[ 1 ] setShader( "white", 640, 30 );
-	self.kc_hud[ 1 ].color	= (1, 1, 1);
+	self.kc_hud[ 1 ].color	= ( 0.05, 0.05, 0.07 );
 	self.kc_hud[ 1 ].horzAlign = "fullscreen";
 	self.kc_hud[ 1 ].vertAlign = "fullscreen";
 	self.kc_hud[ 1 ].archived = false;
 	
 	self.kc_hud[ 2 ] = newClientHudElem( self );
-	self.kc_hud[ 2 ].alpha = 0.25;
+	self.kc_hud[ 2 ].alpha = 0.72;
 	self.kc_hud[ 2 ] setShader( "white", 640, 30 );
-	self.kc_hud[ 2 ].color	= (1, 1, 1);
+	self.kc_hud[ 2 ].color	= ( 0.05, 0.05, 0.07 );
 	self.kc_hud[ 2 ].horzAlign = "fullscreen";
 	self.kc_hud[ 2 ].vertAlign = "fullscreen";
 	self.kc_hud[ 2 ].archived = false;

@@ -61,16 +61,29 @@ init()
 	addDvar( "nuke", "int", 28, 1 );
 	
 	// Hardpoints shop - required credits
-	addDvar( "radar_shop", "int", 20, 1 );
-	addDvar( "airstrike_shop", "int", 70, 1 );
-	addDvar( "helicopter_shop", "int", 180, 1 );
-	addDvar( "artillery_shop", "int", 70, 1 ); 
-	addDvar( "asf_shop", "int", 100, 1 );
-	addDvar( "agm_shop", "int", 100, 1 );
-	addDvar( "predator_shop", "int", 280, 1 );
-	addDvar( "ac130_shop", "int", 380, 1 );
-	addDvar( "mannedheli_shop", "int", 500, 1 );
-	addDvar( "nuke_shop", "int", 600, 1 );
+	addDvar( "radar_shop", "int", 15, 1 );
+	addDvar( "airstrike_shop", "int", 50, 1 );
+	addDvar( "helicopter_shop", "int", 140, 1 );
+	addDvar( "artillery_shop", "int", 55, 1 ); 
+	addDvar( "asf_shop", "int", 90, 1 );
+	addDvar( "agm_shop", "int", 80, 1 );
+	addDvar( "predator_shop", "int", 220, 1 );
+	addDvar( "ac130_shop", "int", 300, 1 );
+	addDvar( "mannedheli_shop", "int", 400, 1 );
+	addDvar( "nuke_shop", "int", 550, 1 );
+
+	addDvar( "ammo_shop", "int", 40, 1 );
+	addDvar( "health_shop", "int", 60, 1 );
+	addDvar( "smoke_shop", "int", 35, 1 );
+	addDvar( "slide_shop", "int", 50, 1 );
+
+	addDvar( "slide_enable", "int", 1, 0, 1 );
+	addDvar( "slide_cooldown", "int", 10, 1, 60 );
+	addDvar( "slide_duration", "float", 0.7, 0.3, 2 );
+
+	addDvar( "anticheat_enable", "int", 1, 0, 1 );
+	addDvar( "anticheat_warn", "int", 30, 1, 1000 );
+	addDvar( "anticheat_kick", "int", 60, 1, 1000 );
 	
 	addDvar( "arty_shell_num", "int", 35, 10, 100 ); // Number of artillery shells
 	

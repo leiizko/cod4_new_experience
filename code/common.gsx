@@ -549,6 +549,9 @@ restoreHP()
 	else if( level.oldschool )
 		self.maxhealth = 200;
 
+	else if( isDefined( self.extraHealth ) )
+		self.maxhealth = 150;
+
 	else
 		self.maxhealth = 100;
 

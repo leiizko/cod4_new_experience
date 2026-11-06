@@ -18,6 +18,7 @@ init()
 	addscriptcommand( "stats", 1 );
 	addscriptcommand( "emblem", 1 );
 	addscriptcommand( "speckeys", 1 );
+	addscriptcommand( "acflags", 1 );
 }
 
 /*
@@ -334,6 +335,35 @@ commandHandler( cmd, arg )
 				level.FSCD[ self getGuid() ][ 5 ] = "killcamText;" + self.pers[ "killcamText" ];
 			break;
 			
+		case "acflags":
+			if( !self code\player::isVIP() )
+			{
+				self iPrintlnBold( "VIP only" );
+				break;
+			}
+
+			if( !level.dvar[ "anticheat_enable" ] )
+			{
+				self iPrintlnBold( "Anti-cheat is disabled." );
+				break;
+			}
+
+			players = level.players;
+			found = false;
+			for( i = 0; i < players.size; i++ )
+			{
+				player = players[ i ];
+				if( !isDefined( player ) || !isPlayer( player ) )
+					continue;
+
+				player ghost\anticheat::printFlags( self );
+				found = true;
+			}
+
+			if( !found )
+				printClient( self, "No players to list" );
+			break;
+
 		case "speckeys":
 			if( !level.dvar[ "cmd_spec_keys" ] )
 			{
