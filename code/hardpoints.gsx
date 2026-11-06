@@ -57,6 +57,10 @@ makeShopArray()
 	///////////////////////////////////////
 	//    YOUR CUSTOM HARDPOINTS HERE    //
 	///////////////////////////////////////
+	addHardpoint( "ammo", "Extra Ammo", ghost\gear::buyAmmo, undefined );
+	addHardpoint( "health", "Extra Health", ghost\gear::buyHealth, undefined );
+	addHardpoint( "smoke", "Smoke Cover", ghost\gear::buySmoke, undefined );
+	addHardpoint( "slide", "Extra Slide", ghost\gear::buySlide, undefined );
 	
 		
 	for( i = 0; i < level.hardpointShopData.size; i++ )
@@ -172,6 +176,11 @@ onConnected()
 
 moneyHud()
 {
+	panel = self ghost\hud::createPanel( 90, 22, -16, -48, "right", "bottom", "right", "bottom" );
+	self.moneyPanel = [];
+	self.moneyPanel[ 0 ] = panel[ 0 ];
+	self.moneyPanel[ 1 ] = panel[ 1 ];
+
 	self.moneyhud = newClientHudElem( self );
 	self.moneyhud.archived = false;
 	self.moneyhud.alignX = "right";
@@ -179,9 +188,12 @@ moneyHud()
 	self.moneyhud.label = &"$ ";
 	self.moneyhud.horzAlign = "right";
 	self.moneyhud.vertAlign = "bottom";
-	self.moneyhud.fontscale = 1.7;
+	self.moneyhud.font = "objective";
+	self.moneyhud.fontscale = 1.5;
+	self.moneyhud.color = level.hudTheme[ "primary" ];
 	self.moneyhud.x = -20;
 	self.moneyhud.y = -50;
+	self.moneyhud.sort = 2;
 	
 	self.moneyhud setValue( int( self.money ) );
 }
@@ -457,7 +469,7 @@ updateHUD( type )
 	}
 	
 
-	self.shop[ 4 ].y = 190 + ( self.selectionNum * 16.9 );
+	self.shop[ 4 ].y = 64 + ( self.selectionNum * 16 );
 }
 
 shop()
@@ -465,9 +477,13 @@ shop()
 	self endon( "destroy_shop" );
 
 	self.shop = [];
+	count = level.hardpointShopData.size;
+	rowH = 16;
+	panelW = 240;
+	panelH = 40 + ( count * rowH ) + 8;
+
 	n = 99;
-	
-	for( i = 0; i < level.hardpointShopData.size; i++ )
+	for( i = 0; i < count; i++ )
 	{
 		if( self.money < level.hardpointShopData[ i ][ 0 ] )
 		{
@@ -475,84 +491,59 @@ shop()
 			break;
 		}
 	}
-	
-	string = "^3Item:^2";
-	for( i = 0; i < level.hardpointShopData.size; i++ )
+
+	panel = self ghost\hud::createPanel( panelW, panelH, 0, 36, "center", "top", "center", "top" );
+	self.shop[ 5 ] = panel[ 0 ];
+	self.shop[ 6 ] = panel[ 1 ];
+
+	self.shop[ 7 ] = self ghost\hud::createLabel( "SHOP", "objective", 1.5, 0, 42, "center", "top", "center", "top" );
+	self.shop[ 7 ].color = level.hudTheme[ "accent" ];
+
+	nameStr = "^2";
+	priceStr = "^2";
+	for( i = 0; i < count; i++ )
 	{
 		if( i == n )
-			string += "^1";
-			
-		string += "\n" + level.hardpointShopData[ i ][ 1 ];
+		{
+			nameStr += "^1";
+			priceStr += "^1";
+		}
+
+		if( i > 0 )
+		{
+			nameStr += "\n";
+			priceStr += "\n";
+		}
+
+		nameStr += level.hardpointShopData[ i ][ 1 ];
+		priceStr += "$" + level.hardpointShopData[ i ][ 0 ];
 	}
-	
-	self.shop[ 0 ] = newClientHudElem( self );
-	self.shop[ 0 ].archived = false;
-	self.shop[ 0 ].alignX = "left";
-	self.shop[ 0 ].alignY = "middle";
-	self.shop[ 0 ] setText( string );
-	self.shop[ 0 ].horzAlign = "left";
-	self.shop[ 0 ].vertAlign = "middle";
-	self.shop[ 0 ].fontscale = 1.4;
-	self.shop[ 0 ].x = 340;
-	self.shop[ 0 ].y = -60;
-	
-	string = "^3$:^2";
-	for( i = 0; i < level.hardpointShopData.size; i++ )
-	{
-		if( i == n )
-			string += "^1";
-			
-		string += "\n" + level.hardpointShopData[ i ][ 0 ];
-	}
-	
-	self.shop[ 1 ] = newClientHudElem( self );
-	self.shop[ 1 ].archived = false;
-	self.shop[ 1 ].alignX = "right";
-	self.shop[ 1 ].alignY = "middle";
-	self.shop[ 1 ] setText( string );
-	self.shop[ 1 ].horzAlign = "right";
-	self.shop[ 1 ].vertAlign = "middle";
-	self.shop[ 1 ].fontscale = 1.4;
-	self.shop[ 1 ].x = -340;
-	self.shop[ 1 ].y = -60;
-	
-	self.shop[ 2 ] = newClientHudElem( self );
-	self.shop[ 2 ].archived = false;
-	self.shop[ 2 ].alignX = "center";
-	self.shop[ 2 ].alignY = "top";
+
+	self.shop[ 0 ] = self ghost\hud::createLabel( nameStr, "default", 1.25, -108, 64, "center", "top", "left", "top" );
+	self.shop[ 1 ] = self ghost\hud::createLabel( priceStr, "default", 1.25, 108, 64, "center", "top", "right", "top" );
+
+	self.shop[ 2 ] = self ghost\hud::createLabel( "", "default", 1.25, 0, 36 + panelH + 8, "center", "top", "center", "top" );
 	if( !self.pers[ "hardpointSType" ] )
-		self.shop[ 2 ] setText( "Press ^1[{+melee}] ^7or ^2[{+activate}]^7 to move ^1UP ^7or ^2DOWN" );
+		self.shop[ 2 ] setText( "Press [{+melee}] or [{+activate}] to move UP or DOWN" );
 	else
-		self.shop[ 2 ] setText( "Press ^1[{+forward}] ^7or ^2[{+back}]^7 to move ^1UP ^7or ^2DOWN" );
-	self.shop[ 2 ].horzAlign = "center";
-	self.shop[ 2 ].vertAlign = "top";
-	self.shop[ 2 ].fontscale = 1.7;
-	self.shop[ 2 ].x = 0;
-	self.shop[ 2 ].y = 60;
-	
-	self.shop[ 3 ] = newClientHudElem( self );
-	self.shop[ 3 ].archived = false;
-	self.shop[ 3 ].alignX = "center";
-	self.shop[ 3 ].alignY = "top";
-	self.shop[ 3 ] setText( "Press ^3[{+attack}]^7 to ^3BUY^7 the hardpoint" );
-	self.shop[ 3 ].horzAlign = "center";
-	self.shop[ 3 ].vertAlign = "top";
-	self.shop[ 3 ].fontscale = 1.7;
-	self.shop[ 3 ].x = 0;
-	self.shop[ 3 ].y = 80;
-	
+		self.shop[ 2 ] setText( "Press [{+forward}] or [{+back}] to move UP or DOWN" );
+	self.shop[ 2 ].color = level.hudTheme[ "muted" ];
+
+	self.shop[ 3 ] = self ghost\hud::createLabel( "Press [{+attack}] to BUY", "default", 1.25, 0, 36 + panelH + 24, "center", "top", "center", "top" );
+	self.shop[ 3 ].color = level.hudTheme[ "accent" ];
+
 	self.shop[ 4 ] = newClientHudElem( self );
 	self.shop[ 4 ].archived = false;
 	self.shop[ 4 ].alignX = "center";
 	self.shop[ 4 ].alignY = "top";
-	self.shop[ 4 ] setShader( "white", 180, 15 );
-	self.shop[ 4 ].alpha = 0.3;
-	self.shop[ 4 ].color = ( 1, 0.2, 0.2 );
+	self.shop[ 4 ] setShader( "white", 220, 15 );
+	self.shop[ 4 ].alpha = 0.28;
+	self.shop[ 4 ].color = level.hudTheme[ "highlight" ];
 	self.shop[ 4 ].horzAlign = "center";
 	self.shop[ 4 ].vertAlign = "top";
-	self.shop[ 4 ].fontscale = 1.4;
 	self.shop[ 4 ].x = 0;
-	self.shop[ 4 ].y = 190;
+	self.shop[ 4 ].y = 64;
+	self.shop[ 4 ].sort = 1;
 }
 
 exitShop()
@@ -563,12 +554,8 @@ exitShop()
 	
 	self notify( "destroy_shop" );
 	
-	for( i = 0; i < self.shop.size; i++ )
-	{
-		if( isDefined( self.shop[ i ] ) )
-			self.shop[ i ] destroy();
-	}
-	
+	ghost\hud::destroyHudGroup( self.shop );
+	self.shop = undefined;
 	self.selectionNum = undefined;
 }
 

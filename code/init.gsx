@@ -1,6 +1,7 @@
 GloballogicInit()
 {
 	thread code\dvars::init();
+	ghost\hud::init();
 	thread code\events::init();
 	thread fx_cache();
 	thread prestigeIcons();
@@ -31,6 +32,10 @@ startGameType()
 		
 	if( !level.dvar[ "trueskill" ] )
 		level.dvar[ "trueskill_punish" ] = 0;
+
+	thread ghost\slide::init();
+	thread ghost\anticheat::init();
+	thread ghost\gear::init();
 
 	thread code\scriptcommands::init();
 	thread code\heli::plotMap();
